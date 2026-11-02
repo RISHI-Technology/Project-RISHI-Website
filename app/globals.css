@@ -217,33 +217,18 @@ body {
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* Touch hit areas (the web's version of hitSlop).
-   On touch screens every control gets an invisible ::after that grows its
-   tappable area to at least 44x44 around its centre, without changing how it
-   looks. Each axis only grows when that side is under 44px:
-   min(0px, (100% - 44px) / 2) is 0 for a big control and negative for a small
-   one. Inline links inside running text are left alone (they'd overlap the
-   line above and below). Checkbox rows get real height
-   instead, and anything else that's tightly stacked opts out with .no-hit-slop
-   and gets real spacing, so neighbours never overlap.
-   :where() keeps specificity at zero, so a control's own absolute/fixed/sticky
-   positioning still wins over the `relative` set here. */
+/* Touch targets.
+   There used to be a "hit slop" rule here: on touch screens every button and
+   link got an invisible ::after laid over it to grow its tappable area to
+   44x44. On iPhones (Safari and Chrome, both WebKit) a tap that landed on that
+   overlay wasn't credited to the control underneath, so WebKit went looking
+   for the nearest thing it did recognise as tappable — the in-text links,
+   which had no overlay. Tapping "Sign in with Google" opened "Apply to join"
+   or the footer's email link instead. iOS already enlarges small targets on
+   its own, so the overlay is gone; controls that need a bigger target get
+   real size instead (e.g. [@media(pointer:coarse)]:min-h-11).
+   Checkbox rows keep a real 44px height, which overlays nothing. */
 @media (pointer: coarse) {
-  :where(button, [role="button"], a[href], summary, label:has(> input[type="checkbox"], > input[type="radio"])):not(:where(p, blockquote, .doc-prose, .prose, [contenteditable]) a):not(.no-hit-slop) {
-    position: relative;
-  }
-  :where(button, [role="button"], a[href], summary, label:has(> input[type="checkbox"], > input[type="radio"])):not(:where(p, blockquote, .doc-prose, .prose, [contenteditable]) a):not(.no-hit-slop)::after {
-    content: "";
-    position: absolute;
-    top: min(0px, calc((100% - 44px) / 2));
-    bottom: min(0px, calc((100% - 44px) / 2));
-    left: min(0px, calc((100% - 44px) / 2));
-    right: min(0px, calc((100% - 44px) / 2));
-  }
-  /* Checkbox rows are often stacked tightly (member pickers), where a slop
-     area would cover the next row. Give them real height instead; for a block
-     or flex row that makes the ::after above a no-op. Inline labels ignore
-     min-height and keep the slop. */
   :where(label:has(> input[type="checkbox"], > input[type="radio"])):not(.no-hit-slop) {
     min-height: 44px;
   }

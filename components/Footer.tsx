@@ -99,14 +99,10 @@ function SiteFooter() {
               Terms of Service
             </Link>
             <span className="text-white/55">Promoting sustainable development since 2008.</span>
-            {/* A plain <a>, not <Link>: a full page load, so /login always opens
-                fresh at the top. A client-side jump from the bottom of a long
-                page left iOS Safari's tap targets offset from what's drawn, so
-                tapping "Sign in with Google" opened the links below it. */}
-            <a href="/login" className="a-btn a-btn-outline-light min-h-[40px] px-4 text-[0.9375rem]">
+            <Link href="/login" className="a-btn a-btn-outline-light min-h-[40px] px-4 text-[0.9375rem]">
               <LockIcon />
               Member Login
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -195,14 +191,13 @@ function DashboardFooter() {
               Terms of Service
             </Link>
             <span className="text-xs text-paper/50">Promoting sustainable development since 2008.</span>
-            {/* Full page load on purpose — see the site footer's Member Login. */}
-            <a
+            <Link
               href="/login"
               className="inline-flex items-center gap-2 rounded-full border border-paper/30 bg-paper/5 px-4 py-2 text-sm font-semibold text-paper transition-colors hover:border-marigold hover:bg-marigold hover:text-pine-deep"
             >
               <LockIcon />
               Member Login
-            </a>
+            </Link>
           </div>
         </div>
       </div>
