@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Media from "@/components/Media";
-import Reveal from "@/components/Reveal";
-import Contours from "@/components/Contours";
 import SectionHeading from "@/components/SectionHeading";
+import SiteLabel from "@/components/SiteLabel";
 import { PROJECTS, PROJECTS_PAGE } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -13,106 +12,96 @@ export const metadata: Metadata = {
 
 export default function ProjectsIndex() {
   return (
-    <>
-      <section className="relative overflow-hidden bg-pine pt-[var(--header-h)] text-paper">
-        <Contours className="absolute inset-0 h-full w-full text-paper" opacity={0.12} />
-        <div className="container-rishi relative z-10 pb-20 pt-16 lg:pb-28 lg:pt-24">
-          <Reveal>
-            <span className="inline-flex items-center gap-3 text-sm font-medium text-paper/75">
-              <span className="h-px w-6 bg-marigold" />
-              What We Do
-            </span>
-            <h1 className="mt-7 max-w-4xl font-display text-5xl font-semibold leading-[1.02] sm:text-6xl lg:text-7xl">
-              Four teams, One village
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-paper/80">
-              Each team focuses on a pillar of sustainable development in Bharog
-              Baneri, Himachal Pradesh.
-            </p>
-          </Reveal>
+    <div className="site">
+      <section className="border-b border-graphite/10 pt-[var(--header-h)]">
+        <div className="s-container grid gap-8 pb-[clamp(3.5rem,7vw,6rem)] pt-[clamp(3.5rem,7vw,6rem)] lg:grid-cols-12 lg:items-end">
+          <div className="lg:col-span-7">
+            <SiteLabel>What We Do</SiteLabel>
+            <h1 className="t-display mt-7 text-deodar">Four teams, One village</h1>
+          </div>
+          <p className="t-lead text-graphite/80 lg:col-span-4 lg:col-start-9">
+            Each team focuses on a pillar of sustainable development in Bharog
+            Baneri, Himachal Pradesh.
+          </p>
         </div>
       </section>
 
       {/* ----------------------------------------------- Project Work in Action */}
-      <section className="bg-pine-deep py-20 text-paper lg:py-28">
-        <div className="container-rishi">
-          <SectionHeading
-            eyebrow="On the ground"
-            title={PROJECTS_PAGE.videoTitle}
-            accent="pine"
-            tone="dark"
-          />
-          <Reveal delay={0.1}>
-            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-paper/70">{PROJECTS_PAGE.videoBlurb}</p>
-          </Reveal>
-
-          <Reveal delay={0.15}>
-            <div className="mt-12 overflow-hidden rounded-2xl bg-black/30">
-              <div className="relative aspect-video w-full">
-                {PROJECTS_PAGE.videoEmbedUrl ? (
-                  <iframe
-                    src={PROJECTS_PAGE.videoEmbedUrl}
-                    title={PROJECTS_PAGE.videoTitle}
-                    className="absolute inset-0 h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 border border-dashed border-paper/25 text-center">
-                    <span className="grid h-16 w-16 place-items-center rounded-full bg-marigold/90 text-pine-deep">
-                      <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </span>
-                    <p className="rounded-full bg-ink/65 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-paper">
-                      Add your trip video
-                    </p>
-                    <p className="max-w-sm px-6 text-sm text-paper/60">
-                      Paste a YouTube or Vimeo embed link into{" "}
-                      <code className="text-marigold-soft">videoEmbedUrl</code> in
-                      lib/content.ts.
-                    </p>
-                  </div>
-                )}
-              </div>
+      <section className="s-dark s-section bg-deodar text-snow">
+        <div className="s-container">
+          <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-6">
+              <SectionHeading eyebrow="On the ground" title={PROJECTS_PAGE.videoTitle} accent="pine" tone="dark" />
             </div>
-          </Reveal>
+            <p className="t-lead text-snow/80 lg:col-span-5 lg:col-start-8">{PROJECTS_PAGE.videoBlurb}</p>
+          </div>
+
+          <div className="mt-[var(--space-block)] overflow-hidden rounded-[var(--r-media)] bg-deodar-deep">
+            <div className="relative aspect-video w-full">
+              {PROJECTS_PAGE.videoEmbedUrl ? (
+                <iframe
+                  src={PROJECTS_PAGE.videoEmbedUrl}
+                  title={PROJECTS_PAGE.videoTitle}
+                  className="absolute inset-0 h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 border border-dashed border-snow/25 text-center">
+                  <span className="grid h-16 w-16 place-items-center rounded-full bg-saffron text-deodar-deep">
+                    <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
+                  <p className="t-label rounded-full bg-graphite/70 px-4 py-1.5 text-snow">
+                    Add your trip video
+                  </p>
+                  <p className="t-small max-w-sm px-6 text-snow/70">
+                    Paste a YouTube or Vimeo embed link into{" "}
+                    <code className="text-saffron">videoEmbedUrl</code> in
+                    lib/content.ts.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="container-rishi py-20 lg:py-28">
-        <div className="grid gap-x-8 gap-y-14 md:grid-cols-2">
+      {/* The four teams — one feature row each, alternating sides */}
+      <section className="s-section">
+        <div className="s-container space-y-[var(--space-section)]">
           {PROJECTS.map((p, i) => (
-            <Reveal as="article" key={p.slug} delay={i * 0.08}>
+            <article key={p.slug} className="grid items-center gap-8 lg:grid-cols-12 lg:gap-x-16">
               <Link
                 href={`/projects/${p.slug}`}
-                className="group block rounded-2xl"
+                className={`block rounded-[var(--r-media)] lg:col-span-7 ${i % 2 ? "lg:order-2 lg:col-start-6" : ""}`}
+                tabIndex={-1}
+                aria-hidden
               >
                 <Media
                   src={p.image}
                   alt={p.name}
                   label={`${p.name} cover`}
-                  className="aspect-[3/2] w-full [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover:[&_img]:scale-[1.03]"
-                  rounded="rounded-2xl"
-                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="aspect-[3/2] w-full"
+                  rounded="rounded-[var(--r-media)]"
+                  sizes="(max-width: 1024px) 100vw, 58vw"
                 />
-                <div className="pt-6">
-                  <h2 className="font-display text-2xl font-semibold text-pine-deep sm:text-[1.75rem]">
-                    {p.name}
-                  </h2>
-                  <p className="mt-2 line-clamp-3 max-w-xl leading-relaxed text-ink/70">{p.intro}</p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-pine underline-offset-4 group-hover:underline">
-                    Explore team
-                    <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </span>
-                </div>
               </Link>
-            </Reveal>
+              <div className={`lg:col-span-5 ${i % 2 ? "lg:order-1 lg:col-start-1" : ""}`}>
+                <h2 className="t-h2 text-deodar">{p.name}</h2>
+                <p className="mt-4 line-clamp-6 text-graphite/80">{p.intro}</p>
+                <Link href={`/projects/${p.slug}`} className="s-btn s-btn-outline mt-7">
+                  Explore team
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </Link>
+              </div>
+            </article>
           ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }

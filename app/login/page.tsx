@@ -3,7 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Contours from "@/components/Contours";
+import SiteLabel from "@/components/SiteLabel";
 
 function LoginCard() {
   const { status } = useSession();
@@ -16,19 +16,16 @@ function LoginCard() {
   }, [status, router]);
 
   return (
-    <div className="relative z-10 w-full max-w-md rounded-2xl border border-paper/15 bg-pine p-8 text-center shadow-[0_24px_60px_-24px_rgba(6,18,13,0.7)] sm:p-10">
-      <span className="inline-flex items-center gap-3 text-sm font-medium text-paper/75">
-        <span className="h-px w-6 bg-marigold" />
-        Members Only
-      </span>
-      <h1 className="mt-5 font-display text-4xl font-semibold sm:text-[2.75rem]">Member Login</h1>
-      <p className="mt-3 text-sm text-paper/70">
+    <div className="w-full max-w-md rounded-[var(--r-media)] border border-graphite/10 bg-snow p-8 shadow-[0_24px_60px_-32px_rgb(var(--c-graphite)/0.35)] sm:p-10">
+      <SiteLabel>Members Only</SiteLabel>
+      <h1 className="t-h2 mt-6 text-deodar">Member Login</h1>
+      <p className="t-small mt-3 text-stone">
         Sign in with your Berkeley email to access the member
         dashboard.
       </p>
 
       {error && (
-        <p className="mt-5 rounded-xl border border-red-300/30 bg-red-500/15 px-4 py-3 text-sm text-red-100">
+        <p role="alert" className="t-small mt-6 rounded-[var(--r-control)] border border-red-700/20 bg-red-50 px-4 py-3 text-red-800">
           That account isn&rsquo;t on the member list. If this is a mistake,
           please inform Webmaster.
         </p>
@@ -36,7 +33,7 @@ function LoginCard() {
 
       <button
         onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-        className="mt-7 flex w-full items-center justify-center gap-3 rounded-full bg-paper px-6 py-3.5 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5"
+        className="s-btn s-btn-outline mt-8 w-full gap-3"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
@@ -47,9 +44,9 @@ function LoginCard() {
         Sign in with Google
       </button>
 
-      <p className="mt-6 text-xs text-paper/45">
+      <p className="t-small mt-6 text-stone">
         Access is limited to registered members. Not a member?{" "}
-        <a href="/apply" className="text-marigold-soft underline-offset-2 hover:underline">
+        <a href="/apply" className="s-link font-medium">
           Apply to join
         </a>
         .
@@ -60,8 +57,7 @@ function LoginCard() {
 
 export default function LoginPage() {
   return (
-    <section className="relative flex min-h-[88vh] items-center justify-center overflow-hidden bg-pine-deep px-6 text-paper">
-      <Contours className="absolute inset-0 h-full w-full text-paper" opacity={0.1} />
+    <section className="site flex min-h-[88vh] items-center justify-center bg-mist px-6 pb-16 pt-[calc(var(--header-h)+3rem)]">
       <Suspense fallback={null}>
         <LoginCard />
       </Suspense>

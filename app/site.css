@@ -1,0 +1,158 @@
+/* ==========================================================================
+   Public website — "Field Report" design system.
+
+   Every colour, font, size and space used by the public pages is defined
+   here as a CSS variable, and the components read them (Tailwind colours
+   `deodar`, `saffron`, `mist`… in tailwind.config.ts map to these too).
+
+   Scope: everything below is either a variable on :root (inert until used)
+   or a class under `.site`, the wrapper on public pages and the public
+   header. The member dashboard and the footer never use them.
+
+   Brand (the site's original three colours)
+     Deodar   pine green — primary, dark sections   (#1E4D3A / #143628)
+     Marigold orange — actions and highlights        (#E2A02F)
+     Page     warm linen; Mist a sage-tinted alternate; Snow (white) only
+              for the top bar and raised cards
+   Type: Eczar (display; Rosetta, by Vaibhav Singh) + Mukta (text; Ek Type).
+   ========================================================================== */
+
+:root {
+  /* Colour (space-separated RGB so Tailwind can apply opacity) */
+  --c-deodar: 30 77 58;          /* #1E4D3A — the original pine */
+  --c-deodar-deep: 20 54 40;     /* #143628 — the original pine-deep */
+  --c-marigold: 226 160 47;      /* #E2A02F */
+  --c-marigold-deep: 201 136 26; /* #C9881A */
+  --c-snow: 255 255 255;         /* pure white — top bar and raised cards only */
+  --c-page: 248 245 237;         /* #F8F5ED — warm linen, the page itself */
+  --c-mist: 238 239 229;         /* #EEEFE5 — sage-tinted linen, alternate sections */
+  --c-graphite: 24 33 29;        /* #18211D — body text */
+  --c-stone: 82 96 90;           /* #52605A — secondary text, 6:1 on white */
+
+  /* Type */
+  --f-display: var(--font-eczar), "Iowan Old Style", Georgia, serif;
+  --f-text: var(--font-mukta), "Segoe UI", system-ui, sans-serif;
+  --fs-hero: clamp(4.5rem, 11vw, 10rem);
+  --fs-display: clamp(2.75rem, 5.6vw, 5rem);
+  --fs-h2: clamp(2.125rem, 3.7vw, 3.375rem);
+  --fs-h3: clamp(1.375rem, 1.9vw, 1.75rem);
+  --fs-lead: clamp(1.1875rem, 1.45vw, 1.375rem);
+  --fs-body: 1.0625rem;
+  --fs-small: 0.9375rem;
+  --fs-label: 0.875rem;
+
+  /* Space & shape */
+  --container: 1180px;
+  --gutter: 1.5rem;
+  --space-section: clamp(5rem, 9vw, 8.5rem);
+  --space-block: clamp(2.5rem, 4vw, 3.5rem);
+  --r-media: 6px;
+  --r-control: 8px;
+
+  /* Motion */
+  --t-ui: 180ms;
+  --t-hero: 900ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (min-width: 640px) {
+  :root { --gutter: 2rem; }
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+.site {
+  font-family: var(--f-text);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: rgb(var(--c-graphite));
+  background: rgb(var(--c-page));
+}
+.site :where(h1, h2, h3, h4), .site .font-display {
+  font-family: var(--f-display);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+.site ::selection { background: rgb(var(--c-marigold) / 0.4); color: rgb(var(--c-graphite)); }
+
+.s-container {
+  width: 100%;
+  max-width: var(--container); /* same box as .container-rishi, so the footer lines up */
+  margin-inline: auto;
+  padding-left: calc(var(--gutter) + var(--safe-left));
+  padding-right: calc(var(--gutter) + var(--safe-right));
+}
+/* For layouts where a photo bleeds to the viewport edge: text keeps the
+   container's left edge. */
+.s-bleed-left {
+  padding-left: max(calc(var(--gutter) + var(--safe-left)), calc((100vw - var(--container)) / 2 + var(--gutter)));
+}
+.s-section { padding-block: var(--space-section); }
+
+/* ---- Type roles ---------------------------------------------------------- */
+.t-hero { font-family: var(--f-display); font-size: var(--fs-hero); font-weight: 700; line-height: 0.84; letter-spacing: -0.03em; }
+.t-display { font-family: var(--f-display); font-size: var(--fs-display); font-weight: 600; line-height: 1.02; letter-spacing: -0.022em; }
+.t-h2 { font-family: var(--f-display); font-size: var(--fs-h2); font-weight: 600; line-height: 1.06; letter-spacing: -0.018em; }
+.t-h3 { font-family: var(--f-display); font-size: var(--fs-h3); font-weight: 600; line-height: 1.18; letter-spacing: -0.01em; }
+.t-lead { font-size: var(--fs-lead); line-height: 1.55; }
+.t-small { font-size: var(--fs-small); line-height: 1.55; }
+/* Small sentence-case marker label (never all caps). */
+.t-label { font-size: var(--fs-label); font-weight: 600; line-height: 1.3; letter-spacing: 0.01em; }
+.t-num { font-variant-numeric: tabular-nums lining-nums; }
+
+/* ---- Links & buttons ----------------------------------------------------- */
+.s-link {
+  color: rgb(var(--c-deodar));
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-thickness var(--t-ui) ease-out, color var(--t-ui) ease-out;
+}
+.s-link:hover { text-decoration-thickness: 2px; }
+.s-dark .s-link { color: rgb(var(--c-snow)); }
+
+.s-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0 1.375rem;
+  border-radius: var(--r-control);
+  font-family: var(--f-text);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background-color var(--t-ui) ease-out, color var(--t-ui) ease-out, border-color var(--t-ui) ease-out;
+}
+.s-btn svg { transition: transform var(--t-ui) ease-out; }
+.s-btn:hover svg { transform: translateX(2px); }
+.s-btn:active { transform: translateY(1px); }
+.s-btn-primary { background: rgb(var(--c-marigold)); color: rgb(var(--c-deodar-deep)); }
+.s-btn-primary:hover { background: rgb(var(--c-marigold-deep)); }
+.s-btn-dark { background: rgb(var(--c-deodar)); color: rgb(var(--c-snow)); }
+.s-btn-dark:hover { background: rgb(var(--c-deodar-deep)); }
+.s-btn-outline { border-color: rgb(var(--c-graphite) / 0.25); color: rgb(var(--c-graphite)); }
+.s-btn-outline:hover { border-color: rgb(var(--c-graphite) / 0.6); background: rgb(var(--c-graphite) / 0.04); }
+.s-btn-outline-light { border-color: rgb(var(--c-snow) / 0.45); color: rgb(var(--c-snow)); }
+.s-btn-outline-light:hover { background: rgb(var(--c-snow)); color: rgb(var(--c-deodar-deep)); }
+
+/* Focus: one ring everywhere on the public site, tuned per surface. */
+.site :focus-visible { outline: 2px solid rgb(var(--c-deodar)); outline-offset: 3px; }
+.site .s-dark :focus-visible,
+.site.s-dark :focus-visible { outline-color: rgb(var(--c-marigold)); }
+
+/* Small marker line before a page label (one colour, marigold). */
+.s-mark { display: inline-block; width: 2rem; height: 2px; background: rgb(var(--c-marigold)); }
+
+/* ---- The one orchestrated moment: the home hero arrives ------------------ */
+@keyframes s-reveal-photo {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+.s-hero-photo { animation: s-reveal-photo var(--t-hero) var(--ease-out) 120ms both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .s-hero-photo { animation: none; }
+  .s-btn, .s-btn svg, .s-link { transition: none; }
+}

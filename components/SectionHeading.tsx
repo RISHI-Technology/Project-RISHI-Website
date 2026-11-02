@@ -1,3 +1,4 @@
+
 export default function SectionHeading({
   eyebrow,
   title,
@@ -12,15 +13,15 @@ export default function SectionHeading({
   /** "light" = for paper/light sections; "dark" = for pine/dark sections */
   tone?: "light" | "dark";
 }) {
-  // Section headings stand on their own: no small all-caps label above them.
-  // `eyebrow` and `accent` are accepted but not drawn, so call sites stay
-  // unchanged.
+  // Public-site section heading (app/site.css type scale). The small all-caps
+  // label above it is not drawn; `eyebrow` and
+  // `accent` are accepted but no longer drawn, so call sites stay unchanged.
   void eyebrow; void accent;
-  const titleColor = tone === "dark" ? "text-paper" : "text-pine-deep";
+  const titleColor = tone === "dark" ? "text-snow" : "text-deodar";
 
   return (
     <div className={align === "center" ? "text-center" : ""}>
-      <h2 className={`font-display text-[2.25rem] font-semibold leading-[1.08] sm:text-5xl sm:leading-[1.04] ${titleColor}`}>
+      <h2 className={`t-h2 max-w-[22ch] ${align === "center" ? "mx-auto" : ""} ${titleColor}`}>
         {title}
       </h2>
     </div>

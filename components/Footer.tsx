@@ -27,7 +27,7 @@ export default function Footer() {
           {/* Brand + contact */}
           <div>
             <p className="font-display text-2xl font-semibold">{ORG.name}</p>
-            <p className="mt-1 text-[15px] font-medium text-marigold-soft">
+            <p className="mt-1 text-sm uppercase tracking-[0.2em] text-marigold-soft">
               {ORG.chapter}
             </p>
             <div className="mt-6 space-y-2 text-sm text-paper/70">
@@ -57,7 +57,7 @@ export default function Footer() {
 
           {/* Explore */}
           <div>
-            <p className="font-display text-xl font-semibold text-paper">Explore</p>
+            <p className="eyebrow text-marigold-soft">Explore</p>
             <ul className="mt-4 space-y-2.5 text-sm [@media(pointer:coarse)]:space-y-0">
               {NAV.flatMap((item) =>
                 item.children

@@ -1,156 +1,141 @@
 import Link from "next/link";
 import Media from "@/components/Media";
-import Reveal from "@/components/Reveal";
 import SectionHeading from "@/components/SectionHeading";
-import Contours from "@/components/Contours";
+import SiteLabel from "@/components/SiteLabel";
 import { PROJECTS, LINKS } from "@/lib/content";
 
 type Project = (typeof PROJECTS)[number];
+
+const Arrow = ({ className = "h-4 w-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
 
 export default function ProjectPage({ project }: { project: Project }) {
   const others = PROJECTS.filter((p) => p.slug !== project.slug);
 
   return (
-    <article>
+    <article className="site">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-pine pt-[var(--header-h)] text-paper">
-        <Contours className="absolute inset-0 h-full w-full text-paper" opacity={0.1} />
-        <div className="container-rishi relative z-10 grid gap-12 pb-16 pt-14 lg:grid-cols-12 lg:items-center lg:pb-24 lg:pt-20">
-          <Reveal className="lg:col-span-6">
-            <span className="inline-flex items-center gap-3 text-sm font-medium text-paper/75">
-              <span className="h-px w-6 bg-marigold" />
-              Project Team
-            </span>
-            <h1 className="mt-7 font-display text-5xl font-semibold leading-[1.02] sm:text-6xl lg:text-7xl">
-              {project.name}
-            </h1>
-            <p className="mt-6 max-w-xl leading-relaxed text-paper/80 sm:text-lg">{project.intro}</p>
-          </Reveal>
-          <Reveal delay={0.12} className="lg:col-span-6">
+      <section className="border-b border-graphite/10 pt-[var(--header-h)]">
+        <div className="s-container grid gap-12 pb-[clamp(3.5rem,6vw,5.5rem)] pt-[clamp(3rem,6vw,5rem)] lg:grid-cols-12 lg:items-center lg:gap-x-16">
+          <div className="lg:col-span-6">
+            <SiteLabel>Project Team</SiteLabel>
+            <h1 className="t-display mt-7 text-deodar">{project.name}</h1>
+            <p className="mt-6 max-w-[38rem] text-graphite/80">{project.intro}</p>
+          </div>
+          <div className="lg:col-span-6">
             <Media
               src={(project as { heroImage?: string | null }).heroImage ?? null}
               alt={`${project.name} team in Bharog Baneri`}
               label={`${project.name} hero photo`}
               className="aspect-[4/3] w-full"
-              rounded="rounded-2xl"
+              rounded="rounded-[var(--r-media)]"
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
-          </Reveal>
+          </div>
         </div>
       </section>
 
       {/* Quote */}
       {project.quote && (
-        <section className="bg-marigold/10">
-          <div className="container-rishi py-16 lg:py-20">
-            <Reveal className="mx-auto max-w-3xl text-center">
-              <p className="font-display text-2xl italic leading-snug text-pine-deep sm:text-[2rem] sm:leading-[1.25]">
+        <section className="bg-mist">
+          <div className="s-container py-[clamp(4rem,7vw,6rem)]">
+            <figure className="mx-auto max-w-4xl">
+              <blockquote className="t-h2 text-center font-normal text-deodar">
                 &ldquo;{project.quote}&rdquo;
-              </p>
+              </blockquote>
               {project.quoteAuthor && (
-                <p className="mt-5 text-[15px] font-medium text-sage-deep">
+                <figcaption className="t-small mt-6 text-center font-semibold text-stone">
                   — {project.quoteAuthor}
-                </p>
+                </figcaption>
               )}
-            </Reveal>
+            </figure>
           </div>
         </section>
       )}
 
       {/* Highlights */}
-      <section className="container-rishi py-20 lg:py-28">
-        <SectionHeading eyebrow="This term" title="Project Highlights" />
-        <div
-          className={`mt-12 grid gap-x-8 gap-y-14 ${
-            project.highlights.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"
-          }`}
-        >
-          {project.highlights.map((h, i) => (
-            <Reveal as="article" key={h.title} delay={i * 0.08} className="group">
-              <Media
-                src={h.image}
-                alt={h.title}
-                label={`${h.title} photo`}
-                className="aspect-[4/3] w-full"
-                rounded="rounded-2xl"
-              />
-              <h3 className="mt-6 font-display text-[1.375rem] font-semibold leading-snug text-pine-deep">
-                {h.title}
-              </h3>
-              <p className="mt-2 leading-relaxed text-ink/70">{h.body}</p>
-            </Reveal>
-          ))}
+      <section className="s-section">
+        <div className="s-container">
+          <SectionHeading eyebrow="This term" title="Project Highlights" />
+          <div
+            className={`mt-[var(--space-block)] grid gap-x-8 gap-y-14 ${
+              project.highlights.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"
+            }`}
+          >
+            {project.highlights.map((h) => (
+              <article key={h.title}>
+                <Media
+                  src={h.image}
+                  alt={h.title}
+                  label={`${h.title} photo`}
+                  className="aspect-[4/3] w-full"
+                  rounded="rounded-[var(--r-media)]"
+                />
+                <h3 className="t-h3 mt-6 text-deodar">{h.title}</h3>
+                <p className="t-small mt-3 text-graphite/80">{h.body}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Past projects */}
-      <section className="bg-pine-deep py-20 text-paper lg:py-28">
-        <div className="container-rishi">
+      <section className="s-dark s-section bg-deodar text-snow">
+        <div className="s-container">
           <SectionHeading eyebrow="Our track record" title="Past Projects" accent="pine" tone="dark" />
-          <div className="mt-12 grid gap-x-12 sm:grid-cols-2">
+          <div className="mt-[var(--space-block)] grid gap-x-16 sm:grid-cols-2">
             {project.past.map((p, i) => (
-              <Reveal
-                as="div"
-                key={p.title}
-                delay={i * 0.06}
-                className="border-t border-paper/15 pb-10 pt-6"
-              >
-                <span className="text-sm font-semibold tabular-nums text-marigold">
+              <div key={p.title} className="border-t border-snow/20 pb-10 pt-6">
+                <span className="t-label t-num text-saffron">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <h3 className="mt-3 font-display text-xl font-semibold">{p.title}</h3>
-                <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-paper/70">{p.body}</p>
-              </Reveal>
+                <h3 className="t-h3 mt-3">{p.title}</h3>
+                <p className="t-small mt-3 max-w-xl text-snow/80">{p.body}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA + other projects */}
-      <section className="container-rishi py-20 lg:py-28">
-        <div className="rounded-2xl bg-marigold/15 p-8 sm:p-12">
-          <Reveal className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h2 className="font-display text-3xl font-semibold text-pine-deep sm:text-4xl">
-                Want to work on {project.name}?
-              </h2>
-              <p className="mt-3 max-w-xl text-lg text-ink/70">
+      <section className="s-section">
+        <div className="s-container">
+          <div className="grid gap-8 rounded-[var(--r-media)] bg-saffron p-[clamp(2rem,4vw,3.5rem)] text-deodar-deep lg:grid-cols-12 lg:items-end">
+            <div className="lg:col-span-8">
+              <h2 className="t-h2">Want to work on {project.name}?</h2>
+              <p className="t-lead mt-4 max-w-xl">
                 We recruit at the start of every Fall and Spring semester. Come find
                 your team.
               </p>
             </div>
-            <div className="flex shrink-0 flex-wrap gap-3">
-              <Link href="/apply" className="btn-primary">
+            <div className="flex flex-wrap gap-3 lg:col-span-4 lg:justify-end">
+              <Link href="/apply" className="s-btn s-btn-dark">
                 Apply to join
               </Link>
-              <a href={LINKS.donate} className="btn-ghost">
+              <a href={LINKS.donate} className="s-btn border-deodar-deep/30 text-deodar-deep hover:border-deodar-deep hover:bg-deodar-deep/[0.06]">
                 Support our work
               </a>
             </div>
-          </Reveal>
-        </div>
+          </div>
 
-        <div className="mt-16">
-          <p className="font-display text-xl font-semibold text-pine-deep">Other teams</p>
-          <div className="mt-5 grid gap-x-8 sm:grid-cols-3">
-            {others.map((o) => (
-              <Link
-                key={o.slug}
-                href={`/projects/${o.slug}`}
-                className="group flex items-center justify-between gap-4 border-t border-pine/20 py-5 text-pine-deep transition-colors hover:text-pine"
-              >
-                <span className="font-display text-lg font-semibold underline-offset-4 group-hover:underline">{o.name}</span>
-                <svg
-                  className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </Link>
-            ))}
+          <div className="mt-[var(--space-block)]">
+            <SiteLabel>Other teams</SiteLabel>
+            <ul className="mt-6 grid gap-x-8 sm:grid-cols-3">
+              {others.map((o) => (
+                <li key={o.slug}>
+                  <Link
+                    href={`/projects/${o.slug}`}
+                    className="group flex items-center justify-between gap-4 border-t border-graphite/15 py-5 text-deodar"
+                  >
+                    <span className="t-h3 decoration-2 underline-offset-[0.2em] group-hover:underline">{o.name}</span>
+                    <Arrow className="h-5 w-5 shrink-0 transition-transform duration-150 group-hover:translate-x-1" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>

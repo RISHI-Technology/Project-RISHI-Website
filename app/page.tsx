@@ -2,227 +2,201 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { placeholderFor } from "@/lib/imagePlaceholders";
 import type { CSSProperties } from "react";
+import { placeholderFor } from "@/lib/imagePlaceholders";
 import Media from "@/components/Media";
-import Reveal from "@/components/Reveal";
-import Contours from "@/components/Contours";
 import SectionHeading from "@/components/SectionHeading";
+import SiteLabel from "@/components/SiteLabel";
 import { HOME, PROJECTS, ABOUT, LINKS } from "@/lib/content";
 
+const Arrow = ({ className = "h-4 w-4" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+
 export default function Home() {
-  // The site's one orchestrated moment: the hero lines rise in, ~1s in all.
-  // Pure CSS (.hero-rise in globals.css), so it starts at first paint instead
-  // of waiting for JavaScript, and reduced motion shows everything at once.
-  const rise = (i: number) => ({ style: { "--i": i } as CSSProperties });
+  // The site's one orchestrated moment: the type rises in (.hero-rise,
+  // globals.css), the photo is revealed top-down (app/site.css). All CSS, so it starts at first paint; reduced
+  // motion shows everything at once.
+  const rise = (i: number) => ({ "--i": i }) as CSSProperties;
 
   return (
-    <>
+    <div className="site">
       {/* ---------------------------------------------------------------- HERO */}
-      {/* The photo is the subject: shown sharp, darkened only where the words
-          sit (bottom and left), with the type anchored bottom-left. */}
-      <section className="relative flex min-h-[92vh] min-h-[92svh] flex-col overflow-hidden bg-pine-deep text-paper">
-        {HOME.heroImage && (
-          <Image
-            src={HOME.heroImage}
-            alt="Himalayan foothills near Bharog Baneri"
-            fill
-            priority
-            sizes="100vw"
-            placeholder={placeholderFor(HOME.heroImage) ? "blur" : "empty"}
-            blurDataURL={placeholderFor(HOME.heroImage)?.blur}
-            className="object-cover object-[50%_40%]"
-          />
-        )}
-        <div className="absolute inset-0 bg-[linear-gradient(to_top,rgb(20_54_40/0.94)_0%,rgb(20_54_40/0.6)_34%,rgb(20_54_40/0.12)_68%,rgb(20_54_40/0.4)_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(20_54_40/0.55)_0%,rgb(20_54_40/0)_62%)]" />
-        <Contours className="absolute inset-x-0 bottom-0 h-1/2 w-full text-paper" opacity={0.06} />
-
-        <div className="container-rishi relative z-10 mt-auto pb-8 pt-[calc(var(--header-h)+5rem)] [text-shadow:_0_1px_24px_rgba(12,22,16,0.35)] sm:pb-10">
-          <h1 className="font-display font-semibold leading-[0.9]">
-            <span style={rise(0).style} className="hero-rise block text-[3.25rem] sm:text-7xl lg:text-[5rem]">
-              {HOME.heroLine1}
+      <section className="bg-page pt-[var(--header-h)]">
+        <div className="grid lg:min-h-[calc(100svh-var(--header-h))] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)]">
+          <div className="s-bleed-left flex flex-col justify-center pb-14 pr-[var(--gutter)] pt-14 lg:py-20 lg:pr-14">
+            <span style={rise(0)} className="hero-rise">
+              <SiteLabel>{HOME.heroEyebrow}</SiteLabel>
             </span>
-            <span style={rise(1).style} className="hero-rise block text-[4.5rem] text-marigold sm:text-8xl lg:text-[6rem]">
-              {HOME.heroLine2}
-            </span>
-          </h1>
 
-          <p style={rise(2).style} className="hero-rise mt-6 max-w-xl text-lg text-paper/90 sm:text-xl">
-            {HOME.heroSub}
-          </p>
+            <h1 className="mt-8 text-deodar">
+              <span style={rise(1)} className="hero-rise t-display block font-normal">
+                {HOME.heroLine1}
+              </span>
+              <span style={rise(2)} className="hero-rise t-hero block">
+                {HOME.heroLine2}
+              </span>
+            </h1>
 
-          <div style={rise(3).style} className="hero-rise mt-9 flex flex-wrap gap-3">
-            <a href={LINKS.interestForm} target="_blank" rel="noopener noreferrer" className="btn-accent">
-              Register your interest
-            </a>
-            <Link href="/about" className="btn border border-paper/40 text-paper hover:bg-paper hover:text-pine-deep">
-              Learn about us
-            </Link>
+            <p style={rise(3)} className="hero-rise t-lead mt-8 max-w-md text-graphite/80">
+              {HOME.heroSub}
+            </p>
+
+            <div style={rise(4)} className="hero-rise mt-10 flex flex-wrap gap-3">
+              <a href={LINKS.interestForm} target="_blank" rel="noopener noreferrer" className="s-btn s-btn-primary">
+                Register your interest
+                <Arrow />
+              </a>
+              <Link href="/about" className="s-btn s-btn-outline">
+                Learn about us
+              </Link>
+            </div>
           </div>
 
-          {/* Foot of the hero: the chapter line, and a quiet cue that the
-              page continues. */}
-          <div
-            style={rise(4).style}
-            className="hero-rise mt-16 flex items-center justify-between gap-6 border-t border-paper/20 pt-5 sm:mt-24"
-          >
-            <span className="inline-flex items-center gap-3 text-sm font-medium text-paper/80">
-              <span className="h-px w-6 bg-marigold" />
-              {HOME.heroEyebrow}
-            </span>
-            <div className="relative h-8 w-px overflow-hidden bg-paper/25" aria-hidden>
-              <span className="absolute inset-x-0 top-0 h-3 bg-marigold" />
-            </div>
+          <div className="relative min-h-[62svh] lg:min-h-0">
+            {HOME.heroImage && (
+              <div className="s-hero-photo absolute inset-0 overflow-hidden bg-deodar">
+                <Image
+                  src={HOME.heroImage}
+                  alt="Himalayan foothills near Bharog Baneri"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 55vw"
+                  placeholder={placeholderFor(HOME.heroImage) ? "blur" : "empty"}
+                  blurDataURL={placeholderFor(HOME.heroImage)?.blur}
+                  className="object-cover object-[50%_40%]"
+                />
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* ------------------------------------------------------------- MISSION */}
-      <section className="container-rishi py-24 lg:py-32">
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="lg:col-span-6">
+      <section className="s-section">
+        <div className="s-container grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+          <div className="lg:col-span-5 lg:pt-2">
             <SectionHeading eyebrow="Why we exist" title={HOME.missionTitle} />
-            <Reveal delay={0.1}>
-              <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-ink/75">
-                {HOME.missionBody}
-              </p>
-            </Reveal>
-
-            {/* The chapter at a glance, set as a ledger rather than a row of
-                big-number boxes. */}
-            <dl className="mt-10 max-w-[34rem] border-b border-pine/15">
-              {HOME.stats.map((s, i) => (
-                <Reveal key={s.label} delay={i * 0.1} className="flex items-baseline justify-between gap-6 border-t border-pine/15 py-4">
-                  <dt className="text-[15px] text-ink/75">{s.label}</dt>
-                  <dd className="font-display text-3xl font-semibold tabular-nums text-pine">
-                    {s.value}
-                  </dd>
-                </Reveal>
-              ))}
-            </dl>
-
-            <Reveal delay={0.1}>
-              <div className="mt-10 flex flex-wrap gap-3">
-                <Link href="/about" className="btn-primary">
-                  Our story
-                </Link>
-                <Link href="/projects" className="btn-ghost">
-                  Explore projects
-                </Link>
-              </div>
-            </Reveal>
+            <p className="t-lead mt-6 text-graphite/80">{HOME.missionBody}</p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link href="/about" className="s-btn s-btn-dark">
+                Our story
+              </Link>
+              <Link href="/projects" className="s-btn s-btn-outline">
+                Explore projects
+              </Link>
+            </div>
           </div>
-          <Reveal delay={0.15} className="lg:col-span-6">
+          <div className="lg:col-span-7">
             <Media
               src={HOME.missionImage}
               alt="Project RISHI members in the field"
               label="Mission / field photo"
-              className="aspect-[4/3] w-full lg:aspect-auto lg:h-full lg:min-h-[34rem]"
-              rounded="rounded-2xl"
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="aspect-[4/3] w-full"
+              rounded="rounded-[var(--r-media)]"
+              sizes="(max-width: 1024px) 100vw, 58vw"
             />
-          </Reveal>
+          </div>
         </div>
+
+        <dl className="s-container mt-[var(--space-block)] grid gap-x-8 gap-y-10 sm:grid-cols-3">
+          {HOME.stats.map((s) => (
+            <div key={s.label} className="flex flex-col-reverse border-t-[3px] border-saffron pt-6">
+              <dt className="t-small mt-3 text-stone">{s.label}</dt>
+              <dd className="t-display t-num text-deodar">{s.value}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       {/* ------------------------------------------------------------ PROJECTS */}
-      <section className="relative overflow-hidden bg-pine-deep py-24 text-paper lg:py-32">
-        <Contours className="absolute inset-x-0 top-0 h-80 w-full text-marigold" opacity={0.1} />
-        <div className="container-rishi relative z-10">
+      <section className="s-section bg-mist">
+        <div className="s-container">
           <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
             <div className="lg:col-span-6">
-              <SectionHeading eyebrow="What we do" title="Four teams, One village" accent="pine" tone="dark" />
+              <SectionHeading eyebrow="What we do" title="Four teams, One village" />
             </div>
-            <Reveal delay={0.1} className="lg:col-span-5 lg:col-start-8">
-              <p className="max-w-xl text-lg leading-relaxed text-paper/70">
-                Our work in Bharog Baneri is carried out by four project teams, each
-                tackling a different pillar of sustainable development.
-              </p>
-            </Reveal>
+            <p className="t-lead text-graphite/75 lg:col-span-5 lg:col-start-8">
+              Our work in Bharog Baneri is carried out by four project teams, each
+              tackling a different pillar of sustainable development.
+            </p>
           </div>
 
-          <div className="mt-14 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:mt-16">
-            {PROJECTS.map((p, i) => (
-              <Reveal as="article" key={p.slug} delay={i * 0.08}>
-                <Link href={`/projects/${p.slug}`} className="group block rounded-2xl">
+          <div className="mt-[var(--space-block)] grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+            {PROJECTS.map((p) => (
+              <article key={p.slug}>
+                <Link href={`/projects/${p.slug}`} className="group block rounded-[var(--r-media)]">
                   <Media
                     src={p.image}
                     alt={p.name}
                     label={`${p.name} cover`}
-                    className="aspect-[3/2] w-full [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover:[&_img]:scale-[1.03]"
-                    rounded="rounded-2xl"
-                    sizes="(max-width: 640px) 100vw, 50vw"
+                    className="aspect-[4/5] w-full"
+                    rounded="rounded-[var(--r-media)]"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                   />
-                  <div className="mt-6 flex items-start justify-between gap-6">
-                    <div>
-                      <h3 className="font-display text-2xl font-semibold sm:text-[1.75rem]">{p.name}</h3>
-                      <p className="mt-2 line-clamp-2 max-w-md text-[15px] leading-relaxed text-paper/65">
-                        {p.intro}
-                      </p>
-                    </div>
-                    <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-paper/25 text-paper transition-colors duration-200 group-hover:border-marigold group-hover:bg-marigold group-hover:text-pine-deep">
-                      <svg className="h-[18px] w-[18px] transition-transform duration-200 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
-                    </span>
-                  </div>
+                  <h3 className="t-h3 mt-5 flex items-center justify-between gap-3 text-deodar">
+                    <span className="decoration-2 underline-offset-[0.2em] group-hover:underline">{p.name}</span>
+                    <Arrow className="h-5 w-5 shrink-0 transition-transform duration-150 group-hover:translate-x-1" />
+                  </h3>
+                  <p className="t-small mt-2 line-clamp-3 text-stone">{p.intro}</p>
                 </Link>
-              </Reveal>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
       {/* --------------------------------------------------------- METHODOLOGY */}
-      {/* The order is the point, so the steps sit on one ruled line, read left
-          to right. */}
-      <section className="container-rishi pb-16 pt-24 lg:pb-20 lg:pt-32">
-        <SectionHeading eyebrow="How we work" title={ABOUT.methodology.title} />
-        <ol className="mt-12 grid gap-x-6 sm:grid-cols-3 lg:mt-14 lg:grid-cols-5">
-          {ABOUT.methodology.steps.map((step, i) => (
-            <Reveal as="li" key={step} delay={i * 0.08} className="border-t border-pine/25 pb-6 pt-5">
-              <span className="block text-sm font-semibold tabular-nums text-marigold-ink">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="mt-6 block font-display text-2xl font-semibold text-pine-deep">
-                {step}
-              </span>
-            </Reveal>
-          ))}
-        </ol>
+      {/* A real sequence, so it reads as one line: five stops, left to right
+          (top to bottom on phones). */}
+      <section className="s-dark s-section bg-deodar text-snow">
+        <div className="s-container">
+          <SectionHeading eyebrow="How we work" title={ABOUT.methodology.title} tone="dark" />
+          <ol className="relative mt-[var(--space-block)] grid gap-9 before:absolute before:bottom-3 before:left-[0.6875rem] before:top-3 before:w-px before:bg-snow/25 sm:grid-cols-5 sm:gap-6 sm:before:bottom-auto sm:before:left-0 sm:before:right-0 sm:before:top-[0.6875rem] sm:before:h-px sm:before:w-auto">
+            {ABOUT.methodology.steps.map((step, i) => (
+              <li key={step} className="relative grid grid-cols-[1.375rem_1fr] gap-x-5 sm:block">
+                <span className="relative z-10 mt-0.5 block h-[1.375rem] w-[1.375rem] rounded-full border-2 border-saffron bg-deodar sm:mt-0" aria-hidden />
+                <div className="sm:mt-6">
+                  <span className="t-label t-num block text-saffron">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="t-h3 mt-1.5 block">{step}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
 
       {/* ----------------------------------------------------------- GET INVOLVED */}
-      <section className="container-rishi pb-24 lg:pb-32">
-        <div className="grid gap-5 lg:grid-cols-2">
-          <Reveal className="relative overflow-hidden rounded-2xl bg-pine p-10 text-paper sm:p-12">
-            <Contours className="absolute inset-0 h-full w-full text-paper" opacity={0.12} />
-            <div className="relative z-10 flex h-full flex-col items-start">
-              <h3 className="font-display text-3xl font-semibold sm:text-4xl">Join us</h3>
-              <p className="mb-8 mt-3 max-w-md text-lg text-paper/75">
-                Applications are open now!
-              </p>
-              <Link href="/apply" className="btn-accent mt-auto">
-                See recruitment dates
-              </Link>
-            </div>
-          </Reveal>
+      <section className="s-section">
+        <div className="s-container grid gap-4 lg:grid-cols-2">
+          <div className="flex flex-col items-start rounded-[var(--r-media)] bg-saffron p-[clamp(2rem,4vw,3.5rem)] text-deodar-deep">
+            <h2 className="t-h2">Join us</h2>
+            <p className="t-lead mb-10 mt-4 max-w-md">
+              Applications are open now!
+            </p>
+            <Link href="/apply" className="s-btn s-btn-dark mt-auto">
+              See recruitment dates
+              <Arrow />
+            </Link>
+          </div>
 
-          <Reveal delay={0.1} className="relative overflow-hidden rounded-2xl bg-marigold p-10 text-pine-deep sm:p-12">
-            <div className="relative z-10 flex h-full flex-col items-start">
-              <h3 className="font-display text-3xl font-semibold sm:text-4xl">Become a donor</h3>
-              <p className="mb-8 mt-3 max-w-md text-lg text-pine-deep/90">
-                We appreciate donations of all sizes — they keep us running and
-                directly support our work in Bharog Baneri.
-              </p>
-              <a href={LINKS.donate} className="btn mt-auto bg-pine-deep text-paper hover:-translate-y-0.5">
-                Donate now
-              </a>
-            </div>
-          </Reveal>
+          <div className="s-dark flex flex-col items-start rounded-[var(--r-media)] bg-deodar p-[clamp(2rem,4vw,3.5rem)] text-snow">
+            <h2 className="t-h2">Become a donor</h2>
+            <p className="t-lead mb-10 mt-4 max-w-md text-snow/90">
+              We appreciate donations of all sizes — they keep us running and
+              directly support our work in Bharog Baneri.
+            </p>
+            <a href={LINKS.donate} className="s-btn s-btn-primary mt-auto">
+              Donate now
+              <Arrow />
+            </a>
+          </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

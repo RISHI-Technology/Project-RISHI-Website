@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import "./site.css";       // public website design system ("Field Report"; scoped to .site). Loaded
+                           // before globals.css so Tailwind utilities can override its classes.
 import "./globals.css";
 import "./dark-theme.css"; // dashboard dark mode (generated: scripts/gen-dark-theme.mjs)
 import "./ai-theme.css";   // RISHI AI light/dark (generated: scripts/gen-ai-theme.mjs)
@@ -25,6 +27,24 @@ const fraunces = localFont({
 const inter = localFont({
   src: [{ path: "./fonts/Inter.woff2", style: "normal" }],
   variable: "--font-inter",
+  display: "swap",
+});
+
+// Public website type (app/site.css): Eczar for display, Mukta for text.
+const eczar = localFont({
+  src: [{ path: "./fonts/Eczar.woff2", weight: "400 800", style: "normal" }],
+  variable: "--font-eczar",
+  display: "swap",
+});
+
+const mukta = localFont({
+  src: [
+    { path: "./fonts/Mukta-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Mukta-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Mukta-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/Mukta-700.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-mukta",
   display: "swap",
 });
 
@@ -57,7 +77,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${eczar.variable} ${mukta.variable}`} suppressHydrationWarning>
       <head>
         {/* Apply dashboard dark mode and the Liquid Glass interface (the default;
             "classic" opts out, RISHI AI is excluded — see components/GlassMode)
