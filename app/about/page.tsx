@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Media from "@/components/Media";
+import Reveal from "@/components/Reveal";
 import Contours from "@/components/Contours";
 import SectionHeading from "@/components/SectionHeading";
 import PhotoWall from "@/components/PhotoWall";
@@ -12,23 +13,22 @@ export const metadata: Metadata = {
     "Project RISHI is a student-run non-profit working with the village of Bharog Baneri, Himachal Pradesh.",
 };
 
-const ExternalArrow = ({ className = "h-4 w-4" }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M7 17 17 7M9 7h8v8" />
-  </svg>
-);
-
 export default function AboutPage() {
   return (
     <>
       {/* Hero */}
       <section className="relative overflow-hidden bg-pine pt-[var(--header-h)] text-paper">
         <Contours className="absolute inset-0 h-full w-full text-paper" opacity={0.12} />
-        <div className="container-rishi relative z-10 py-20 lg:py-24">
-          <p className="eyebrow text-marigold-soft">About us</p>
-          <h1 className="mt-4 max-w-3xl font-display text-5xl font-medium leading-[1.04] tracking-[-0.02em] sm:text-6xl">
-            {ABOUT.heading}
-          </h1>
+        <div className="container-rishi relative z-10 py-20 lg:py-28">
+          <Reveal>
+            <span className="eyebrow text-marigold-soft">
+              <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
+              About Us
+            </span>
+            <h1 className="mt-4 max-w-3xl font-display text-5xl font-semibold leading-[1.02] sm:text-6xl">
+              {ABOUT.heading}
+            </h1>
+          </Reveal>
         </div>
       </section>
 
@@ -36,101 +36,134 @@ export default function AboutPage() {
       <section className="container-rishi py-20">
         <div className="grid gap-14 lg:grid-cols-[1.1fr_1fr]">
           <div>
-            <SectionHeading title={ABOUT.mission.title} />
-            <p className="mt-6 text-lg leading-relaxed text-ink/75">
-              {ABOUT.mission.body}
-            </p>
-            <Link href="/projects" className="btn-primary mt-8">
-              Explore our teams
-            </Link>
+            <SectionHeading eyebrow="What drives us" title={ABOUT.mission.title} />
+            <Reveal delay={0.1}>
+              <p className="mt-6 text-lg leading-relaxed text-ink/75">
+                {ABOUT.mission.body}
+              </p>
+              <Link href="/projects" className="btn-primary mt-7">
+                Explore our teams
+              </Link>
+            </Reveal>
           </div>
 
-          <div className="rounded-2xl border border-pine/10 bg-pine/[0.03] p-8">
-            <p className="eyebrow text-ink/70">{ABOUT.methodology.title}</p>
-            <ol className="mt-6 divide-y divide-pine/10">
-              {ABOUT.methodology.steps.map((step, i) => (
-                <li key={step} className="flex items-baseline gap-4 py-3 first:pt-0 last:pb-0">
-                  <span className="w-4 shrink-0 font-mono text-sm tabular-nums text-ink/60">
-                    {i + 1}
-                  </span>
-                  <span className="font-display text-xl font-medium text-pine-deep">
-                    {step}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <Reveal delay={0.15}>
+            <div className="rounded-3xl border border-pine/12 bg-pine/[0.03] p-8">
+              <p className="eyebrow text-sage-deep">{ABOUT.methodology.title}</p>
+              <ol className="mt-5 space-y-3">
+                {ABOUT.methodology.steps.map((step, i) => (
+                  <li key={step} className="flex items-center gap-4">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-marigold font-display text-sm font-semibold text-pine-deep">
+                      {i + 1}
+                    </span>
+                    <span className="font-display text-lg font-semibold text-pine-deep">
+                      {step}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* History + Location */}
       <section className="bg-pine-deep py-20 text-paper">
         <div className="container-rishi grid gap-12 lg:grid-cols-2">
-          <div>
-            <h2 className="font-display text-2xl font-medium">{ABOUT.history.title}</h2>
-            <p className="mt-4 text-lg leading-relaxed text-paper/80">
+          <Reveal>
+            <span className="eyebrow text-marigold-soft">
+              <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
+              {ABOUT.history.title}
+            </span>
+            <p className="mt-5 text-lg leading-relaxed text-paper/80">
               {ABOUT.history.body}
             </p>
-          </div>
-          <div>
-            <h2 className="font-display text-2xl font-medium">{ABOUT.location.title}</h2>
-            <p className="mt-4 text-lg leading-relaxed text-paper/80">
+          </Reveal>
+          <Reveal delay={0.1}>
+            <span className="eyebrow text-marigold-soft">
+              <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
+              {ABOUT.location.title}
+            </span>
+            <p className="mt-5 text-lg leading-relaxed text-paper/80">
               {ABOUT.location.body}
             </p>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Our Team */}
       <section className="container-rishi py-20">
-        <SectionHeading title="Our team" />
-        <Media
-          src={ABOUT.teamImage}
-          alt="The Project RISHI Berkeley team"
-          label="Team group photo"
-          className="mt-8 aspect-[3/2] w-full"
-          rounded="rounded-2xl"
-          sizes="100vw"
-        />
+        <SectionHeading eyebrow="The people" title="Our Team" />
+        <Reveal delay={0.1}>
+          <Media
+            src={ABOUT.teamImage}
+            alt="The Project RISHI Berkeley team"
+            label="Team group photo"
+            className="mt-8 aspect-[3/2] w-full"
+            rounded="rounded-3xl"
+            sizes="100vw"
+          />
+        </Reveal>
       </section>
 
       {/* Life at Project RISHI — gallery */}
       <section className="container-rishi pb-20">
-        <SectionHeading title="Life at Project RISHI" />
-        <PhotoWall images={ABOUT.gallery.filter(Boolean) as string[]} />
+        <SectionHeading eyebrow="In Action" title="Life at Project RISHI" />
+        <Reveal delay={0.1}>
+          <PhotoWall images={ABOUT.gallery.filter(Boolean) as string[]} />
+        </Reveal>
       </section>
 
       {/* Chapters around the country */}
-      <section className="border-t border-pine/10 bg-marigold/[0.07] py-20">
+      <section className="bg-marigold/10 py-20">
         <div className="container-rishi">
-          <SectionHeading title="Chapters around the country" />
+          <SectionHeading eyebrow="A national network" title="Chapters around the country" />
           <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {ABOUT.chapters.map((c) => (
-              <a
-                key={c.name}
-                href={c.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center justify-between gap-3 rounded-xl border border-pine/10 bg-paper px-4 py-3 transition-colors duration-150 hover:border-pine/30"
-              >
-                <span className="text-sm font-medium text-ink/85">{c.name}</span>
-                <ExternalArrow className="h-4 w-4 shrink-0 text-ink/40 transition-colors duration-150 group-hover:text-pine" />
-              </a>
+            {ABOUT.chapters.map((c, i) => (
+              <Reveal key={c.name} delay={(i % 4) * 0.05}>
+                <a
+                  href={c.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-between rounded-xl border border-pine/12 bg-paper px-4 py-3.5 transition-colors hover:border-pine hover:bg-pine hover:text-paper"
+                >
+                  <span className="text-sm font-medium">{c.name}</span>
+                  <svg
+                    className="h-4 w-4 opacity-40 transition-opacity group-hover:opacity-100"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M7 17 17 7M9 7h8v8" />
+                  </svg>
+                </a>
+              </Reveal>
             ))}
           </div>
 
-          {/* The national organization */}
-          <a
-            href={LINKS.nationalSite}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group mt-6 flex items-center justify-between gap-4 rounded-2xl bg-pine px-6 py-5 text-paper transition-colors duration-150 hover:bg-pine-deep sm:px-8"
-          >
-            <span className="font-display text-xl font-medium">
-              Visit the national Project RISHI site
-            </span>
-            <ExternalArrow className="h-5 w-5 shrink-0 text-paper/70 transition-colors duration-150 group-hover:text-marigold-soft" />
-          </a>
+          {/* Standout link to the national organization */}
+          <Reveal delay={0.1}>
+            <a
+              href={LINKS.nationalSite}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group mt-6 flex items-center justify-center gap-3 rounded-2xl bg-pine px-8 py-5 text-paper shadow-lg shadow-pine/20 transition-all hover:-translate-y-0.5 hover:bg-pine-deep"
+            >
+              <span className="font-display text-lg font-semibold">
+                Visit the National Project RISHI Webpage
+              </span>
+              <svg
+                className="h-5 w-5 transition-transform group-hover:translate-x-1"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M7 17 17 7M9 7h8v8" />
+              </svg>
+            </a>
+          </Reveal>
         </div>
       </section>
     </>

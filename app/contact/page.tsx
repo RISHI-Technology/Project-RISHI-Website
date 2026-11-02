@@ -15,14 +15,15 @@ export default function ContactPage() {
       <div className="container-rishi relative z-10 grid min-h-[70vh] gap-12 py-20 lg:grid-cols-2 lg:items-center">
         <Reveal>
           <span className="eyebrow text-marigold-soft">
+            <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
             Contact
           </span>
-          <h1 className="mt-4 font-display text-5xl font-medium leading-[1.04] tracking-[-0.02em] sm:text-6xl">
-            Let&rsquo;s talk
+          <h1 className="mt-4 font-display text-5xl font-semibold leading-[1.02] sm:text-6xl">
+            Let&rsquo;s talk.
           </h1>
           <p className="mt-6 max-w-md text-lg text-paper/80">
-            Questions about our work or partnerships? Reach out and
-            we&rsquo;ll get back to you.
+            Questions about our work or partnerships? Reach out
+            — we&rsquo;d love to hear from you.
           </p>
           <a href={`mailto:${ORG.email}`} className="btn-accent mt-8">
             Email us
@@ -30,21 +31,21 @@ export default function ContactPage() {
         </Reveal>
 
         <Reveal delay={0.12}>
-          <div className="space-y-6 rounded-2xl border border-paper/15 bg-paper/[0.04] p-8">
+          <div className="space-y-6 rounded-3xl border border-paper/15 bg-paper/[0.04] p-8">
             <div>
-              <p className="eyebrow text-paper/70">General inquiries</p>
+              <p className="eyebrow text-marigold-soft">General inquiries</p>
               <a href={`mailto:${ORG.email}`} className="mt-2 block text-lg text-paper underline-offset-2 hover:underline">
                 {ORG.email}
               </a>
             </div>
             <div className="h-px bg-paper/10" />
             <div>
-              <p className="eyebrow text-paper/70">Find us</p>
+              <p className="eyebrow text-marigold-soft">Find us</p>
               <p className="mt-2 text-lg text-paper/85">{ORG.address}</p>
             </div>
             <div className="h-px bg-paper/10" />
             <div>
-              <p className="eyebrow text-paper/70">Socials</p>
+              <p className="eyebrow text-marigold-soft">Socials</p>
               <div className="mt-3 flex gap-4">
                 <a href={LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-paper/80 underline-offset-2 hover:text-paper hover:underline">
                   Instagram

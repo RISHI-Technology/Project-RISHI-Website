@@ -118,7 +118,7 @@ function SwatchPopover({ label, swatches, onPick, children }: {
           {swatches.map((c) => (
             <button key={c} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { onPick(c); setOpen(false); }}
               title={c === "transparent" ? "None" : c}
-              className="h-6 w-6 rounded border border-pine/15 transition-colors hover:border-pine/60"
+              className="h-6 w-6 rounded border border-pine/15 transition-transform hover:scale-110"
               style={c === "transparent"
                 ? { backgroundImage: "linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%)", backgroundSize: "8px 8px", backgroundPosition: "0 0,4px 4px" }
                 : { background: c }} />

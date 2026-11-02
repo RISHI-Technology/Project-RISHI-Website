@@ -175,8 +175,8 @@ export default function FilesSettingsPanel() {
   });
 
   return (
-    <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-pine/15 bg-pine/[0.03] p-8">
-      <h2 className="font-display text-lg font-medium text-pine-deep">Files</h2>
+    <div className="mx-auto mt-6 max-w-xl rounded-3xl border border-pine/15 bg-pine/[0.03] p-8">
+      <h2 className="font-display text-lg font-semibold text-pine-deep">Files</h2>
       <p className="mt-1 text-sm text-ink/75">
         The Files section mirrors the club&apos;s Drive folders. Only names and links are copied —
         the documents themselves stay in Drive, so nothing here goes out of date.

@@ -76,7 +76,7 @@ export default function Media({
           <circle cx="8.5" cy="8.5" r="1.5" />
           <path d="m21 15-5-5L5 21" />
         </svg>
-        <span className="rounded-md bg-ink/65 px-2 py-1 text-xs font-medium text-paper">
+        <span className="rounded-full bg-ink/65 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-paper">
           {label ?? "Add image"}
         </span>
       </div>

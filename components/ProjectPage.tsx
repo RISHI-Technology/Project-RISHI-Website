@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Media from "@/components/Media";
+import Reveal from "@/components/Reveal";
 import SectionHeading from "@/components/SectionHeading";
 import Contours from "@/components/Contours";
 import { PROJECTS, LINKS } from "@/lib/content";
@@ -15,62 +16,68 @@ export default function ProjectPage({ project }: { project: Project }) {
       <section className="relative overflow-hidden bg-pine pt-[var(--header-h)] text-paper">
         <Contours className="absolute inset-0 h-full w-full text-paper" opacity={0.1} />
         <div className="container-rishi relative z-10 grid gap-10 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
-          <div>
-            <p className="eyebrow text-marigold-soft">Project team</p>
-            <h1 className="mt-4 font-display text-5xl font-medium leading-[1.04] tracking-[-0.02em] sm:text-6xl">
+          <Reveal>
+            <span className="eyebrow text-marigold-soft">
+              <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
+              Project Team
+            </span>
+            <h1 className="mt-4 font-display text-4xl font-semibold leading-[1.05] sm:text-6xl">
               {project.name}
             </h1>
             <p className="mt-6 max-w-xl text-paper/80">{project.intro}</p>
-          </div>
-          <Media
-            src={(project as { heroImage?: string | null }).heroImage ?? null}
-            alt={`${project.name} team in Bharog Baneri`}
-            label={`${project.name} hero photo`}
-            className="aspect-[4/3] w-full"
-            rounded="rounded-2xl"
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
+          </Reveal>
+          <Reveal delay={0.12}>
+            <Media
+              src={(project as { heroImage?: string | null }).heroImage ?? null}
+              alt={`${project.name} team in Bharog Baneri`}
+              label={`${project.name} hero photo`}
+              className="aspect-[4/3] w-full"
+              rounded="rounded-3xl"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+          </Reveal>
         </div>
       </section>
 
       {/* Quote */}
       {project.quote && (
-        <section className="border-b border-pine/10 bg-marigold/[0.07]">
-          <figure className="container-rishi py-16">
-            <blockquote className="mx-auto max-w-3xl text-center font-display text-2xl leading-snug text-pine-deep sm:text-3xl">
-              &ldquo;{project.quote}&rdquo;
-            </blockquote>
-            {project.quoteAuthor && (
-              <figcaption className="mt-4 text-center text-sm text-ink/70">
-                {project.quoteAuthor}
-              </figcaption>
-            )}
-          </figure>
+        <section className="bg-marigold/10">
+          <div className="container-rishi py-14">
+            <Reveal className="mx-auto max-w-3xl text-center">
+              <p className="font-display text-2xl italic leading-snug text-pine-deep sm:text-3xl">
+                &ldquo;{project.quote}&rdquo;
+              </p>
+              {project.quoteAuthor && (
+                <p className="mt-4 text-sm font-semibold uppercase tracking-[0.18em] text-sage-deep">
+                  — {project.quoteAuthor}
+                </p>
+              )}
+            </Reveal>
+          </div>
         </section>
       )}
 
       {/* Highlights */}
       <section className="container-rishi py-20">
-        <SectionHeading title="Project highlights" />
+        <SectionHeading eyebrow="This term" title="Project Highlights" />
         <div
           className={`mt-10 grid gap-8 ${
             project.highlights.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"
           }`}
         >
-          {project.highlights.map((h) => (
-            <article key={h.title}>
+          {project.highlights.map((h, i) => (
+            <Reveal as="article" key={h.title} delay={i * 0.08} className="group">
               <Media
                 src={h.image}
                 alt={h.title}
                 label={`${h.title} photo`}
                 className="aspect-[16/10] w-full"
-                rounded="rounded-xl"
               />
-              <h3 className="mt-5 font-display text-xl font-medium text-pine-deep">
+              <h3 className="mt-5 font-display text-xl font-semibold text-pine-deep">
                 {h.title}
               </h3>
               <p className="mt-2 text-ink/70">{h.body}</p>
-            </article>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -78,13 +85,21 @@ export default function ProjectPage({ project }: { project: Project }) {
       {/* Past projects */}
       <section className="bg-pine-deep py-20 text-paper">
         <div className="container-rishi">
-          <SectionHeading title="Past projects" tone="dark" />
-          <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-paper/10 bg-paper/10 sm:grid-cols-2">
-            {project.past.map((p) => (
-              <div key={p.title} className="bg-pine-deep p-6">
-                <h3 className="font-display text-lg font-medium">{p.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-paper/70">{p.body}</p>
-              </div>
+          <SectionHeading eyebrow="Our track record" title="Past Projects" accent="pine" tone="dark" />
+          <div className="mt-10 grid gap-px overflow-hidden rounded-3xl border border-paper/10 bg-paper/10 sm:grid-cols-2">
+            {project.past.map((p, i) => (
+              <Reveal
+                as="div"
+                key={p.title}
+                delay={i * 0.06}
+                className="bg-pine-deep p-7"
+              >
+                <span className="font-display text-sm text-marigold">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3 className="mt-2 font-display text-lg font-semibold">{p.title}</h3>
+                <p className="mt-2 text-sm text-paper/70">{p.body}</p>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -92,43 +107,42 @@ export default function ProjectPage({ project }: { project: Project }) {
 
       {/* CTA + other projects */}
       <section className="container-rishi py-20">
-        <div className="rounded-2xl border border-pine/10 bg-marigold/10 p-8 sm:p-12">
-          <h2 className="font-display text-3xl font-medium text-pine-deep">
-            Want to work on {project.name}?
-          </h2>
-          <p className="mt-3 max-w-xl text-ink/70">
-            We recruit at the start of every fall and spring semester. Come find
-            your team.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/apply" className="btn-primary">
-              Apply to join
-            </Link>
-            <a href={LINKS.donate} className="btn-ghost">
-              Support our work
-            </a>
-          </div>
+        <div className="rounded-3xl bg-marigold/15 p-8 text-center sm:p-12">
+          <Reveal>
+            <h2 className="font-display text-3xl font-semibold text-pine-deep">
+              Want to work on {project.name}?
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-ink/70">
+              We recruit at the start of every Fall and Spring semester. Come find
+              your team.
+            </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Link href="/apply" className="btn-primary">
+                Apply to join
+              </Link>
+              <a href={LINKS.donate} className="btn-ghost">
+                Support our work
+              </a>
+            </div>
+          </Reveal>
         </div>
 
-        <div className="mt-16">
-          <p className="eyebrow text-ink/70">Other teams</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-14">
+          <p className="eyebrow text-sage-deep">Other teams</p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
             {others.map((o) => (
               <Link
                 key={o.slug}
                 href={`/projects/${o.slug}`}
-                className="group flex items-center justify-between gap-4 rounded-xl border border-pine/10 px-5 py-4 transition-colors duration-150 hover:border-pine/30 hover:bg-pine/[0.03]"
+                className="group flex items-center justify-between rounded-2xl border border-pine/15 p-5 transition-colors hover:border-pine hover:bg-pine hover:text-paper"
               >
-                <span className="font-display text-lg font-medium text-pine-deep">{o.name}</span>
+                <span className="font-display text-lg font-semibold">{o.name}</span>
                 <svg
-                  className="h-4 w-4 shrink-0 text-ink/40 transition-colors duration-150 group-hover:text-pine"
+                  className="h-5 w-5 transition-transform group-hover:translate-x-1"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
+                  strokeWidth="2"
                 >
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>

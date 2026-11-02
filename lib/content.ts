@@ -60,15 +60,15 @@ export const NAV = [
 ];
 
 export const HOME = {
-  heroEyebrow: "Rural India Social & Health Improvement",
+  heroEyebrow: "UC Berkeley Chapter",
   heroLine1: "Project",
   heroLine2: "RISHI",
-  heroSub: "A UC Berkeley student chapter working alongside the village of Bharog Baneri, Himachal Pradesh, since 2012",
+  heroSub: "Rural India Social & Health Improvement",
   // Hero background image — replace with a wide village / team photo.
   heroImage: "/images/hero-bg.jpg" as string | null, // e.g. "/images/hero-village.jpg"
   // (No longer used — the hero now uses a centered layout over heroImage.)
   heroSideImage: null as string | null,
-  missionTitle: "Our mission",
+  missionTitle: "Our Mission",
   missionBody:
     "Project RISHI promotes the sustainable development and growth of rural Indian communities. We continually expand our resources to support our villagers — identifying issues central to our target communities and providing the means to implement solutions through extensive field research and on-campus initiatives.",
   missionImage: "/images/mission.jpg" as string | null, // e.g. "/images/mission.jpg"
@@ -268,13 +268,13 @@ export const PROJECTS = [
 ];
 
 export const ABOUT = {
-  heading: "Berkeley students, one Himalayan village, since 2012",
+  heading: "An NGO that moves forward",
   mission: {
-    title: "Mission and values",
+    title: "Mission & Values",
     body: "We take pride in promoting the sustainable development and growth of rural communities in India. In partnership with local community members, leaders, and social enterprises, we identify issues central to our target communities and provide the resources to implement solutions.",
   },
   methodology: {
-    title: "Five-step methodology",
+    title: "5-Step Methodology",
     steps: ["Understand", "Research", "Finance", "Implement", "Evaluate"],
   },
   history: {
@@ -323,7 +323,7 @@ export const ABOUT = {
 
 /** Projects index page — embedded trip video. */
 export const PROJECTS_PAGE = {
-  videoTitle: "Project work in action",
+  videoTitle: "Project Work in Action",
   videoBlurb:
     "A look at our team on the ground in Bharog Baneri — the people, the place, and the work we do together.",
   // Paste a YouTube/Vimeo EMBED url here (the "embed" form, not the watch url).
@@ -334,17 +334,17 @@ export const PROJECTS_PAGE = {
 };
 
 export const APPLY = {
-  heading: "Join Project RISHI",
-  termLabel: "Fall 2026 recruitment",
+  heading: "Thank you for your interest in Project RISHI!",
+  termLabel: "Fall 2026 Recruitment",
   // Recruitment timeline — edit dates each cycle.
   timeline: [
-    { label: "Tabling", value: "Aug 26 – Sep 10" },
-    { label: "Coffee chats", value: "Aug 31 – Sep 11" },
-    { label: "Info session 1", value: "Wed, Sep 9", time: "8 – 10 pm · Eshleman 544" },
-    { label: "Info session 2", value: "Thu, Sep 10", time: "8 – 10 pm · Dwinelle 243" },
-    { label: "Applications due", value: "Fri, Sep 11", time: "8 am" },
-    { label: "Interviews", value: "Sep 12 – 13", time: "Invite only" },
+    { label: "Tabling", value: "8/26 – 9/10" },
+    { label: "Coffee Chats", value: "8/31 – 9/11" },
+    { label: "Info Session #1", value: "Wed, September 9th", time: "8 – 10 PM @ Eshleman 544" },
+    { label: "Info Session #2", value: "Thu, September 10th", time: "8 – 10 PM @ Dwinelle 243" },
+    { label: "Applications Due", value: "Fri, September 11th", time: "8:00 AM" },
+    { label: "Interviews", value: "9/12 – 9/13 · Invite only" },
   ],
   blurb:
-    "Applications for Fall 2026 are open. Tabling, coffee chats, info sessions and interviews are below.",
+    "Applications open now!",
 };

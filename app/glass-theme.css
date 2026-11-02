@@ -1,0 +1,303 @@
+/* ==========================================================================
+   Liquid Glass — the dashboard's default interface.
+
+   Everything here is keyed on <html class="glass">, which is only ever set on
+   dashboard pages (not RISHI AI) for members who haven't chosen Classic in
+   Settings (components/GlassMode.tsx). Classic is therefore the dashboard
+   exactly as it was.
+
+   How it's built:
+   - The member's banner is a fixed, full-screen backdrop (GlassBackdrop in
+     components/DashboardBanner.tsx); the welcome banner itself goes clear.
+   - Each page section after the banner becomes a frosted pane floating over it.
+   - The glass MATERIAL is drawn by each pane's ::before/::after, never by the
+     section itself. A section with backdrop-filter/transform/isolation would
+     become the containing block for the many inline `fixed inset-0` modals
+     inside it and trap them; a pseudo-element can't. So no ancestor of real
+     content gets a filter, a transform or a stacking context from this file.
+   - Text keeps its normal colours: panes are light glass in light mode and
+     dark glass in dark mode (app/dark-theme.css still applies inside them).
+   ========================================================================== */
+
+/* ---- Material tokens ---------------------------------------------------- */
+html.glass {
+  --g-radius: 28px;
+  --g-blur: blur(32px) saturate(190%) brightness(1.08);
+  --g-pane: rgb(250 248 242 / 0.78);
+  --g-pane-sheen: rgb(255 255 255 / 0.38);
+  --g-rim-hi: rgb(255 255 255 / 0.9);
+  --g-rim: rgb(255 255 255 / 0.32);
+  --g-shadow: 0 30px 70px -30px rgb(4 14 10 / 0.6), 0 2px 10px -2px rgb(4 14 10 / 0.2);
+  --g-fill: rgb(255 255 255 / 0.46);
+  --g-fill-edge: rgb(255 255 255 / 0.78);
+  --g-fill-shadow: 0 1px 2px rgb(20 54 40 / 0.06), inset 0 1px 0 rgb(255 255 255 / 0.9);
+  --g-light: rgb(255 255 255 / 0.55);
+  --g-float: rgb(250 248 242 / 0.8);
+  --g-float-edge: rgb(255 255 255 / 0.7);
+  --g-scrim-top: rgb(5 14 10 / 0.45);
+  --g-scrim-mid: rgb(5 14 10 / 0.1);
+  --g-scrim-low: rgb(5 14 10 / 0.34);
+}
+html.glass.dark {
+  --g-blur: blur(32px) saturate(170%);
+  --g-pane: rgb(9 19 15 / 0.64);
+  --g-pane-sheen: rgb(255 255 255 / 0.05);
+  --g-rim-hi: rgb(255 255 255 / 0.26);
+  --g-rim: rgb(255 255 255 / 0.07);
+  --g-shadow: 0 30px 70px -30px rgb(0 0 0 / 0.8), 0 2px 10px -2px rgb(0 0 0 / 0.35);
+  --g-fill: rgb(255 255 255 / 0.045);
+  --g-fill-edge: rgb(255 255 255 / 0.1);
+  --g-fill-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07);
+  --g-light: rgb(255 255 255 / 0.12);
+  --g-float: rgb(14 26 20 / 0.82);
+  --g-float-edge: rgb(255 255 255 / 0.12);
+  --g-scrim-top: rgb(3 9 6 / 0.6);
+  --g-scrim-mid: rgb(3 9 6 / 0.35);
+  --g-scrim-low: rgb(3 9 6 / 0.55);
+}
+
+/* ---- Backdrop: the member's banner, full screen, fixed ------------------- */
+.glass-backdrop { display: none; }
+html.glass .glass-backdrop {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* Large-viewport height: mobile toolbars collapsing never resize (and so
+     never re-crop) the picture. */
+  height: 100vh;
+  height: 100lvh;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+  background: #0d1f17;
+}
+.glass-backdrop-media {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.03);
+  transition: opacity 600ms ease, transform 1400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.glass-backdrop-media.is-ready { opacity: 1; transform: none; }
+/* Light from above, a gentle dark edge where the welcome text sits, and enough
+   weight at the top for the white navigation to read on any picture. */
+.glass-backdrop-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, var(--g-scrim-top) 0%, var(--g-scrim-mid) 32%, var(--g-scrim-mid) 62%, var(--g-scrim-low) 100%),
+    linear-gradient(90deg, rgb(5 14 10 / 0.38) 0%, rgb(5 14 10 / 0) 60%);
+}
+
+/* ---- The welcome banner goes clear: the backdrop shows through ---------- */
+html.glass [data-banner-bg] { display: none; }
+html.glass .dash-shell > [data-glass-hero] { background: transparent; }
+html.glass .dash-shell > [data-dashboard-banner] :is(h1, h2) {
+  text-shadow: 0 2px 28px rgb(0 0 0 / 0.28);
+}
+
+/* ---- Panes: each section after the banner ------------------------------- */
+html.glass .dash-shell > :is([data-dashboard-banner], [data-glass-hero]) ~ section {
+  position: relative;
+  width: calc(100% - 1rem);
+  padding-top: 2rem;
+  padding-bottom: 2.25rem;
+  margin-bottom: 1rem;
+}
+@media (min-width: 640px) {
+  html.glass .dash-shell > :is([data-dashboard-banner], [data-glass-hero]) ~ section {
+    width: calc(100% - 2.5rem);
+    padding-top: 2.5rem;
+    padding-bottom: 2.75rem;
+    margin-bottom: 1.25rem;
+  }
+}
+/* The material */
+html.glass .dash-shell > :is([data-dashboard-banner], [data-glass-hero]) ~ section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: var(--g-radius);
+  background:
+    linear-gradient(180deg, var(--g-pane-sheen) 0, rgb(255 255 255 / 0) 260px),
+    var(--g-pane);
+  -webkit-backdrop-filter: var(--g-blur);
+  backdrop-filter: var(--g-blur);
+  box-shadow: var(--g-shadow);
+  animation: glass-materialize 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+/* The rim: light catching the edge, brightest where it faces the light. */
+html.glass .dash-shell > :is([data-dashboard-banner], [data-glass-hero]) ~ section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: var(--g-radius);
+  padding: 1px;
+  background: linear-gradient(170deg, var(--g-rim-hi) 0, var(--g-rim) 160px, rgb(255 255 255 / 0) 45%, var(--g-rim) 92%, var(--g-rim-hi) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: glass-fade 700ms ease both;
+}
+/* A pane arrives as a material: it gains its body as it settles, rather than
+   just fading in. Opacity + scale only — cheap to animate. */
+@keyframes glass-materialize {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes glass-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- Surfaces inside a pane: clear glass "fills", not more frosting -------
+   (A light translucent layer on another doesn't get a second blur.)
+   Only in-flow surfaces: anything floating — menus, popovers, dialogs, sticky
+   bars — keeps its solid background, so whatever it covers can't show through.
+   Surfaces with their own hover colour get it back while hovered.
+   (Each selector is ONE compound — no whitespace between its parts, which
+   would turn them into descendant selectors.) */
+html.glass .dash-shell > section :is(.bg-paper, .bg-pine\/\[0\.02\], .bg-pine\/\[0\.03\], .bg-pine\/\[0\.04\]):not(.absolute, .fixed, .sticky, [role="dialog"], [role="menu"], [role="listbox"], [style*="position: fixed"], [style*="position: absolute"], [data-theme-fixed]):not(:where(.absolute, .fixed, .sticky, [role="dialog"], [role="menu"], [role="listbox"], [style*="position: fixed"], [style*="position: absolute"], [data-theme-fixed]) *):not([class*="hover:bg-"]:hover) {
+  background-color: var(--g-fill);
+  box-shadow: var(--g-fill-shadow);
+}
+/* Their hairline borders become a lit edge (only on those same fills). */
+html.glass .dash-shell > section :is(.bg-paper, .bg-pine\/\[0\.02\], .bg-pine\/\[0\.03\], .bg-pine\/\[0\.04\]):is(.border-pine\/10, .border-pine\/15, .border-pine\/20, .border-ink\/10):not(.absolute, .fixed, .sticky, [role="dialog"], [role="menu"], [role="listbox"], [style*="position: fixed"], [style*="position: absolute"], [data-theme-fixed]):not(:where(.absolute, .fixed, .sticky, [role="dialog"], [role="menu"], [role="listbox"], [style*="position: fixed"], [style*="position: absolute"], [data-theme-fixed]) *):not([class*="hover:border-"]:hover) {
+  border-color: var(--g-fill-edge);
+}
+
+/* ---- Light that follows the pointer (tiles marked [data-glass-light]) ----- */
+html.glass [data-glass-light] {
+  transition-property: color, background-color, border-color, transform, box-shadow;
+  transition-duration: 150ms, 150ms, 150ms, 100ms, 150ms;
+  transition-timing-function: ease-out;
+}
+html.glass [data-glass-light]:hover {
+  background-image: radial-gradient(320px circle at var(--gx, 50%) var(--gy, 0%), var(--g-light), rgb(255 255 255 / 0) 70%);
+}
+/* Press feedback lands on pointer-down, instantly. */
+html.glass [data-glass-light]:active { transform: scale(0.985); }
+
+/* ---- Header: clear glass over the picture, adapts once it's over a pane --- */
+html.glass body > header.fixed {
+  background-color: rgb(8 18 14 / 0.16);
+  border-bottom-color: transparent;
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.14);
+  transition: background-color 300ms ease, box-shadow 300ms ease;
+}
+html.glass[data-glass-scrolled]:not(.dark) body > header.fixed {
+  background-color: rgb(250 248 242 / 0.72);
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.7), 0 8px 24px -16px rgb(4 14 10 / 0.35);
+}
+html.glass.dark body > header.fixed { background-color: rgb(8 16 12 / 0.5); }
+/* White navigation while it sits on the picture (light mode only — dark mode
+   is already light-on-dark). Menus that drop down keep their own colours. */
+html.glass:not([data-glass-scrolled]):not(.dark) body > header > nav :is(.text-ink\/70, .text-pine, .text-pine\/90):not(:where(.absolute *)) {
+  color: rgb(255 255 255 / 0.88);
+}
+html.glass:not([data-glass-scrolled]):not(.dark) body > header > nav :is(.text-pine, .text-pine\/90, .hover\:text-pine:hover):not(:where(.absolute *)) {
+  color: #fff;
+}
+html.glass:not([data-glass-scrolled]):not(.dark) body > header img[data-logo="light"] { display: none; }
+html.glass:not([data-glass-scrolled]):not(.dark) body > header img[data-logo="dark"] { display: inline; }
+
+/* ---- Footer: dark glass rather than a solid slab ------------------------ */
+html.glass body > footer.bg-pine-deep {
+  background-color: rgb(6 15 11 / 0.58);
+  -webkit-backdrop-filter: blur(26px) saturate(150%);
+  backdrop-filter: blur(26px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+/* ---- Glass controls ------------------------------------------------------ */
+/* Clear glass: buttons that sit right on the picture (welcome banner). */
+html.glass [data-glass="clear"] {
+  background-color: rgb(255 255 255 / 0.12);
+  border-color: rgb(255 255 255 / 0.3);
+  color: #fff;
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 6px 18px -8px rgb(0 0 0 / 0.35);
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, transform 100ms ease-out;
+}
+html.glass [data-glass="clear"]:hover {
+  background-color: rgb(255 255 255 / 0.24);
+  border-color: rgb(255 255 255 / 0.45);
+  color: #fff;
+}
+html.glass [data-glass="clear"]:active { transform: scale(0.96); }
+
+/* Floating pill (the Back button): frosted, follows light/dark. */
+html.glass [data-glass="pill"]:not(:hover) {
+  background-color: var(--g-float);
+}
+html.glass [data-glass="pill"] {
+  border-color: var(--g-float-edge);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 10px 30px -10px rgb(4 14 10 / 0.45);
+}
+html.glass [data-glass="pill"]:active { transform: scale(0.96); }
+
+/* Floating sheet (the banner picker): heavier glass — bigger surface, thicker. */
+html.glass [data-glass="sheet"] {
+  background-color: var(--g-float);
+  border-color: var(--g-float-edge);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(40px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55), 0 30px 70px -20px rgb(4 14 10 / 0.6);
+}
+html.glass.dark [data-glass="sheet"],
+html.glass.dark [data-glass="pill"] {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 30px 70px -20px rgb(0 0 0 / 0.7);
+}
+
+/* ---- Dialogs: dim AND blur what's behind, to focus ---------------------- */
+/* (Only the full-screen scrims. Each is itself inset-0, so it being the
+   containing block for anything fixed inside changes nothing.) */
+html.glass .fixed.inset-0:is(.bg-ink\/40, .bg-ink\/50, .bg-ink\/60, .bg-ink\/70, .bg-black\/60) {
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  backdrop-filter: blur(6px) saturate(120%);
+}
+
+/* ---- Accessibility ------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html.glass .dash-shell > :is([data-dashboard-banner], [data-glass-hero]) ~ section::before { animation: glass-fade 200ms ease both; }
+  .glass-backdrop-media { transform: none; transition: opacity 200ms ease; }
+  html.glass [data-glass-light]:active,
+  html.glass [data-glass="clear"]:active,
+  html.glass [data-glass="pill"]:active { transform: none; }
+}
+
+/* Reduce transparency: frosted becomes solid; the picture stays as a frame.
+   The header goes solid too, so it always uses the normal (dark) navigation. */
+@media (prefers-reduced-transparency: reduce) {
+  html.glass .dash-shell > :is([data-dashboard-banner], [data-glass-hero]) ~ section::before {
+    background: #FBF8F1;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  html.glass.dark .dash-shell > :is([data-dashboard-banner], [data-glass-hero]) ~ section::before { background: #0F1C16; }
+  html.glass:not(.dark) body > header.fixed { background-color: rgb(250 248 242 / 0.97); }
+  html.glass.dark body > header.fixed { background-color: rgb(12 22 18 / 0.97); }
+  html.glass:not(.dark) body > header > nav :is(.text-ink\/70):not(:where(.absolute *)) { color: rgb(27 38 32 / 0.7); }
+  html.glass:not(.dark) body > header > nav :is(.text-pine, .text-pine\/90, .hover\:text-pine:hover):not(:where(.absolute *)) { color: #1E4D3A; }
+  html.glass:not(.dark) body > header img[data-logo="light"] { display: inline; }
+  html.glass:not(.dark) body > header img[data-logo="dark"] { display: none; }
+  html.glass body > footer.bg-pine-deep { background-color: #143628; }
+  html.glass [data-glass="sheet"], html.glass [data-glass="pill"]:not(:hover) { background-color: #FBF8F1; }
+  html.glass.dark [data-glass="sheet"], html.glass.dark [data-glass="pill"]:not(:hover) { background-color: #13201A; }
+}
+
+/* More contrast: near-solid panes with a defined edge. */
+@media (prefers-contrast: more) {
+  html.glass { --g-pane: rgb(251 248 241 / 0.96); --g-fill: rgb(255 255 255 / 0.9); --g-fill-edge: rgb(20 54 40 / 0.35); }
+  html.glass.dark { --g-pane: rgb(12 22 18 / 0.96); --g-fill: rgb(255 255 255 / 0.08); --g-fill-edge: rgb(255 255 255 / 0.3); }
+  html.glass .dash-shell > :is([data-dashboard-banner], [data-glass-hero]) ~ section::after { background: rgb(20 54 40 / 0.4); }
+  html.glass.dark .dash-shell > :is([data-dashboard-banner], [data-glass-hero]) ~ section::after { background: rgb(255 255 255 / 0.35); }
+}

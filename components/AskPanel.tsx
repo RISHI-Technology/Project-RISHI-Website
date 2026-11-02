@@ -328,7 +328,7 @@ function UsagePanel({ status, remaining }: { status: Status | null; remaining: n
       </div>
       {!unlimited && (
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-paper/10" role="meter" aria-valuemin={0} aria-valuemax={daily} aria-valuenow={left} aria-label="Credits left today">
-          <div className="h-full rounded-full bg-marigold" style={{ width: `${(100 * left) / daily}%` }} />
+          <div className="h-full rounded-full bg-marigold transition-all" style={{ width: `${(100 * left) / daily}%` }} />
         </div>
       )}
       <table className="mt-3 w-full font-mono text-[10.5px] text-paper/55">
@@ -363,7 +363,7 @@ function DeepResearchNotice({ credits, onConfirm, onCancel }: { credits: { left:
     <div className="safe-overlay fixed inset-0 z-[70] grid place-items-center bg-black/60" role="dialog" aria-modal="true" aria-labelledby="deep-title" onClick={onCancel}>
       <div className="w-full max-w-md rounded-2xl border border-paper/15 bg-[#0F2A1F] p-6 text-paper shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <p className="font-mono text-[10.5px] text-marigold-soft">Deep Research</p>
-        <h2 id="deep-title" className="mt-1 font-display text-2xl font-medium">A longer, slower answer</h2>
+        <h2 id="deep-title" className="mt-1 font-display text-2xl font-semibold">A longer, slower answer</h2>
         <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-paper/75">
           <li><strong className="text-paper">Reads twice as much as Detailed:</strong> up to 24 files, then writes a structured report with a summary, timeline, people involved and open questions.</li>
           <li><strong className="text-paper">Takes about 30–60 seconds.</strong> Keep this page open while it works. If the assistant is very busy it may not finish in time, and you can simply try again.</li>
@@ -522,7 +522,7 @@ export default function AskPanel() {
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /><path d="M8.5 11h5M11 8.5v5" /></svg>
               </span>
               <div>
-                <h1 className="font-display text-2xl font-medium leading-none">RISHI AI</h1>
+                <h1 className="font-display text-2xl font-semibold leading-none">RISHI AI</h1>
                 <p className="mt-1 font-mono text-[10.5px] text-paper/65 xl:hidden">{status?.enabled ? statusLine : "offline"}</p>
               </div>
             </div>
@@ -545,7 +545,7 @@ export default function AskPanel() {
 
             {thread.length === 0 && status?.enabled && (
               <section className="pt-6 sm:pt-12">
-                <h2 className="max-w-[18ch] font-display text-4xl font-medium leading-[1.1] text-paper sm:text-5xl">
+                <h2 className="max-w-[18ch] font-display text-4xl font-semibold leading-[1.1] text-paper sm:text-5xl">
                   Ask Anything RISHI
                 </h2>
                 <p className="mt-4 max-w-[58ch] text-[15px] leading-7 text-paper/60">
@@ -569,7 +569,7 @@ export default function AskPanel() {
                 <article key={t.id} ref={(el) => { if (el) exRefs.current.set(t.id, el); }} data-ask-exchange
                   onClick={() => t.status === "done" && setSelected(t.id)}
                   className={`scroll-mt-6 border-l-2 pl-5 transition-colors ${inspected?.id === t.id ? "border-marigold" : "border-paper/10"}`}>
-                  <h2 className="font-display text-xl font-medium leading-snug text-paper sm:text-2xl">{t.q}</h2>
+                  <h2 className="font-display text-xl font-semibold leading-snug text-paper sm:text-2xl">{t.q}</h2>
                   <div className="mt-4"><Trace ex={t} /></div>
 
                   {t.status === "error" && t.code === "quick_unavailable" && (() => {

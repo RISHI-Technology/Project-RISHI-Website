@@ -138,28 +138,22 @@ body {
     padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   }
 
-  /* Small sentence-case label above a heading or a group of fields */
+  /* Small uppercase label used as section eyebrows */
   .eyebrow {
-    @apply inline-flex items-center gap-2 text-sm font-medium;
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em];
   }
 
-  /* Buttons: a colour step on hover and a small press. Nothing lifts or glows. */
   .btn {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-medium transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98];
-    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-[background-color,color,border-color,box-shadow,transform] duration-200 ease-out;
   }
   .btn-primary {
-    @apply btn bg-pine text-paper hover:bg-pine-deep;
+    @apply btn bg-pine text-paper hover:bg-pine-deep hover:-translate-y-0.5;
   }
   .btn-accent {
-    @apply btn bg-marigold text-pine-deep hover:bg-marigold-soft;
+    @apply btn bg-marigold text-pine-deep hover:bg-marigold-deep hover:text-paper hover:-translate-y-0.5;
   }
   .btn-ghost {
-    @apply btn border border-pine/20 text-pine hover:border-pine/40 hover:bg-pine/[0.05];
-  }
-  /* Secondary action on a dark surface (pine panels, the photo hero) */
-  .btn-ghost-dark {
-    @apply btn border border-paper/30 text-paper hover:border-paper/60 hover:bg-paper/10;
+    @apply btn border border-pine/25 text-pine hover:border-pine hover:bg-pine hover:text-paper;
   }
 }
 
@@ -195,12 +189,12 @@ body {
    doesn't fight Tailwind's -translate-x-1/2 centring. The reduced-motion
    rule below collapses it to an instant appearance. */
 @keyframes hero-rise {
-  from { opacity: 0; translate: 0 8px; }
+  from { opacity: 0; translate: 0 18px; }
   to { opacity: 1; translate: 0 0; }
 }
 .hero-rise {
-  animation: hero-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(60ms + var(--i, 0) * 50ms);
+  animation: hero-rise 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(100ms + var(--i, 0) * 80ms);
 }
 
 /* View transitions.

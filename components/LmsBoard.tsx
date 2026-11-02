@@ -584,7 +584,7 @@ export default function LmsBoard() {
     const unlock = () => setNudgeLockedIds((ids) => ids.filter((x) => x !== taskId));
     try {
       await api(`/api/lms/tasks/${taskId}`, { method: "PATCH", body: JSON.stringify({ action: "nudge" }) });
-      const msg = `${personName} has been nudged`;
+      const msg = `${personName} has been nudged!`;
       toast({ message: msg, durationMs: 2000 });
       load(); // refresh so the new activity-log entry shows
       setTimeout(unlock, 5000); // keep the button disabled ~5s to prevent spam
@@ -703,7 +703,7 @@ export default function LmsBoard() {
       <div className="mt-10 space-y-10">
         {["Events", "My tasks"].map((h) => (
           <section key={h}>
-            <h3 className="font-display text-xl font-medium text-pine-deep">{h}</h3>
+            <h3 className="font-display text-xl font-semibold text-pine-deep">{h}</h3>
             <div className={CARD_GRID}>{[0, 1, 2].map((i) => <div key={i} className={i ? "hidden sm:block" : ""}><CardSkeleton /></div>)}</div>
           </section>
         ))}
@@ -795,7 +795,7 @@ export default function LmsBoard() {
         {pendingOrdered.length > 0 && (
           <section data-tour="pending-approval">
             <div className="flex flex-wrap items-baseline gap-3">
-              <h3 className="font-display text-xl font-medium text-pine-deep">Pending Your Approval</h3>
+              <h3 className="font-display text-xl font-semibold text-pine-deep">Pending Your Approval</h3>
               <span className="rounded-full bg-marigold-soft px-2.5 py-0.5 text-xs font-semibold text-marigold-ink">
                 {pendingOrdered.length} {pendingOrdered.length === 1 ? "task" : "tasks"}
               </span>
@@ -821,7 +821,7 @@ export default function LmsBoard() {
         )}
 
         <section data-tour="events">
-          <h3 className="font-display text-xl font-medium text-pine-deep">Events</h3>
+          <h3 className="font-display text-xl font-semibold text-pine-deep">Events</h3>
           {upcomingEvents.length === 0 ? (
             <div className="mt-4"><Empty>No upcoming events.</Empty></div>
           ) : (
@@ -834,7 +834,7 @@ export default function LmsBoard() {
         </section>
 
         <section data-tour="my-tasks">
-          <h3 className="font-display text-xl font-medium text-pine-deep">My tasks</h3>
+          <h3 className="font-display text-xl font-semibold text-pine-deep">My tasks</h3>
           {toMeOrdered.length === 0 ? (
             <div className="mt-4"><Empty>No active tasks assigned to you. Nice.</Empty></div>
           ) : (
@@ -856,7 +856,7 @@ export default function LmsBoard() {
 
         {activeByMeGroups.length > 0 && (
           <section>
-            <h3 className="font-display text-xl font-medium text-pine-deep">Assigned by me</h3>
+            <h3 className="font-display text-xl font-semibold text-pine-deep">Assigned by me</h3>
             <div className={CARD_GRID}>
               {activeByMeGroups.map((g) =>
                 g.rows.length === 1 ? (
@@ -874,7 +874,7 @@ export default function LmsBoard() {
 
         {coLeadGroups.length > 0 && (
           <section>
-            <h3 className="font-display text-xl font-medium text-pine-deep">Assigned by my co-leads</h3>
+            <h3 className="font-display text-xl font-semibold text-pine-deep">Assigned by my co-leads</h3>
             <p className="mt-1 text-xs text-ink/70">
               Tasks assigned by the other lead(s) of your project group or your co-NMT leaders. You have full control over these.
             </p>
@@ -1210,7 +1210,7 @@ function TaskRow({
       </button>
       <div className="mt-auto flex flex-wrap gap-2 pt-3">
         {role === "assignee" && task.emailTemplate && onComposeEmail && (
-          <button onClick={onComposeEmail} className="inline-flex items-center gap-1.5 rounded-full bg-marigold px-3.5 py-1.5 text-xs font-medium text-pine-deep transition-colors hover:bg-marigold-soft">
+          <button onClick={onComposeEmail} className="inline-flex items-center gap-1.5 rounded-full bg-marigold px-3.5 py-1.5 text-xs font-semibold text-pine-deep transition-transform hover:scale-[1.02]">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3.5 7.5 8.5 6 8.5-6" /></svg>
             Compose email
           </button>
@@ -1328,7 +1328,7 @@ function GroupCard({ group, byline, onOpen, onArchive }: { group: TaskGroup; byl
         <div className="flex shrink-0 items-center gap-1.5">
           <span className="rounded-full bg-sage/15 px-2.5 py-1 text-xs font-semibold tabular-nums text-pine-deep">{done}/{total} complete</span>
           {group.rows.some((r) => r.canManage) && (
-            <button onClick={onArchive} title="Archive for everyone" className="grid h-6 w-6 place-items-center rounded-full text-ink/65 hover:bg-pine/5 hover:text-pine-deep" aria-label="Archive for everyone"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="4" width="18" height="5" rx="1" /><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9" /><path d="M10 13h4" /></svg></button>
+            <button onClick={onArchive} title="Archive for everyone" className="grid h-6 w-6 place-items-center rounded-full text-ink/65 hover:bg-pine/5 hover:text-pine-deep">🗄</button>
           )}
         </div>
       </div>
@@ -1766,7 +1766,7 @@ function CalendarView({ title, items, period, legend }: {
   const navLabel = view === "day" ? "day" : view === "week" ? "week" : view === "all" ? "year" : "month";
 
   return (
-    <div className="rounded-2xl border border-pine/12 bg-paper p-5">
+    <div className="rounded-3xl border border-pine/12 bg-paper p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           {drilled && (
@@ -1774,7 +1774,7 @@ function CalendarView({ title, items, period, legend }: {
               &lsaquo; {period === "all" ? "Year" : period}
             </button>
           )}
-          <h3 className="font-display text-xl font-medium text-pine-deep">
+          <h3 className="font-display text-xl font-semibold text-pine-deep">
             {heading}{title ? ` - ${title}` : ""}
           </h3>
         </div>
@@ -1798,7 +1798,7 @@ function CalendarView({ title, items, period, legend }: {
               <div key={d.toISOString()} onClick={() => setOpenDay(d)} role="button" tabIndex={0}
                 onKeyDown={(e) => { if (e.key === "Enter") setOpenDay(d); }} title="Open this day"
                 className={`min-h-[8rem] cursor-pointer rounded-xl border p-2 transition-colors hover:border-pine/40 ${isToday ? "border-marigold bg-marigold-soft/15" : "border-pine/10 bg-pine/[0.015]"}`}>
-                <div className={`mb-1 text-[11px] font-semibold tabular-nums ${isToday ? "text-marigold-ink" : "text-ink/65"}`}>
+                <div className={`mb-1 text-[11px] font-semibold uppercase tabular-nums tracking-wide ${isToday ? "text-marigold-ink" : "text-ink/65"}`}>
                   {WEEKDAYS[d.getDay()]} {d.getDate()}
                 </div>
                 <div className="space-y-1">
@@ -1861,13 +1861,13 @@ function DayAgenda({ date, items, big, onNavigate }: {
     <div className="space-y-4">
       {events.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-ink/65">Events</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink/65">Events</p>
           <div className="mt-2 space-y-2">{events.map(Row)}</div>
         </div>
       )}
       {tasks.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-ink/65">Tasks due</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink/65">Tasks due</p>
           <div className="mt-2 space-y-2">{tasks.map(Row)}</div>
         </div>
       )}
@@ -1888,7 +1888,7 @@ function MonthGrid({ cursor, today, itemsOn, onOpenDay }: {
   while (cells.length % 7 !== 0) cells.push(null);
   return (
     <>
-      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-ink/65">
+      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-ink/65">
         {WEEKDAYS.map((d) => <div key={d}>{d}</div>)}
       </div>
       <div className="mt-1 grid grid-cols-7 gap-1">
@@ -1987,7 +1987,7 @@ function FullScreenModal({ title, onClose, children }: { title: string; onClose:
     <div className="fixed inset-0 z-[60] flex flex-col bg-ink/60" role="dialog" aria-modal="true" aria-label={title}>
       <div className="safe-edges flex h-full w-full flex-col bg-paper">
         <div className="flex items-center justify-between border-b border-pine/10 px-6 py-4">
-          <h3 className="font-display text-2xl font-medium text-pine-deep">{title}</h3>
+          <h3 className="font-display text-2xl font-semibold text-pine-deep">{title}</h3>
           <button data-tour="fs-close" onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full text-ink/70 hover:bg-ink/5" aria-label="Close">✕</button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6 pb-24">
@@ -2012,7 +2012,7 @@ function HistorySection({ title, empty, children }: { title: string; empty: stri
   const items = React.Children.toArray(children);
   return (
     <section>
-      <h4 className="font-display text-lg font-medium text-pine-deep">{title}</h4>
+      <h4 className="font-display text-lg font-semibold text-pine-deep">{title}</h4>
       {items.length === 0
         ? <p className="mt-2 text-sm text-ink/65">{empty}</p>
         : <div className="mt-3 space-y-2">{items}</div>}
@@ -2056,9 +2056,9 @@ function PastTaskRow({ g, onOpen, onUnarchive }: {
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/40 safe-overlay" onClick={onClose}>
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-paper p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-paper p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-xl font-medium text-pine-deep">{title}</h3>
+          <h3 className="font-display text-xl font-semibold text-pine-deep">{title}</h3>
           <button data-tour="tf-close" onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full text-ink/70 hover:bg-ink/5" aria-label="Close">✕</button>
         </div>
         <div className="mt-5">{children}</div>
@@ -2467,7 +2467,7 @@ function SegToggle({ label, value, onChange, options }: {
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs font-semibold text-ink/65">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-wide text-ink/65">{label}</span>
       <div className="inline-flex rounded-full border border-pine/20 bg-paper p-0.5">
         {options.map(([val, lbl]) => (
           <button key={val} onClick={() => onChange(val)}
@@ -2529,7 +2529,7 @@ function ClubOverviewLists({ tasks, events, archive, period, nameOf, onOpenTask,
   const nothing = groups.length === 0 && fEvents.length === 0;
   return (
     <div className="mt-10">
-      <h3 className="font-display text-2xl font-medium text-pine-deep">Full Club Overview</h3>
+      <h3 className="font-display text-2xl font-semibold text-pine-deep">Full Club Overview</h3>
       {nothing && <p className="mt-6 text-sm text-ink/65">Nothing matches the selected filters.</p>}
       <div className="mt-6 space-y-8">
         {LANE_ORDER.map((lane) => {
@@ -2541,7 +2541,7 @@ function ClubOverviewLists({ tasks, events, archive, period, nameOf, onOpenTask,
             <section key={lane}>
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded" style={{ backgroundColor: c.dot }} />
-                <h4 className="font-display text-lg font-medium text-pine-deep">{LANE_LABEL[lane]}</h4>
+                <h4 className="font-display text-lg font-semibold text-pine-deep">{LANE_LABEL[lane]}</h4>
                 <span className="text-xs tabular-nums text-ink/65">{laneGroups.length} task{laneGroups.length === 1 ? "" : "s"} · {laneEvents.length} event{laneEvents.length === 1 ? "" : "s"}</span>
               </div>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">

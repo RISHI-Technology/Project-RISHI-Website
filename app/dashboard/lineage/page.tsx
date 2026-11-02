@@ -49,7 +49,7 @@ function LineageCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border p-6 sm:p-8 ${
+      className={`rounded-3xl border p-6 sm:p-8 ${
         isMine
           ? "border-marigold/50 bg-marigold/[0.06]"
           : "border-pine/12 bg-paper"
@@ -61,12 +61,12 @@ function LineageCard({
             <span className="h-1.5 w-1.5 rounded-full bg-pine" />
             Lineage Head
           </p>
-          <h3 className="mt-1 font-display text-xl font-medium text-pine-deep">
+          <h3 className="mt-1 font-display text-xl font-semibold text-pine-deep">
             {tree.name}
           </h3>
         </div>
         {isMine && (
-          <span className="shrink-0 rounded-full bg-marigold px-3 py-1.5 text-xs font-bold text-pine-deep">
+          <span className="shrink-0 rounded-full bg-marigold px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-pine-deep">
             Your lineage
           </span>
         )}
@@ -107,7 +107,7 @@ export default function LineagePage() {
               </svg>
               Back to dashboard
             </Link>
-            <h1 className="mt-4 font-display text-4xl font-medium sm:text-5xl">
+            <h1 className="mt-4 font-display text-4xl font-semibold sm:text-5xl">
               RISHI Lineage
             </h1>
           </Reveal>

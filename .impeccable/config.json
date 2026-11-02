@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "app/globals.css"
+        ],
+        "createdAt": "2026-11-02T06:40:34.886Z",
+        "reason": "Claude triage: L319 is the Lineage family-tree connector line (.familytree li::before), L380 is the TipTap blockquote rule (.doc-prose blockquote) — structural/typographic, not card accents; pre-existing, unchanged since 1ba89b5"
+      }
+    ]
+  }
+}

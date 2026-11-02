@@ -62,6 +62,7 @@ export default function ThemeToggle() {
       title={dark ? "Light mode" : "Dark mode"}
       aria-pressed={dark}
       data-theme-toggle
+      data-glass="clear"
       className="relative grid h-10 w-10 place-items-center rounded-full border border-paper/30 text-paper transition-colors hover:bg-paper hover:text-pine-deep"
     >
       {dark ? (
@@ -82,9 +83,9 @@ export default function ThemeToggle() {
 export function ThemeSetting() {
   const theme = useTheme();
   return (
-    <div className="mx-auto mt-6 flex max-w-xl items-center justify-between gap-4 rounded-2xl border border-pine/15 bg-pine/[0.03] p-6">
+    <div className="mx-auto mt-6 flex max-w-xl items-center justify-between gap-4 rounded-3xl border border-pine/15 bg-pine/[0.03] p-6">
       <div>
-        <h2 className="font-display text-lg font-medium text-pine-deep">Appearance</h2>
+        <h2 className="font-display text-lg font-semibold text-pine-deep">Appearance</h2>
         <p className="mt-1 text-sm text-ink/75">Dark mode applies to the dashboard in this browser.</p>
       </div>
       <div role="radiogroup" aria-label="Theme" className="flex shrink-0 rounded-full border border-pine/20 p-1">

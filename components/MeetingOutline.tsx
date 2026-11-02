@@ -58,7 +58,7 @@ export default function MeetingOutline({
       <div className="space-y-1.5">
         {blocks.filter((b) => b.text.trim() || b.kind === "heading").map((b) =>
           b.kind === "heading" ? (
-            <h4 key={b.id} className="pt-3 font-display text-lg font-medium text-pine-deep first:pt-0">{b.text || "Untitled section"}</h4>
+            <h4 key={b.id} className="pt-3 font-display text-lg font-semibold text-pine-deep first:pt-0">{b.text || "Untitled section"}</h4>
           ) : (
             <div key={b.id} className="flex gap-2 text-sm text-ink/80" style={{ paddingLeft: `${b.indent * 1.5}rem` }}>
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-pine/40" />
@@ -97,7 +97,7 @@ export default function MeetingOutline({
               else if (e.key === "Backspace" && b.text === "") { e.preventDefault(); remove(b.id); }
               else if ((e.key === "ArrowUp" || e.key === "ArrowDown") && (e.metaKey || e.altKey)) { e.preventDefault(); move(b.id, e.key === "ArrowUp" ? -1 : 1); }
             }}
-            className={`w-full resize-none overflow-hidden bg-transparent py-1.5 outline-none placeholder:text-ink/25 ${b.kind === "heading" ? "font-display text-lg font-medium text-pine-deep" : "text-sm text-ink/85"}`}
+            className={`w-full resize-none overflow-hidden bg-transparent py-1.5 outline-none placeholder:text-ink/25 ${b.kind === "heading" ? "font-display text-lg font-semibold text-pine-deep" : "text-sm text-ink/85"}`}
           />
 
           {/* hover controls */}

@@ -28,30 +28,6 @@ const FONTS = [
 const SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "30px", "36px"];
 const EMOJIS = "😀 😄 😁 😉 😊 😍 🤩 😎 🤔 🙌 👏 👍 👎 🙏 💪 🎉 🔥 ✨ ⭐ ✅ ❌ ❤️ 💛 💚 💙 📌 📣 📝 📅 ⏰ 🚀 🌱 🎓 ☕ 💡".split(" ");
 
-/** Toolbar icon: one 16px line icon, 1.5 stroke, in the button's text colour.
- *  Path segments are split on "|", and every segment starts with its own M. */
-function Ico({ d }: { d: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden>
-      {d.split("|").map((p, i) => <path key={i} d={p} />)}
-    </svg>
-  );
-}
-const ICONS = {
-  undo: "M9 14 4 9l5-5|M4 9h10.5a5.5 5.5 0 0 1 0 11H11",
-  redo: "M15 14l5-5-5-5|M20 9H9.5a5.5 5.5 0 0 0 0 11H13",
-  bullets: "M9 6h11|M9 12h11|M9 18h11|M4.5 6h.01|M4.5 12h.01|M4.5 18h.01",
-  numbers: "M10 6h10|M10 12h10|M10 18h10|M4 6h1v4|M4 10h2|M6 18H4c0-1 2-2 2-3s-1-1.5-2-1",
-  outdent: "M21 5H3|M21 19H3|M21 12H11|M7 9l-3 3 3 3",
-  indent: "M21 5H3|M21 19H3|M21 12H11|M4 9l3 3-3 3",
-  quote: "M8 6h12|M8 12h12|M8 18h9|M4 5v14",
-  link: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71|M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71",
-  image: "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z|M21 15l-5-5L5 21|M9 9h.01",
-  smile: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z|M8 14s1.5 2 4 2 4-2 4-2|M9 9h.01|M15 9h.01",
-  clip: "M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48",
-  clear: "M4 7V4h16v3|M5 20h6|M13 4 8 20|M15 15l5 5|M20 15l-5 5",
-};
-
 function Btn({
   active, disabled, title, onClick, children,
 }: {
@@ -172,8 +148,8 @@ export default function RichTextEditor({
     <div className="rounded-xl border border-ink/15 bg-paper">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 border-b border-ink/12 p-1.5">
-        <Btn title="Undo (Ctrl/⌘+Z)" disabled={!e.can().undo()} onClick={() => e.chain().focus().undo().run()}><Ico d={ICONS.undo} /></Btn>
-        <Btn title="Redo (Ctrl/⌘+Y)" disabled={!e.can().redo()} onClick={() => e.chain().focus().redo().run()}><Ico d={ICONS.redo} /></Btn>
+        <Btn title="Undo (Ctrl/⌘+Z)" disabled={!e.can().undo()} onClick={() => e.chain().focus().undo().run()}>↶</Btn>
+        <Btn title="Redo (Ctrl/⌘+Y)" disabled={!e.can().redo()} onClick={() => e.chain().focus().redo().run()}>↷</Btn>
         <Divider />
 
         {/* Font family */}
@@ -218,11 +194,11 @@ export default function RichTextEditor({
         </label>
         <Divider />
 
-        <Btn title="Bulleted list" active={e.isActive("bulletList")} onClick={() => e.chain().focus().toggleBulletList().run()}><Ico d={ICONS.bullets} /></Btn>
-        <Btn title="Numbered list" active={e.isActive("orderedList")} onClick={() => e.chain().focus().toggleOrderedList().run()}><Ico d={ICONS.numbers} /></Btn>
-        <Btn title="Decrease indent" onClick={doOutdent}><Ico d={ICONS.outdent} /></Btn>
-        <Btn title="Increase indent" onClick={doIndent}><Ico d={ICONS.indent} /></Btn>
-        <Btn title="Quote" active={e.isActive("blockquote")} onClick={() => e.chain().focus().toggleBlockquote().run()}><Ico d={ICONS.quote} /></Btn>
+        <Btn title="Bulleted list" active={e.isActive("bulletList")} onClick={() => e.chain().focus().toggleBulletList().run()}>•≡</Btn>
+        <Btn title="Numbered list" active={e.isActive("orderedList")} onClick={() => e.chain().focus().toggleOrderedList().run()}>1.≡</Btn>
+        <Btn title="Decrease indent" onClick={doOutdent}>⇤</Btn>
+        <Btn title="Increase indent" onClick={doIndent}>⇥</Btn>
+        <Btn title="Quote" active={e.isActive("blockquote")} onClick={() => e.chain().focus().toggleBlockquote().run()}>❝</Btn>
         <Divider />
 
         <Btn title="Align left" active={e.isActive({ textAlign: "left" })} onClick={() => e.chain().focus().setTextAlign("left").run()}>
@@ -241,7 +217,7 @@ export default function RichTextEditor({
 
         {/* Link */}
         <div className="relative">
-          <Btn title="Insert link" active={e.isActive("link")} onClick={() => { setLinkUrl(e.getAttributes("link").href ?? ""); setShowLink((s) => !s); setShowEmoji(false); }}><Ico d={ICONS.link} /></Btn>
+          <Btn title="Insert link" active={e.isActive("link")} onClick={() => { setLinkUrl(e.getAttributes("link").href ?? ""); setShowLink((s) => !s); setShowEmoji(false); }}>🔗</Btn>
           {showLink && (
             <div className="absolute left-0 top-9 z-20 flex w-64 items-center gap-1 rounded-lg border border-ink/15 bg-paper p-1.5 shadow-lg">
               <input autoFocus value={linkUrl} onChange={(ev) => setLinkUrl(ev.target.value)}
@@ -252,10 +228,10 @@ export default function RichTextEditor({
           )}
         </div>
         {/* Image */}
-        <Btn title="Insert photo" onClick={() => imageInputRef.current?.click()}><Ico d={ICONS.image} /></Btn>
+        <Btn title="Insert photo" onClick={() => imageInputRef.current?.click()}>🖼</Btn>
         {/* Emoji */}
         <div className="relative">
-          <Btn title="Insert emoji" onClick={() => { setShowEmoji((s) => !s); setShowLink(false); }}><Ico d={ICONS.smile} /></Btn>
+          <Btn title="Insert emoji" onClick={() => { setShowEmoji((s) => !s); setShowLink(false); }}>😊</Btn>
           {showEmoji && (
             <div className="absolute left-0 top-9 z-20 grid w-64 grid-cols-8 gap-0.5 rounded-lg border border-ink/15 bg-paper p-2 shadow-lg">
               {EMOJIS.map((em) => (
@@ -266,10 +242,10 @@ export default function RichTextEditor({
           )}
         </div>
         {/* Attach files */}
-        <Btn title="Attach file" onClick={() => fileInputRef.current?.click()}><Ico d={ICONS.clip} /></Btn>
+        <Btn title="Attach file" onClick={() => fileInputRef.current?.click()}>📎</Btn>
         <Divider />
 
-        <Btn title="Clear formatting" onClick={() => e.chain().focus().unsetAllMarks().clearNodes().run()}><Ico d={ICONS.clear} /></Btn>
+        <Btn title="Clear formatting" onClick={() => e.chain().focus().unsetAllMarks().clearNodes().run()}>⌫ₐ</Btn>
       </div>
 
       {/* Editable area */}
@@ -282,7 +258,7 @@ export default function RichTextEditor({
         <div className="flex flex-wrap gap-2 border-t border-ink/12 p-2">
           {files.map((f, i) => (
             <span key={`${f.name}-${i}`} className="inline-flex items-center gap-1.5 rounded-full bg-ink/[0.06] px-3 py-1 text-xs text-ink/70">
-              <Ico d={ICONS.clip} />{f.name}
+              📎 {f.name}
               <button type="button" className="text-ink/65 hover:text-red-600"
                 onClick={() => setFilesAndEmit(files.filter((_, j) => j !== i))}>✕</button>
             </span>

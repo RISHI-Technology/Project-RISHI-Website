@@ -11,6 +11,7 @@ export default function SettingsGear({ className = "" }: { className?: string })
     <Link
       href="/dashboard/settings"
       aria-label="Account settings"
+      data-glass="clear"
       className={`group inline-flex items-center gap-2 rounded-full border border-paper/30 py-2 pl-2.5 pr-2.5 text-paper transition-colors hover:bg-paper/10 ${className}`}
     >
       <svg

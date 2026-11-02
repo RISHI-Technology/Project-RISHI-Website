@@ -50,15 +50,15 @@ export default function ContactRequestForm({ current, onDone }: {
         <dt className="text-ink/70">Current phone</dt><dd className="text-ink/80">{current.phone || "—"}</dd>
       </dl>
       <label className="mt-4 block">
-        <span className="text-xs font-semibold text-ink/70">New email</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">New email</span>
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Leave blank to keep the current one" className={field} />
       </label>
       <label className="mt-3 block">
-        <span className="text-xs font-semibold text-ink/70">New phone</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">New phone</span>
         <input value={phone} onChange={(e) => setPhone(formatPhoneInput(e.target.value))} placeholder="Leave blank to keep the current one" className={field} />
       </label>
       <label className="mt-3 block">
-        <span className="text-xs font-semibold text-ink/70">Note (optional)</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Note (optional)</span>
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={1000} placeholder="Anything the webmaster should know" className={`${field} resize-none`} />
       </label>
       <p className="mt-2 text-[11px] text-ink/65">Your request is emailed to the webmaster, who makes the change once they approve it. This never changes the email you log in with.</p>

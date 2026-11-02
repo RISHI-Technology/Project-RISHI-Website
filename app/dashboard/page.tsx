@@ -46,7 +46,8 @@ export default function DashboardPage() {
           <Reveal>
             <div className="flex items-start justify-between gap-4">
               <span className="eyebrow text-marigold-soft">
-                Member dashboard
+                <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
+                Member Dashboard
               </span>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
@@ -57,13 +58,14 @@ export default function DashboardPage() {
               {/* The banner is always dark (colour or darkened photo), so the no-photo
                   placeholder is light-on-dark here. */}
               <Avatar src={avatar} name={fullName || firstName} size={72} className="ring-2 ring-paper/30 !bg-paper/15 !text-paper/75" />
-              <h1 className="font-display text-5xl font-medium leading-[1.02] sm:text-6xl">
-                {fullName || session?.user?.firstName || "Dashboard"}
+              <h1 className="font-display text-5xl font-semibold leading-[1.02] sm:text-6xl">
+                Welcome, {firstName}
               </h1>
             </div>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="mt-8 h-9 rounded-full border border-paper/30 px-4 text-sm font-medium text-paper transition-colors hover:border-paper/60 hover:bg-paper/10"
+              data-glass="clear"
+              className="mt-7 rounded-full border border-paper/30 px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-paper hover:text-pine-deep"
             >
               Sign out
             </button>
@@ -74,7 +76,7 @@ export default function DashboardPage() {
       {/* Dashboard tiles */}
       <section className="container-rishi py-16">
         <div className="mb-6 flex items-center justify-between gap-4">
-          <h2 className="font-display text-2xl font-medium text-pine-deep">Your dashboard</h2>
+          <h2 className="font-display text-2xl font-semibold text-pine-deep">Your dashboard</h2>
           <CreateMenu />
         </div>
 
@@ -85,21 +87,22 @@ export default function DashboardPage() {
           <Reveal>
             <Link
               href="/dashboard/pvp"
-              className="group mb-6 flex items-center gap-4 rounded-2xl border border-pine/10 bg-pine/[0.03] p-5 transition-colors hover:border-pine/30 hover:bg-pine/[0.06]"
+              data-glass-light
+              className="group mb-6 flex items-center gap-4 rounded-3xl border border-pine/25 bg-pine/[0.06] p-5 transition-colors hover:border-pine hover:bg-pine hover:text-paper"
             >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-pine/[0.07] text-pine">
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-marigold text-pine-deep">
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <rect x="4" y="10" width="16" height="10" rx="2" />
                   <path d="M8 10V7a4 4 0 0 1 8 0v3" />
                 </svg>
               </span>
               <span className="min-w-0">
-                <span className="inline-flex items-center gap-2 font-display text-xl font-medium">
+                <span className="inline-flex items-center gap-2 font-display text-xl font-semibold">
                   PVP
                   <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                 </span>
                 <span className="mt-0.5 block text-sm opacity-70">
-                  Full PVP portal
+                  Full PVP Portal
                 </span>
               </span>
             </Link>
@@ -112,17 +115,18 @@ export default function DashboardPage() {
             <div className="grid h-full grid-rows-[2fr_1fr] gap-4">
               <Link
                 href="/dashboard/directory"
-                className="group flex min-h-0 flex-col justify-between rounded-2xl border border-pine/10 bg-pine/[0.03] p-6 transition-colors hover:border-pine/30 hover:bg-pine/[0.06]"
+                data-glass-light
+                className="group flex min-h-0 flex-col justify-between rounded-3xl border border-pine/15 bg-pine/[0.03] p-6 transition-colors hover:border-pine hover:bg-pine hover:text-paper"
               >
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-pine/[0.07] text-pine">
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-marigold text-pine-deep">
+                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 </span>
-                <span className="mt-5 inline-flex items-center gap-2 font-display text-xl font-medium">
-                  Member directory
+                <span className="mt-5 inline-flex items-center gap-2 font-display text-xl font-semibold">
+                  Member Directory
                   <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M5 12h14M13 6l6 6-6 6" />
                   </svg>
@@ -133,17 +137,17 @@ export default function DashboardPage() {
                 locked={unplaced}
                 href="/dashboard/lineage"
                 lockedClassName="flex min-h-0 items-center gap-4 p-5"
-                className="group flex min-h-0 items-center gap-4 rounded-2xl border border-pine/10 bg-pine/[0.03] p-5 transition-colors hover:border-pine/30 hover:bg-pine/[0.06]"
+                className="group flex min-h-0 items-center gap-4 rounded-3xl border border-pine/15 bg-pine/[0.03] p-5 transition-colors hover:border-pine hover:bg-pine hover:text-paper"
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-pine/[0.07] text-pine">
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-marigold text-pine-deep">
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <circle cx="12" cy="5" r="2.5" />
                     <circle cx="5" cy="19" r="2.5" />
                     <circle cx="19" cy="19" r="2.5" />
                     <path d="M12 7.5v4m0 0H5.5a1 1 0 0 0-1 1v3.5m7.5-4.5H18.5a1 1 0 0 1 1 1v3.5" />
                   </svg>
                 </span>
-                <span className="font-display text-lg font-medium leading-tight">
+                <span className="font-display text-lg font-semibold leading-tight">
                   RISHI Lineage
                 </span>
               </GatedLink>
@@ -155,14 +159,15 @@ export default function DashboardPage() {
             <div className="grid h-full grid-rows-[2fr_1fr] gap-4">
             <Link
               href="/dashboard/files"
-              className="group flex min-h-0 flex-col justify-between rounded-2xl border border-pine/10 bg-pine/[0.03] p-6 transition-colors hover:border-pine/30 hover:bg-pine/[0.06]"
+              data-glass-light
+              className="group flex min-h-0 flex-col justify-between rounded-3xl border border-pine/15 bg-pine/[0.03] p-6 transition-colors hover:border-pine hover:bg-pine hover:text-paper"
             >
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-pine/[0.07] text-pine">
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-marigold text-pine-deep">
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
                   <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 </svg>
               </span>
-              <span className="mt-5 inline-flex items-center gap-2 font-display text-xl font-medium">
+              <span className="mt-5 inline-flex items-center gap-2 font-display text-xl font-semibold">
                 Files
                 <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </span>
@@ -173,11 +178,11 @@ export default function DashboardPage() {
               locked={unplaced}
               href="/dashboard/ask"
               lockedClassName="flex min-h-0 items-center gap-4 p-5"
-              className="group flex min-h-0 items-center gap-4 rounded-2xl border border-pine/10 bg-pine/[0.03] p-5 transition-colors hover:border-pine/30 hover:bg-pine/[0.06]"
+              className="group flex min-h-0 items-center gap-4 rounded-3xl border border-pine/15 bg-pine/[0.03] p-5 transition-colors hover:border-pine hover:bg-pine hover:text-paper"
             >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-pine/[0.07] text-pine">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-marigold text-pine-deep">
                 {/* robot: antenna, head, eyes, mouth, side "ears" */}
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M12 3.5v3" />
                   <circle cx="12" cy="3" r="0.9" fill="currentColor" stroke="none" />
                   <rect x="5" y="6.5" width="14" height="11" rx="3" />
@@ -187,7 +192,7 @@ export default function DashboardPage() {
                   <path d="M3 10.5v3M21 10.5v3" />
                 </svg>
               </span>
-              <span className="font-display text-lg font-medium leading-tight">
+              <span className="font-display text-lg font-semibold leading-tight">
                 RISHI AI
               </span>
             </GatedLink>
@@ -212,8 +217,8 @@ export default function DashboardPage() {
       {/* LMS board */}
       <section className="container-rishi pb-20">
         <Reveal>
-          <h2 className="font-display text-3xl font-medium text-pine-deep">
-            Tasks &amp; events
+          <h2 className="font-display text-3xl font-semibold text-pine-deep">
+            Tasks &amp; Events
           </h2>
           <div className="mt-8">
             <LmsBoard />

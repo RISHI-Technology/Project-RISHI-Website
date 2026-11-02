@@ -247,7 +247,7 @@ export default function MessageComposer({
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/50 safe-overlay" onClick={onClose}>
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-paper p-6 text-ink shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-paper p-6 text-ink shadow-xl" onClick={(e) => e.stopPropagation()}>
         {/* Mode switch */}
         {opts.modes.length > 1 ? (
           <div className="mb-4 inline-flex rounded-full bg-ink/[0.06] p-1">
@@ -262,12 +262,12 @@ export default function MessageComposer({
             ))}
           </div>
         ) : (
-          <h3 className="mb-4 font-display text-xl font-medium text-pine-deep">New {MODE_LABEL[mode].toLowerCase()}</h3>
+          <h3 className="mb-4 font-display text-xl font-semibold text-pine-deep">New {MODE_LABEL[mode].toLowerCase()}</h3>
         )}
 
         {/* Subject */}
         <label className="block">
-          <span className="text-xs font-semibold text-ink/70">
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">
             Subject {mode === "email" && <span className="text-red-500">*</span>}
           </span>
           <input
@@ -289,7 +289,7 @@ export default function MessageComposer({
 
           {mode === "announcement" && (
             <>
-              <span className="text-xs font-semibold text-ink/70">Send to</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Send to</span>
               <div className="mt-1.5 flex flex-wrap gap-2">
                 {opts.announce.scopes.map((s) => (
                   <button key={s} onClick={() => setScopeKind(s)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${scopeKind === s ? "bg-pine text-paper" : "border border-ink/15 text-ink/70 hover:bg-ink/5"}`}>
@@ -326,7 +326,7 @@ export default function MessageComposer({
 
           {mode === "email" && (
             <>
-              <span className="text-xs font-semibold text-ink/70">Send to</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Send to</span>
               <div className="mt-1.5 flex flex-wrap gap-2">
                 {(["members", "group", "club"] as const).map((s) => (
                   <button key={s} onClick={() => setEmailScope(s)} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${emailScope === s ? "bg-pine text-paper" : "border border-ink/15 text-ink/70 hover:bg-ink/5"}`}>
@@ -361,14 +361,14 @@ export default function MessageComposer({
               {emailScope === "club" && <p className="mt-3 text-sm text-ink/75">Goes to every member of the club.</p>}
 
               <div className="mt-3">
-                <span className="text-xs font-semibold text-ink/70">Other email addresses</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Other email addresses</span>
                 <div className="mt-1.5">
                   <EmailChipsInput value={externalChips} onChange={setExternalChips} />
                 </div>
               </div>
 
               <div className="mt-3">
-                <span className="text-xs font-semibold text-ink/70">CC</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">CC</span>
                 <div className="mt-1.5">
                   <EmailChipsInput value={cc} onChange={setCc} placeholder="CC addresses (optional)…" />
                 </div>
@@ -382,7 +382,7 @@ export default function MessageComposer({
           <p className="mt-4 text-xs text-ink/70">Sent from the club email ({opts.senders.clubAddress}).</p>
         ) : (
           <div className="mt-4">
-            <span className="text-xs font-semibold text-ink/70">Send from</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Send from</span>
             <div className="mt-1.5 flex flex-wrap gap-2">
               {(mode === "announcement" || clubAllowedForEmail) && (
                 <button onClick={() => setSender("club")} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${sender === "club" ? "bg-pine text-paper" : "border border-ink/15 text-ink/70 hover:bg-ink/5"}`}>
@@ -467,7 +467,7 @@ export default function MessageComposer({
 
         {/* Body */}
         <div className="mt-4">
-          <span className="text-xs font-semibold text-ink/70">Message</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Message</span>
           <div className="mt-1.5">
             <RichTextEditor value={prefill?.bodyHtml ?? ""} onChange={setBodyHtml} registerInsert={(fn) => (insertRef.current = fn)} placeholder="Write your message…" />
           </div>

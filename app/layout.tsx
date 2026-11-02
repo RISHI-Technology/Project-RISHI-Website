@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import "./dark-theme.css"; // dashboard dark mode (generated: scripts/gen-dark-theme.mjs)
 import "./ai-theme.css";   // RISHI AI light/dark (generated: scripts/gen-ai-theme.mjs)
+import "./glass-theme.css"; // dashboard Liquid Glass interface (hand-written; keyed on html.glass)
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BackButton from "@/components/BackButton";
@@ -58,10 +59,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
-        {/* Apply dashboard dark mode before first paint (no flash of light theme). */}
+        {/* Apply dashboard dark mode and the Liquid Glass interface (the default;
+            "classic" opts out, RISHI AI is excluded — see components/GlassMode)
+            before first paint, so neither flashes. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(location.pathname.indexOf("/dashboard")===0&&localStorage.getItem("rishi:theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}`,
+            __html: `try{var p=location.pathname,c=document.documentElement.classList;if(p.indexOf("/dashboard")===0){if(localStorage.getItem("rishi:theme")==="dark")c.add("dark");if(p.indexOf("/dashboard/ask")!==0&&localStorage.getItem("rishi:ui")!=="classic")c.add("glass")}}catch(e){}`,
           }}
         />
       </head>

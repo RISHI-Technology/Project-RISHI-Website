@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { createPortal } from "react-dom";
 import Contours from "@/components/Contours";
 import { blurBehind } from "@/lib/imagePlaceholders";
+import { useGlass } from "@/components/GlassMode";
 import {
   BANNER_PHOTOS, BANNER_PRESETS, type BannerChoice,
 } from "@/lib/lms/bannerPresets";
@@ -31,6 +32,28 @@ type Saved = { choice: BannerChoice | null; uploadUrl: string | null }; // null 
 
 const CACHE_KEY = "rishi:banner:v1";
 const CHANGE_EVENT = "rishi-banner-change";
+// While the picker is open, the draft is broadcast so the Liquid Glass
+// backdrop (which fills the whole screen) previews it live too.
+const PREVIEW_EVENT = "rishi-banner-preview";
+
+/** Liquid Glass default when the member hasn't picked a banner: the club's Himalayas photo. */
+const GLASS_DEFAULT: BannerChoice = (() => {
+  const p = BANNER_PHOTOS.find((x) => x.id === "himalayas") ?? BANNER_PHOTOS[0];
+  return { kind: "photo", id: p.id, pos: p.pos };
+})();
+
+// Both the banner and the glass backdrop ask for the saved banner on mount; one
+// request serves both.
+let inflight: Promise<{ choice?: BannerChoice | null; url?: string | null } | null> | null = null;
+function fetchBanner() {
+  if (!inflight) {
+    inflight = fetch("/api/lms/profile/banner")
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .finally(() => { setTimeout(() => { inflight = null; }, 0); });
+  }
+  return inflight;
+}
 
 /** Is the dashboard in dark mode right now? Follows the theme switch live. */
 function useIsDark() {
@@ -64,7 +87,7 @@ function useSavedBanner(): [Saved, (s: Saved) => void] {
   useEffect(() => {
     const on = (e: Event) => setSavedState((e as CustomEvent).detail);
     window.addEventListener(CHANGE_EVENT, on);
-    fetch("/api/lms/profile/banner").then((r) => (r.ok ? r.json() : null))
+    fetchBanner()
       .then((d) => {
         if (!d) return;
         const s: Saved = { choice: d.choice ?? null, uploadUrl: d.url ?? null };
@@ -121,8 +144,8 @@ async function shrink(file: File): Promise<string> {
 const same = (a: BannerChoice, b: BannerChoice) =>
   a.kind === b.kind && (a.kind === "preset" ? a.id === (b as typeof a).id : a.kind === "photo" ? a.id === (b as typeof a).id : true);
 
-function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }: {
-  saved: Saved; fallback: BannerChoice; draft: Draft; setDraft: (d: Draft) => void; onClose: () => void; onSaved: (d: Saved) => void;
+function Picker({ saved: savedRaw, fallback, glass, draft, setDraft, onClose, onSaved }: {
+  saved: Saved; fallback: BannerChoice; glass: boolean; draft: Draft; setDraft: (d: Draft) => void; onClose: () => void; onSaved: (d: Saved) => void;
 }) {
   const saved: Draft = { choice: savedRaw.choice ?? fallback, uploadUrl: savedRaw.uploadUrl };
   const [busy, setBusy] = useState(false);
@@ -176,16 +199,16 @@ function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }
 
   return createPortal(
     <div className="fixed inset-x-0 bottom-0 z-[70] p-3 pb-[calc(0.75rem+var(--safe-bottom))] sm:bottom-4 sm:left-auto sm:right-4 sm:w-[440px] sm:p-0" role="dialog" aria-modal="false" aria-labelledby="banner-picker-title">
-      <div className="max-h-[70vh] overflow-y-auto rounded-2xl border border-pine/15 bg-paper p-5 text-ink shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+      <div data-glass="sheet" className="max-h-[70vh] overflow-y-auto rounded-3xl border border-pine/15 bg-paper p-5 text-ink shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 id="banner-picker-title" className="font-display text-xl font-medium text-pine-deep">Your banner</h2>
-            <p className="mt-0.5 text-xs text-ink/70">Previewing live above. Only you see your banner.</p>
+            <h2 id="banner-picker-title" className="font-display text-xl font-semibold text-pine-deep">Your banner</h2>
+            <p className="mt-0.5 text-xs text-ink/70">{glass ? "Previewing live behind this panel." : "Previewing live above."} Only you see your banner.</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full text-ink/70 hover:bg-ink/5 hover:text-ink">✕</button>
         </div>
 
-        <p className="mt-5 text-xs font-semibold text-ink/65">Colours</p>
+        <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-ink/65">Colours</p>
         <div className="mt-2 grid grid-cols-4 gap-2">
           {BANNER_PRESETS.map((p) => (
             <button key={p.id} onClick={() => setDraft({ ...draft, choice: { kind: "preset", id: p.id }, pendingImage: undefined })}
@@ -196,7 +219,7 @@ function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }
           ))}
         </div>
 
-        <p className="mt-4 text-xs font-semibold text-ink/65">Club photos</p>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/65">Club photos</p>
         <div className="mt-2 grid grid-cols-4 gap-2">
           {BANNER_PHOTOS.map((p) => (
             <button key={p.id} onClick={() => setDraft({ ...draft, choice: { kind: "photo", id: p.id, pos: p.pos }, pendingImage: undefined })}
@@ -207,7 +230,7 @@ function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }
           ))}
         </div>
 
-        <p className="mt-4 text-xs font-semibold text-ink/65">Your own photo</p>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/65">Your own photo</p>
         <div className="mt-2 flex items-center gap-2">
           {hasUpload && (
             <button onClick={() => setDraft({ ...draft, choice: { kind: "upload", path: "pending", pos: c.kind === "upload" ? c.pos : saved.choice.kind === "upload" ? saved.choice.pos : 50 } })}
@@ -224,7 +247,7 @@ function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }
 
         {(c.kind === "photo" || c.kind === "upload") && (
           <label className="mt-4 block">
-            <span className="text-xs font-semibold text-ink/65">Photo position</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-ink/65">Photo position</span>
             <input type="range" min={0} max={100} value={c.pos} aria-label="Photo position (top to bottom)"
               onChange={(e) => setDraft({ ...draft, choice: { ...c, pos: Number(e.target.value) } })}
               className="mt-2 w-full accent-[#E2A02F]" />
@@ -235,7 +258,7 @@ function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
         <div className="mt-5 flex items-center justify-between gap-2">
-          <button onClick={reset} disabled={busy} title="Pine in light mode, Midnight in dark mode" className="text-sm text-ink/70 hover:text-ink disabled:opacity-50">Reset to default</button>
+          <button onClick={reset} disabled={busy} title={glass ? "The Himalayas" : "Pine in light mode, Midnight in dark mode"} className="text-sm text-ink/70 hover:text-ink disabled:opacity-50">Reset to default</button>
           <div className="flex gap-2">
             <button onClick={onClose} disabled={busy} className="rounded-full px-4 py-2 text-sm font-semibold text-ink/65 hover:text-ink">Cancel</button>
             <button onClick={save} disabled={busy || (same(draft.choice, saved.choice) && !draft.pendingImage && (c.kind === "preset" || (saved.choice.kind !== "preset" && c.pos === (saved.choice as { pos: number }).pos)))}
@@ -260,17 +283,34 @@ export default function DashboardBanner({ children, customizable = false, classN
   const dark = useIsDark();
   const [draft, setDraft] = useState<Draft | null>(null); // non-null while the picker is open
   const close = useCallback(() => setDraft(null), []);
-  const fallback = themeDefault(dark);
-  const shown: Draft = draft ?? { choice: saved.choice ?? fallback, uploadUrl: saved.uploadUrl };
+  const glass = !!useGlass();
+  // The picker's starting point when nothing is saved. (The banner's own
+  // background always uses the theme default — Liquid Glass hides it anyway —
+  // so Classic never flashes the glass default while the setting is read.)
+  const fallback = glass ? GLASS_DEFAULT : themeDefault(dark);
+  const heroFallback = themeDefault(dark);
+
+  // Let the full-screen glass backdrop follow the live preview (null = picker closed).
+  useEffect(() => {
+    if (!customizable) return;
+    window.dispatchEvent(new CustomEvent(PREVIEW_EVENT, { detail: draft }));
+  }, [draft, customizable]);
+  useEffect(() => () => {
+    if (customizable) window.dispatchEvent(new CustomEvent(PREVIEW_EVENT, { detail: null }));
+  }, [customizable]);
+  const shown: Draft = draft ?? { choice: saved.choice ?? heroFallback, uploadUrl: saved.uploadUrl };
 
   return (
     <section data-dashboard-banner={shown.choice.kind === "preset" ? shown.choice.id : shown.choice.kind}
       className={`relative overflow-hidden pt-[var(--header-h)] text-paper ${className}`}>
-      <Background d={shown} />
+      {/* Liquid Glass hides this: the same banner fills the screen behind the
+          whole page instead (<GlassBackdrop/>). */}
+      <div data-banner-bg className="absolute inset-0"><Background d={shown} /></div>
       {children}
       {customizable && (
         <div className="container-rishi pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-end">
           <button onClick={() => setDraft(draft ? null : { choice: saved.choice ?? fallback, uploadUrl: saved.uploadUrl })} aria-expanded={!!draft}
+            data-glass="clear"
             className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full border border-paper/25 bg-black/10 px-3 py-1.5 text-xs font-semibold text-paper/80 backdrop-blur-sm transition-colors hover:bg-paper hover:text-pine-deep">
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="10" r="1.6" /><path d="M21 16l-5-5-8 8" />
@@ -280,9 +320,67 @@ export default function DashboardBanner({ children, customizable = false, classN
         </div>
       )}
       {draft && (
-        <Picker saved={saved} fallback={fallback} draft={draft} setDraft={setDraft} onClose={close}
+        <Picker saved={saved} fallback={fallback} glass={glass} draft={draft} setDraft={setDraft} onClose={close}
           onSaved={(d) => { setSaved(d); setDraft(null); }} />
       )}
     </section>
+  );
+}
+
+/**
+ * Liquid Glass: the member's banner as a fixed, full-screen backdrop behind the
+ * whole dashboard page (rendered once, in app/dashboard/layout). Hidden by CSS
+ * unless <html> has the `glass` class. It only loads anything while glass is on,
+ * and fades the picture in once it has decoded, so there's never a flash of the
+ * wrong photo.
+ */
+export function GlassBackdrop() {
+  const glass = useGlass();
+  return (
+    <div data-glass-backdrop aria-hidden className="glass-backdrop">
+      {glass === true && <GlassBackdropImage />}
+      <div className="glass-backdrop-scrim" />
+    </div>
+  );
+}
+
+function GlassBackdropImage() {
+  const [saved] = useSavedBanner();
+  const [preview, setPreview] = useState<Draft | null>(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const on = (e: Event) => setPreview((e as CustomEvent).detail ?? null);
+    window.addEventListener(PREVIEW_EVENT, on);
+    return () => window.removeEventListener(PREVIEW_EVENT, on);
+  }, []);
+  const d: Draft = preview ?? { choice: saved.choice ?? GLASS_DEFAULT, uploadUrl: saved.uploadUrl };
+  const c = d.choice;
+
+  if (c.kind === "preset") {
+    const p = BANNER_PRESETS.find((x) => x.id === c.id) ?? BANNER_PRESETS[0];
+    return (
+      <div className="glass-backdrop-media is-ready">
+        <div className={`absolute inset-0 ${p.background ? "" : "bg-pine"}`} style={p.background ? { background: p.background } : undefined} />
+        {p.contours && <Contours className="absolute inset-0 h-full w-full" stroke={p.contours.color} opacity={p.contours.opacity} />}
+      </div>
+    );
+  }
+  const src = c.kind === "photo" ? BANNER_PHOTOS.find((x) => x.id === c.id)?.src : d.pendingImage ?? d.uploadUrl;
+  return (
+    <div className={`glass-backdrop-media ${ready ? "is-ready" : ""}`}>
+      {src && (
+        <img
+          key={src}
+          src={src}
+          alt=""
+          decoding="async"
+          ref={(el) => { if (el?.complete && el.naturalWidth) setReady(true); }}
+          onLoad={() => setReady(true)}
+          onError={() => setReady(true)}
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ objectPosition: `50% ${c.pos}%` }}
+        />
+      )}
+    </div>
   );
 }

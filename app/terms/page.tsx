@@ -9,10 +9,10 @@ export default function TermsPage() {
   return (
     <section className="bg-paper pt-[var(--header-h)]">
       <div className="container-rishi max-w-3xl py-16">
-        <h1 className="font-display text-4xl font-medium text-pine-deep">Terms of Service</h1>
+        <h1 className="font-display text-4xl font-semibold text-pine-deep">Terms of Service</h1>
         <p className="mt-2 text-sm text-ink/70">Last updated: July 2026</p>
 
-        <div className="mt-8 space-y-6 text-ink/80 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-medium [&_h2]:text-pine-deep [&_h2]:mt-8 [&_h3]:font-medium [&_h3]:text-pine-deep [&_h3]:mt-5 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_a]:text-pine [&_a]:underline">
+        <div className="mt-8 space-y-6 text-ink/80 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-pine-deep [&_h2]:mt-8 [&_h3]:font-semibold [&_h3]:text-pine-deep [&_h3]:mt-5 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_a]:text-pine [&_a]:underline">
           <p>
             These Terms of Service (&ldquo;Terms&rdquo;) govern your use of the
             Project RISHI @ UC Berkeley member dashboard (the

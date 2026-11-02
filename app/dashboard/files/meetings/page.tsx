@@ -17,7 +17,7 @@ export default function MeetingsHome() {
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
             Back to dashboard
           </Link>
-          <h1 className="mt-4 font-display text-4xl font-medium sm:text-5xl">Meetings</h1>
+          <h1 className="mt-4 font-display text-4xl font-semibold sm:text-5xl">Meetings</h1>
           <p className="mt-2 max-w-2xl text-paper/70"></p>
         </div>
       </DashboardBanner>
@@ -26,10 +26,10 @@ export default function MeetingsHome() {
         <div className="grid gap-5 sm:grid-cols-2">
           {PROJECT_GROUPS.map((g) => (
             <Link key={g} href={`/dashboard/files/meetings/g/${g}`}
-              className="group flex items-center justify-between rounded-2xl border border-pine/15 bg-pine/[0.03] p-7 transition-colors hover:border-pine hover:bg-pine hover:text-paper">
+              className="group flex items-center justify-between rounded-3xl border border-pine/15 bg-pine/[0.03] p-7 transition-colors hover:border-pine hover:bg-pine hover:text-paper">
               <div>
-                <p className="text-xs font-semibold text-marigold-ink group-hover:text-marigold-soft">Project group</p>
-                <h2 className="mt-1 font-display text-2xl font-medium">{PROJECT_GROUP_LABELS[g]}</h2>
+                <p className="text-xs font-semibold uppercase tracking-widest text-marigold-ink group-hover:text-marigold-soft">Project group</p>
+                <h2 className="mt-1 font-display text-2xl font-semibold">{PROJECT_GROUP_LABELS[g]}</h2>
                 <p className="mt-1 text-sm opacity-70">{GROUP_BLURB[g]} meetings & notes</p>
               </div>
               <svg className="h-6 w-6 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>

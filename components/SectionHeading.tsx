@@ -21,7 +21,7 @@ export default function SectionHeading({
 
   return (
     <div className={align === "center" ? "text-center" : ""}>
-      <h2 className={`font-display text-3xl font-medium sm:text-4xl ${titleColor}`}>
+      <h2 className={`font-display text-3xl font-semibold sm:text-4xl ${titleColor}`}>
         {title}
       </h2>
     </div>

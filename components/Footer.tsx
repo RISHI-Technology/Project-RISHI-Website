@@ -10,7 +10,7 @@ function Social({ href, label, children }: { href: string; label: string; childr
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="grid h-10 w-10 place-items-center rounded-full border border-paper/20 text-paper/80 transition-colors hover:border-paper/50 hover:text-paper"
+      className="grid h-10 w-10 place-items-center rounded-full border border-paper/20 text-paper/80 transition-colors hover:border-marigold hover:bg-marigold hover:text-pine-deep"
     >
       {children}
     </a>
@@ -26,8 +26,8 @@ export default function Footer() {
         <div className="grid gap-12 lg:grid-cols-[1.2fr_1fr_1.2fr]">
           {/* Brand + contact */}
           <div>
-            <p className="font-display text-2xl font-medium">{ORG.name}</p>
-            <p className="mt-1 text-sm text-marigold-soft">
+            <p className="font-display text-2xl font-semibold">{ORG.name}</p>
+            <p className="mt-1 text-sm uppercase tracking-[0.2em] text-marigold-soft">
               {ORG.chapter}
             </p>
             <div className="mt-6 space-y-2 text-sm text-paper/70">
@@ -95,26 +95,26 @@ export default function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col items-start gap-4 border-t border-paper/15 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-paper/60">{ORG.copyright}</p>
+          <p className="text-xs text-paper/50">{ORG.copyright}</p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <Link href="/privacy" className="text-xs text-paper/60 transition-colors hover:text-paper">
-              Privacy policy
+            <Link href="/privacy" className="text-xs text-paper/50 transition-colors hover:text-paper">
+              Privacy Policy
             </Link>
-            <Link href="/terms" className="text-xs text-paper/60 transition-colors hover:text-paper">
-              Terms of service
+            <Link href="/terms" className="text-xs text-paper/50 transition-colors hover:text-paper">
+              Terms of Service
             </Link>
-            <span className="text-xs text-paper/60">
-              Promoting sustainable development since 2008
+            <span className="text-xs text-paper/50">
+              Promoting sustainable development since 2008.
             </span>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-sm font-medium text-paper/80 transition-colors hover:text-paper"
+              className="inline-flex items-center gap-2 rounded-full border border-paper/30 bg-paper/5 px-4 py-2 text-sm font-semibold text-paper transition-colors hover:border-marigold hover:bg-marigold hover:text-pine-deep"
             >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="4" y="11" width="16" height="9" rx="2" />
                 <path d="M8 11V7a4 4 0 0 1 8 0v4" />
               </svg>
-              Member login
+              Member Login
             </Link>
           </div>
         </div>

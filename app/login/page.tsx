@@ -16,11 +16,12 @@ function LoginCard() {
   }, [status, router]);
 
   return (
-    <div className="relative z-10 w-full max-w-md rounded-2xl border border-paper/10 bg-pine p-8 text-center shadow-[0_8px_24px_rgba(0,0,0,0.2)] sm:p-10">
+    <div className="relative z-10 w-full max-w-md rounded-3xl border border-paper/10 bg-pine/40 p-8 text-center shadow-2xl shadow-pine-deep/40 backdrop-blur-sm sm:p-10">
       <span className="eyebrow text-marigold-soft">
-        Members only
+        <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
+        Members Only
       </span>
-      <h1 className="mt-4 font-display text-4xl font-medium">Member login</h1>
+      <h1 className="mt-4 font-display text-4xl font-semibold">Member Login</h1>
       <p className="mt-3 text-sm text-paper/70">
         Sign in with your Berkeley email to access the member
         dashboard.
@@ -29,13 +30,13 @@ function LoginCard() {
       {error && (
         <p className="mt-5 rounded-xl border border-red-300/30 bg-red-500/15 px-4 py-3 text-sm text-red-100">
           That account isn&rsquo;t on the member list. If this is a mistake,
-          please let the webmaster know.
+          please inform Webmaster.
         </p>
       )}
 
       <button
         onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-        className="mt-8 flex h-11 w-full items-center justify-center gap-3 rounded-full bg-paper px-6 text-sm font-medium text-ink transition-[background-color,transform] duration-150 hover:bg-white active:scale-[0.98]"
+        className="mt-7 flex w-full items-center justify-center gap-3 rounded-full bg-paper px-6 py-3.5 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
@@ -46,7 +47,7 @@ function LoginCard() {
         Sign in with Google
       </button>
 
-      <p className="mt-6 text-xs text-paper/60">
+      <p className="mt-6 text-xs text-paper/45">
         Access is limited to registered members. Not a member?{" "}
         <a href="/apply" className="text-marigold-soft underline-offset-2 hover:underline">
           Apply to join

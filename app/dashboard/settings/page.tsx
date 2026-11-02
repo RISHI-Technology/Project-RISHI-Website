@@ -11,6 +11,7 @@ import ProfilePhotoModal from "@/components/ProfilePhotoModal";
 import FilesSettingsPanel from "@/components/FilesSettingsPanel";
 import AgentSettingsPanel from "@/components/AgentSettingsPanel";
 import { ThemeSetting } from "@/components/ThemeToggle";
+import { InterfaceSetting } from "@/components/GlassMode";
 import DashboardBanner from "@/components/DashboardBanner";
 
 type Profile = {
@@ -35,7 +36,7 @@ type GmailStatus = {
 function ReadonlyField({ label, value }: { label: string; value: string }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold text-ink/70">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">{label}</span>
       <div className="mt-1.5 cursor-not-allowed select-none rounded-xl border border-ink/10 bg-ink/[0.04] px-4 py-3 text-sm text-ink/75">
         {value || "—"}
       </div>
@@ -159,7 +160,7 @@ export default function SettingsPage() {
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d?.error || "Couldn't save.");
-      setCMsg("Saved");
+      setCMsg("Saved!");
       setTimeout(() => setCMsg(null), 2000);
     } catch (e) {
       setCMsg(e instanceof Error ? e.message : "Couldn't save.");
@@ -182,7 +183,7 @@ export default function SettingsPage() {
             </svg>
             Back to dashboard
           </Link>
-          <h1 className="mt-4 font-display text-4xl font-medium sm:text-5xl">Account settings</h1>
+          <h1 className="mt-4 font-display text-4xl font-semibold sm:text-5xl">Account settings</h1>
         </div>
       </DashboardBanner>
 
@@ -192,7 +193,7 @@ export default function SettingsPage() {
 
         {profile && (
           <Reveal>
-            <div className="mx-auto max-w-xl rounded-2xl border border-pine/15 bg-pine/[0.03] p-8">
+            <div className="mx-auto max-w-xl rounded-3xl border border-pine/15 bg-pine/[0.03] p-8">
               {/* Photo (the one editable setting for now) */}
               <div className="flex items-center gap-5">
                 <Avatar src={profile.avatar} name={`${profile.firstName} ${profile.lastName}`} size={88} />
@@ -223,14 +224,17 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* Interface — Liquid Glass (default) or Classic, every member */}
+            <InterfaceSetting />
+
             {/* Appearance — dark mode for the dashboard, every member */}
             <ThemeSetting />
 
             {/* Directory contact info — members REQUEST changes (emailed to the
                 webmaster); only the webmaster edits directly. */}
             {!canEditContact && (
-              <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-pine/15 bg-pine/[0.03] p-8">
-                <h2 className="font-display text-lg font-medium text-pine-deep">Directory contact info</h2>
+              <div className="mx-auto mt-6 max-w-xl rounded-3xl border border-pine/15 bg-pine/[0.03] p-8">
+                <h2 className="font-display text-lg font-semibold text-pine-deep">Directory contact info</h2>
                 <p className="mt-1 mb-4 text-sm text-ink/75">
                   How you appear in the <a href="/dashboard/directory" className="text-pine underline">member directory</a>.
                   To change it, send a request and the webmaster will update it.
@@ -239,20 +243,20 @@ export default function SettingsPage() {
               </div>
             )}
             {canEditContact && (
-            <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-pine/15 bg-pine/[0.03] p-8">
-              <h2 className="font-display text-lg font-medium text-pine-deep">Directory contact info</h2>
+            <div className="mx-auto mt-6 max-w-xl rounded-3xl border border-pine/15 bg-pine/[0.03] p-8">
+              <h2 className="font-display text-lg font-semibold text-pine-deep">Directory contact info</h2>
               <p className="mt-1 text-sm text-ink/75">
                 How you appear in the <a href="/dashboard/directory" className="text-pine underline">member directory</a>.
                 Editing this does <strong>not</strong> change the email you log in with.
               </p>
               <div className="mt-5 grid gap-4">
                 <label className="block">
-                  <span className="text-xs font-semibold text-ink/70">Email</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Email</span>
                   <input value={cEmail} onChange={(e) => setCEmail(e.target.value)} placeholder="you@example.com"
                     className="mt-1.5 w-full rounded-xl border border-pine/20 px-4 py-3 text-sm outline-none focus:border-pine" />
                 </label>
                 <label className="block">
-                  <span className="text-xs font-semibold text-ink/70">Phone</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Phone</span>
                   <input value={cPhone} onChange={(e) => setCPhone(formatPhoneInput(e.target.value))} placeholder="(555) 123-4567"
                     className="mt-1.5 w-full rounded-xl border border-pine/20 px-4 py-3 text-sm outline-none focus:border-pine" />
                 </label>
@@ -270,8 +274,8 @@ export default function SettingsPage() {
 
             {/* Roster (Google Sheet) — exec only */}
             {roster && (
-              <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-pine/15 bg-pine/[0.03] p-8">
-                <h2 className="font-display text-lg font-medium text-pine-deep">Member roster</h2>
+              <div className="mx-auto mt-6 max-w-xl rounded-3xl border border-pine/15 bg-pine/[0.03] p-8">
+                <h2 className="font-display text-lg font-semibold text-pine-deep">Member roster</h2>
                 <p className="mt-1 text-sm text-ink/75">
                   By default the roster comes from <code>lib/members.ts</code>. Turn on Google Sheet sync to
                   manage members and roles from the{" "}
@@ -293,7 +297,7 @@ export default function SettingsPage() {
                     onClick={() => setRosterMode(roster.mode === "sheet" ? "code" : "sheet")}
                     role="switch" aria-checked={roster.mode === "sheet"}
                     className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${roster.mode === "sheet" ? "bg-pine" : "bg-ink/20"}`}>
-                    <span className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-paper transition-transform duration-150 ${roster.mode === "sheet" ? "translate-x-5" : ""}`} />
+                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-paper transition-all ${roster.mode === "sheet" ? "left-6" : "left-1"}`} />
                   </button>
                 </div>
 
@@ -342,8 +346,8 @@ export default function SettingsPage() {
 
             {/* Email sending (Gmail) */}
             {gmail && (
-              <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-pine/15 bg-pine/[0.03] p-8">
-                <h2 className="font-display text-lg font-medium text-pine-deep">Email sending</h2>
+              <div className="mx-auto mt-6 max-w-xl rounded-3xl border border-pine/15 bg-pine/[0.03] p-8">
+                <h2 className="font-display text-lg font-semibold text-pine-deep">Email sending</h2>
                 <p className="mt-1 text-sm text-ink/75">
                   Connect an account so the dashboard can send announcements and emails on your behalf.
                   This uses send-only access &mdash; it can never read or delete your mail.

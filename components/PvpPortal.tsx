@@ -37,7 +37,7 @@ const BOARDS: { kind: Kind; tab: string; blurb: string; empty: string }[] = [
 ];
 
 const inputCls = "mt-1 w-full rounded-xl border border-pine/15 bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-pine/40";
-const labelCls = "text-xs font-semibold text-ink/65";
+const labelCls = "text-xs font-semibold uppercase tracking-wide text-ink/65";
 const btn = "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors";
 
 const fmtDate = (iso: string | null) =>
@@ -211,7 +211,7 @@ export default function PvpPortal() {
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
             Back to dashboard
           </Link>
-          <h1 className="mt-4 font-display text-4xl font-medium sm:text-5xl">PVP</h1>
+          <h1 className="mt-4 font-display text-4xl font-semibold sm:text-5xl">PVP</h1>
           <p className="mt-2 max-w-xl text-sm text-paper/70">
           </p>
         </div>
@@ -241,7 +241,7 @@ export default function PvpPortal() {
       <NewItem key={tab} kind={tab} approvers={approvers} onCreate={(p) => act({ action: "create", kind: tab, ...p })} />
 
       <div className="mt-5 flex items-center justify-between">
-        <span className="text-xs font-semibold text-ink/65">
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink/65">
           {mine.length} {mine.length === 1 ? "item" : "items"}
         </span>
         <label className="flex items-center gap-1.5 text-xs text-ink/70">
@@ -274,7 +274,7 @@ export default function PvpPortal() {
             ["Not set up yet", mine.filter((i) => !i.scheduledAt)],
           ] as [string, Item[]][]).map(([heading, group]) => (
             <div key={heading}>
-              <h2 className="text-xs font-semibold text-ink/65">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-ink/65">
                 {heading}<span className="ml-1.5 tabular-nums text-ink/65">{group.length}</span>
               </h2>
               {group.length === 0 ? (
