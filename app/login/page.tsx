@@ -16,12 +16,12 @@ function LoginCard() {
   }, [status, router]);
 
   return (
-    <div className="relative z-10 w-full max-w-md rounded-3xl border border-paper/10 bg-pine/40 p-8 text-center shadow-2xl shadow-pine-deep/40 backdrop-blur-sm sm:p-10">
-      <span className="eyebrow text-marigold-soft">
-        <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
+    <div className="relative z-10 w-full max-w-md rounded-2xl border border-paper/15 bg-pine p-8 text-center shadow-[0_24px_60px_-24px_rgba(6,18,13,0.7)] sm:p-10">
+      <span className="inline-flex items-center gap-3 text-sm font-medium text-paper/75">
+        <span className="h-px w-6 bg-marigold" />
         Members Only
       </span>
-      <h1 className="mt-4 font-display text-4xl font-semibold">Member Login</h1>
+      <h1 className="mt-5 font-display text-4xl font-semibold sm:text-[2.75rem]">Member Login</h1>
       <p className="mt-3 text-sm text-paper/70">
         Sign in with your Berkeley email to access the member
         dashboard.

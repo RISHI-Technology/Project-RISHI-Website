@@ -16,16 +16,16 @@ export default function ProjectsIndex() {
     <>
       <section className="relative overflow-hidden bg-pine pt-[var(--header-h)] text-paper">
         <Contours className="absolute inset-0 h-full w-full text-paper" opacity={0.12} />
-        <div className="container-rishi relative z-10 py-20 lg:py-28">
+        <div className="container-rishi relative z-10 pb-20 pt-16 lg:pb-28 lg:pt-24">
           <Reveal>
-            <span className="eyebrow text-marigold-soft">
-              <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
+            <span className="inline-flex items-center gap-3 text-sm font-medium text-paper/75">
+              <span className="h-px w-6 bg-marigold" />
               What We Do
             </span>
-            <h1 className="mt-4 max-w-3xl font-display text-5xl font-semibold leading-[1.02] sm:text-6xl">
+            <h1 className="mt-7 max-w-4xl font-display text-5xl font-semibold leading-[1.02] sm:text-6xl lg:text-7xl">
               Four teams, One village
             </h1>
-            <p className="mt-6 max-w-xl text-paper/80">
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-paper/80">
               Each team focuses on a pillar of sustainable development in Bharog
               Baneri, Himachal Pradesh.
             </p>
@@ -34,7 +34,7 @@ export default function ProjectsIndex() {
       </section>
 
       {/* ----------------------------------------------- Project Work in Action */}
-      <section className="bg-pine-deep py-20 text-paper">
+      <section className="bg-pine-deep py-20 text-paper lg:py-28">
         <div className="container-rishi">
           <SectionHeading
             eyebrow="On the ground"
@@ -43,11 +43,11 @@ export default function ProjectsIndex() {
             tone="dark"
           />
           <Reveal delay={0.1}>
-            <p className="mt-4 max-w-2xl text-paper/70">{PROJECTS_PAGE.videoBlurb}</p>
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-paper/70">{PROJECTS_PAGE.videoBlurb}</p>
           </Reveal>
 
           <Reveal delay={0.15}>
-            <div className="mt-10 overflow-hidden rounded-3xl border border-paper/10 bg-black/30 shadow-xl shadow-pine-deep/40">
+            <div className="mt-12 overflow-hidden rounded-2xl bg-black/30">
               <div className="relative aspect-video w-full">
                 {PROJECTS_PAGE.videoEmbedUrl ? (
                   <iframe
@@ -80,28 +80,28 @@ export default function ProjectsIndex() {
         </div>
       </section>
 
-      <section className="container-rishi py-20">
-        <div className="grid gap-6 md:grid-cols-2">
+      <section className="container-rishi py-20 lg:py-28">
+        <div className="grid gap-x-8 gap-y-14 md:grid-cols-2">
           {PROJECTS.map((p, i) => (
             <Reveal as="article" key={p.slug} delay={i * 0.08}>
               <Link
                 href={`/projects/${p.slug}`}
-                className="group block overflow-hidden rounded-3xl border border-pine/12 transition-colors hover:border-pine"
+                className="group block rounded-2xl"
               >
                 <Media
                   src={p.image}
                   alt={p.name}
                   label={`${p.name} cover`}
-                  className="aspect-[16/9] w-full"
-                  rounded="rounded-none"
+                  className="aspect-[3/2] w-full [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover:[&_img]:scale-[1.03]"
+                  rounded="rounded-2xl"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
-                <div className="p-7">
-                  <h2 className="font-display text-2xl font-semibold text-pine-deep">
+                <div className="pt-6">
+                  <h2 className="font-display text-2xl font-semibold text-pine-deep sm:text-[1.75rem]">
                     {p.name}
                   </h2>
-                  <p className="mt-2 line-clamp-3 text-ink/70">{p.intro}</p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-pine">
+                  <p className="mt-2 line-clamp-3 max-w-xl leading-relaxed text-ink/70">{p.intro}</p>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-pine underline-offset-4 group-hover:underline">
                     Explore team
                     <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M5 12h14M13 6l6 6-6 6" />
