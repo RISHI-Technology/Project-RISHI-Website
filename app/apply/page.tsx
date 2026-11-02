@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import SiteLabel from "@/components/SiteLabel";
+import type { CSSProperties } from "react";
 import { APPLY, LINKS } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -16,94 +16,104 @@ const Arrow = () => (
 export default function ApplyPage() {
   return (
     <div className="site">
-      <section className="border-b border-graphite/10 pt-[var(--header-h)]">
-        <div className="s-container pb-[clamp(3.5rem,7vw,6rem)] pt-[clamp(3.5rem,7vw,6rem)]">
-          <SiteLabel>{APPLY.termLabel}</SiteLabel>
-          <h1 className="t-display mt-7 max-w-[17ch] text-deodar">{APPLY.heading}</h1>
-          <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-5">
-            <p className="t-lead text-graphite/80">{APPLY.blurb}</p>
-            {LINKS.application ? (
-              <a href={LINKS.application} target="_blank" rel="noopener noreferrer" className="s-btn s-btn-primary">
+      <section className="a-glow pb-[clamp(4rem,8vw,7rem)] pt-[calc(var(--header-h)+clamp(3.5rem,8vw,6.5rem))]">
+        <div className="a-wrap text-center">
+          <p className="hero-rise a-eyebrow">{APPLY.termLabel}</p>
+          <h1 style={{ "--i": 1 } as CSSProperties} className="hero-rise a-display mx-auto mt-3 max-w-[18ch]">
+            {APPLY.heading}
+          </h1>
+          <p style={{ "--i": 2 } as CSSProperties} className="hero-rise a-lead mt-5 text-label-2">{APPLY.blurb}</p>
+          {LINKS.application ? (
+            <div style={{ "--i": 3 } as CSSProperties} className="hero-rise mt-8">
+              <a href={LINKS.application} target="_blank" rel="noopener noreferrer" className="a-btn a-btn-primary min-h-[52px] px-8 text-[1.1875rem]">
                 Apply
                 <Arrow />
               </a>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
-      {/* Timeline — one schedule, read top to bottom */}
-      <section className="s-section">
-        <div className="s-container">
-          <ol className="border-b border-graphite/15">
+      {/* Timeline — one schedule */}
+      <section className="pb-[var(--a-section)]">
+        <div className="a-wrap">
+          <ol className="a-reveal a-tile divide-y divide-label/10 px-[clamp(1.25rem,3vw,2.5rem)]">
             {APPLY.timeline.map((t, i) => (
               <li
                 key={t.label}
-                className="grid grid-cols-[2.75rem_1fr] gap-x-4 gap-y-1 border-t border-graphite/15 py-6 sm:grid-cols-[4rem_minmax(0,16rem)_1fr_auto] sm:items-baseline sm:gap-x-8"
+                className="grid grid-cols-[2.75rem_1fr] items-center gap-x-4 gap-y-1 py-6 sm:grid-cols-[3.25rem_minmax(0,15rem)_1fr_auto] sm:gap-x-6"
               >
-                <span className="t-label t-num text-deodar">{String(i + 1).padStart(2, "0")}</span>
-                <p className="t-label text-stone">{t.label}</p>
-                <p className="t-h3 col-start-2 text-deodar sm:col-start-auto">{t.value}</p>
+                <span className="a-num row-span-3 grid h-11 w-11 place-items-center self-start rounded-full bg-pine/[0.08] text-[0.9375rem] font-semibold text-pine sm:row-span-1 sm:self-center">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <p className="a-callout font-semibold text-label-2">{t.label}</p>
+                <p className="a-title3 col-start-2 sm:col-start-auto">{t.value}</p>
                 {"time" in t && t.time ? (
-                  <p className="t-small t-num col-start-2 font-medium text-graphite/80 sm:col-start-auto sm:text-right">{t.time}</p>
+                  <p className="a-callout a-num col-start-2 text-label-2 sm:col-start-auto sm:text-right">{t.time}</p>
                 ) : null}
               </li>
             ))}
           </ol>
 
           {/* Actions */}
-          <div className="mt-[var(--space-block)] grid gap-4 sm:grid-cols-3">
-            <a
-              href={LINKS.interestForm}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group s-dark flex min-h-[10rem] flex-col justify-between rounded-[var(--r-media)] bg-deodar p-7 text-snow transition-colors duration-150 hover:bg-deodar-deep"
-            >
-              <p className="t-h3">Interest Form</p>
-              <span className="t-label mt-6 inline-flex items-center gap-2 text-saffron">
-                Open form →
-              </span>
-            </a>
-            {LINKS.coffeeChats ? (
+          <div className="mt-5 grid gap-5 sm:grid-cols-3">
+            <div className="a-reveal flex">
               <a
-                href={LINKS.coffeeChats}
+                href={LINKS.interestForm}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex min-h-[10rem] flex-col justify-between rounded-[var(--r-media)] bg-saffron p-7 text-deodar-deep transition-colors duration-150 hover:bg-saffron-deep"
+                className="a-press a-on-dark flex min-h-[11rem] w-full flex-col justify-between rounded-[var(--a-r-lg)] bg-pine p-8 transition-colors hover:bg-pine-deep"
               >
-                <p className="t-h3">Coffee Chats</p>
-                <span className="t-label mt-6 inline-flex items-center gap-2">
-                  Book a slot →
+                <p className="a-title2">Interest Form</p>
+                <span className="a-callout inline-flex items-center gap-2 font-semibold text-marigold">
+                  Open form →
                 </span>
               </a>
-            ) : (
-              <div aria-disabled className="flex min-h-[10rem] flex-col justify-between rounded-[var(--r-media)] border border-dashed border-graphite/25 p-7">
-                <p className="t-h3 text-graphite/70">Coffee Chats</p>
-                <span className="t-label mt-6 inline-flex items-center gap-2 text-stone">
-                  Released soon
-                </span>
-              </div>
-            )}
-            {LINKS.application ? (
-              <a
-                href={LINKS.application}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group s-dark flex min-h-[10rem] flex-col justify-between rounded-[var(--r-media)] bg-deodar-deep p-7 text-snow transition-colors duration-150 hover:bg-graphite"
-              >
-                <p className="t-h3">Application</p>
-                <span className="t-label mt-6 inline-flex items-center gap-2 text-saffron">
-                  Apply now →
-                </span>
-              </a>
-            ) : (
-              <div aria-disabled className="flex min-h-[10rem] flex-col justify-between rounded-[var(--r-media)] border border-dashed border-graphite/25 p-7">
-                <p className="t-h3 text-graphite/70">Application</p>
-                <span className="t-label mt-6 inline-flex items-center gap-2 text-stone">
-                  Released soon
-                </span>
-              </div>
-            )}
+            </div>
+            <div className="a-reveal flex">
+              {LINKS.coffeeChats ? (
+                <a
+                  href={LINKS.coffeeChats}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="a-press flex min-h-[11rem] w-full flex-col justify-between rounded-[var(--a-r-lg)] bg-marigold p-8 text-label transition-colors hover:bg-[rgb(var(--a-marigold-press))]"
+                >
+                  <p className="a-title2">Coffee Chats</p>
+                  <span className="a-callout inline-flex items-center gap-2 font-semibold">
+                    Book a slot →
+                  </span>
+                </a>
+              ) : (
+                <div aria-disabled className="flex min-h-[11rem] w-full flex-col justify-between rounded-[var(--a-r-lg)] border border-dashed border-label/20 p-8">
+                  <p className="a-title2 text-label/70">Coffee Chats</p>
+                  <span className="a-callout inline-flex items-center gap-2 font-semibold text-label-2">
+                    Released soon
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="a-reveal flex">
+              {LINKS.application ? (
+                <a
+                  href={LINKS.application}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="a-press a-on-dark flex min-h-[11rem] w-full flex-col justify-between rounded-[var(--a-r-lg)] p-8 transition-colors hover:bg-black"
+                >
+                  <p className="a-title2">Application</p>
+                  <span className="a-callout inline-flex items-center gap-2 font-semibold text-marigold">
+                    Apply now →
+                  </span>
+                </a>
+              ) : (
+                <div aria-disabled className="flex min-h-[11rem] w-full flex-col justify-between rounded-[var(--a-r-lg)] border border-dashed border-label/20 p-8">
+                  <p className="a-title2 text-label/70">Application</p>
+                  <span className="a-callout inline-flex items-center gap-2 font-semibold text-label-2">
+                    Released soon
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import Media from "@/components/Media";
 import SectionHeading from "@/components/SectionHeading";
-import SiteLabel from "@/components/SiteLabel";
+import { Chevron } from "@/components/site/Icons";
 import { PROJECTS, PROJECTS_PAGE } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -13,13 +14,13 @@ export const metadata: Metadata = {
 export default function ProjectsIndex() {
   return (
     <div className="site">
-      <section className="border-b border-graphite/10 pt-[var(--header-h)]">
-        <div className="s-container grid gap-8 pb-[clamp(3.5rem,7vw,6rem)] pt-[clamp(3.5rem,7vw,6rem)] lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-7">
-            <SiteLabel>What We Do</SiteLabel>
-            <h1 className="t-display mt-7 text-deodar">Four teams, One village</h1>
-          </div>
-          <p className="t-lead text-graphite/80 lg:col-span-4 lg:col-start-9">
+      <section className="a-glow pb-[clamp(4rem,8vw,7rem)] pt-[calc(var(--header-h)+clamp(3.5rem,8vw,6.5rem))]">
+        <div className="a-wrap text-center">
+          <p className="hero-rise a-eyebrow">What We Do</p>
+          <h1 style={{ "--i": 1 } as CSSProperties} className="hero-rise a-display mx-auto mt-3 max-w-[14ch]">
+            Four teams, One village
+          </h1>
+          <p style={{ "--i": 2 } as CSSProperties} className="hero-rise a-lead mx-auto mt-5 max-w-xl text-label-2">
             Each team focuses on a pillar of sustainable development in Bharog
             Baneri, Himachal Pradesh.
           </p>
@@ -27,16 +28,14 @@ export default function ProjectsIndex() {
       </section>
 
       {/* ----------------------------------------------- Project Work in Action */}
-      <section className="s-dark s-section bg-deodar text-snow">
-        <div className="s-container">
-          <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-6">
-              <SectionHeading eyebrow="On the ground" title={PROJECTS_PAGE.videoTitle} accent="pine" tone="dark" />
-            </div>
-            <p className="t-lead text-snow/80 lg:col-span-5 lg:col-start-8">{PROJECTS_PAGE.videoBlurb}</p>
+      <section className="a-on-dark a-band-dark py-[var(--a-section)]">
+        <div className="a-wrap">
+          <div className="a-reveal mx-auto max-w-3xl text-center">
+            <SectionHeading eyebrow="On the ground" title={PROJECTS_PAGE.videoTitle} accent="pine" tone="dark" align="center" />
+            <p className="a-lead mt-5 text-white/70">{PROJECTS_PAGE.videoBlurb}</p>
           </div>
 
-          <div className="mt-[var(--space-block)] overflow-hidden rounded-[var(--r-media)] bg-deodar-deep">
+          <div className="a-reveal mt-12 overflow-hidden rounded-[var(--a-r-lg)] bg-black shadow-[0_40px_80px_-30px_rgb(0_0_0/0.6)]">
             <div className="relative aspect-video w-full">
               {PROJECTS_PAGE.videoEmbedUrl ? (
                 <iframe
@@ -47,18 +46,18 @@ export default function ProjectsIndex() {
                   allowFullScreen
                 />
               ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 border border-dashed border-snow/25 text-center">
-                  <span className="grid h-16 w-16 place-items-center rounded-full bg-saffron text-deodar-deep">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 border border-dashed border-white/25 text-center">
+                  <span className="grid h-16 w-16 place-items-center rounded-full bg-marigold text-label">
                     <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </span>
-                  <p className="t-label rounded-full bg-graphite/70 px-4 py-1.5 text-snow">
+                  <p className="a-caption rounded-full bg-white/15 px-4 py-1.5 font-semibold text-white">
                     Add your trip video
                   </p>
-                  <p className="t-small max-w-sm px-6 text-snow/70">
+                  <p className="a-callout max-w-sm px-6 text-white/70">
                     Paste a YouTube or Vimeo embed link into{" "}
-                    <code className="text-saffron">videoEmbedUrl</code> in
+                    <code className="text-marigold">videoEmbedUrl</code> in
                     lib/content.ts.
                   </p>
                 </div>
@@ -68,37 +67,33 @@ export default function ProjectsIndex() {
         </div>
       </section>
 
-      {/* The four teams — one feature row each, alternating sides */}
-      <section className="s-section">
-        <div className="s-container space-y-[var(--space-section)]">
-          {PROJECTS.map((p, i) => (
-            <article key={p.slug} className="grid items-center gap-8 lg:grid-cols-12 lg:gap-x-16">
-              <Link
-                href={`/projects/${p.slug}`}
-                className={`block rounded-[var(--r-media)] lg:col-span-7 ${i % 2 ? "lg:order-2 lg:col-start-6" : ""}`}
-                tabIndex={-1}
-                aria-hidden
-              >
-                <Media
-                  src={p.image}
-                  alt={p.name}
-                  label={`${p.name} cover`}
-                  className="aspect-[3/2] w-full"
-                  rounded="rounded-[var(--r-media)]"
-                  sizes="(max-width: 1024px) 100vw, 58vw"
-                />
-              </Link>
-              <div className={`lg:col-span-5 ${i % 2 ? "lg:order-1 lg:col-start-1" : ""}`}>
-                <h2 className="t-h2 text-deodar">{p.name}</h2>
-                <p className="mt-4 line-clamp-6 text-graphite/80">{p.intro}</p>
-                <Link href={`/projects/${p.slug}`} className="s-btn s-btn-outline mt-7">
-                  Explore team
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                    <path d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                </Link>
+      {/* The four teams */}
+      <section className="py-[var(--a-section)]">
+        <div className="a-wrap grid gap-5 md:grid-cols-2">
+          {PROJECTS.map((p) => (
+            <div key={p.slug} className="a-reveal flex">
+            <Link
+              href={`/projects/${p.slug}`}
+              className="a-press a-tile group flex w-full flex-col"
+            >
+              <Media
+                src={p.image}
+                alt={p.name}
+                label={`${p.name} cover`}
+                className="aspect-[16/10] w-full [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover:[&_img]:scale-[1.03]"
+                rounded="rounded-none"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+              <div className="flex flex-1 flex-col items-start p-[clamp(1.75rem,3vw,2.5rem)]">
+                <h2 className="a-title">{p.name}</h2>
+                <p className="a-body mb-6 mt-3 line-clamp-3 text-label-2">{p.intro}</p>
+                <span className="a-more mt-auto">
+                  <span>Explore team</span>
+                  <Chevron />
+                </span>
               </div>
-            </article>
+            </Link>
+            </div>
           ))}
         </div>
       </section>

@@ -29,22 +29,21 @@ const config: Config = {
           soft: "#F2C879",
           ink: "#744A0A", // marigold-family TEXT on light/marigold-soft backgrounds (AA: 4.9:1 on soft, 7.3:1 on paper)
         },
-        // --- Public website ("Field Report") ------------------------------
-        // Values live in app/site.css as CSS variables; these names just
-        // point at them. Used only by the public pages, header and footer.
-        deodar: {
-          DEFAULT: "rgb(var(--c-deodar) / <alpha-value>)",
-          deep: "rgb(var(--c-deodar-deep) / <alpha-value>)",
+        // --- Public website (Apple-style) — values live in app/site.css -----------
+        canvas: "rgb(var(--a-canvas) / <alpha-value>)",
+        label: {
+          DEFAULT: "rgb(var(--a-label) / <alpha-value>)",
+          2: "rgb(var(--a-label2) / <alpha-value>)",
+        },
+        night: {
+          DEFAULT: "rgb(var(--a-night) / <alpha-value>)",
+          2: "rgb(var(--a-night-2) / <alpha-value>)",
         },
         saffron: {
-          DEFAULT: "rgb(var(--c-marigold) / <alpha-value>)",
-          deep: "rgb(var(--c-marigold-deep) / <alpha-value>)",
+          DEFAULT: "rgb(var(--a-saffron) / <alpha-value>)",
+          ink: "rgb(var(--a-saffron-ink) / <alpha-value>)",
         },
-        snow: "rgb(var(--c-snow) / <alpha-value>)",
-        page: "rgb(var(--c-page) / <alpha-value>)",
-        mist: "rgb(var(--c-mist) / <alpha-value>)",
-        graphite: "rgb(var(--c-graphite) / <alpha-value>)",
-        stone: "rgb(var(--c-stone) / <alpha-value>)",
+        sand: "rgb(var(--a-sand) / <alpha-value>)",
       },
       fontFamily: {
         display: ["var(--font-fraunces)", "Georgia", "serif"],

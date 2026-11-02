@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Media from "@/components/Media";
 import SectionHeading from "@/components/SectionHeading";
-import SiteLabel from "@/components/SiteLabel";
 import PhotoWall from "@/components/PhotoWall";
+import { ArrowUpRight } from "@/components/site/Icons";
 import { ABOUT, LINKS } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -12,117 +12,129 @@ export const metadata: Metadata = {
     "Project RISHI is a student-run non-profit working with the village of Bharog Baneri, Himachal Pradesh.",
 };
 
-const ExternalArrow = ({ className = "h-4 w-4" }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M7 17 17 7M9 7h8v8" />
-  </svg>
-);
-
 export default function AboutPage() {
   return (
     <div className="site">
       {/* Hero */}
-      <section className="border-b border-graphite/10 pt-[var(--header-h)]">
-        <div className="s-container pb-[clamp(3.5rem,7vw,6rem)] pt-[clamp(3.5rem,7vw,6rem)]">
-          <SiteLabel>About Us</SiteLabel>
-          <h1 className="t-display mt-7 max-w-[18ch] text-deodar">{ABOUT.heading}</h1>
+      <section className="a-glow pb-[clamp(4rem,8vw,7rem)] pt-[calc(var(--header-h)+clamp(3.5rem,8vw,6.5rem))]">
+        <div className="a-wrap text-center">
+          <p className="hero-rise a-eyebrow">About Us</p>
+          <h1 style={{ "--i": 1 } as React.CSSProperties} className="hero-rise a-display mx-auto mt-3 max-w-[16ch]">
+            {ABOUT.heading}
+          </h1>
         </div>
       </section>
 
       {/* Mission + Methodology */}
-      <section className="s-section">
-        <div className="s-container grid gap-14 lg:grid-cols-12 lg:gap-x-16">
-          <div className="lg:col-span-6">
+      <section className="pb-[var(--a-section)]">
+        <div className="a-wrap grid gap-5 lg:grid-cols-5">
+          <div className="a-reveal a-tile flex flex-col items-start p-[clamp(2rem,4vw,3.5rem)] lg:col-span-3">
             <SectionHeading eyebrow="What drives us" title={ABOUT.mission.title} />
-            <p className="t-lead mt-6 text-graphite/80">{ABOUT.mission.body}</p>
-            <Link href="/projects" className="s-btn s-btn-dark mt-10">
+            <p className="a-lead mb-10 mt-5 text-label-2">{ABOUT.mission.body}</p>
+            <Link href="/projects" className="a-btn a-btn-pine mt-auto">
               Explore our teams
             </Link>
           </div>
 
-          <div className="lg:col-span-5 lg:col-start-8">
-            <div className="border-t-[3px] border-deodar pt-6">
-              <h3 className="t-h3 text-deodar">{ABOUT.methodology.title}</h3>
-              <ol className="mt-5">
-                {ABOUT.methodology.steps.map((step, i) => (
-                  <li key={step} className="flex items-baseline gap-5 border-b border-graphite/10 py-4">
-                    <span className="t-label t-num w-6 shrink-0 text-deodar">{i + 1}</span>
-                    <span className="t-h3 text-graphite">{step}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
+          <div className="a-reveal a-tile-dark a-band-dark p-[clamp(2rem,4vw,3.5rem)] lg:col-span-2">
+            <h3 className="a-title2">{ABOUT.methodology.title}</h3>
+            <ol className="mt-6">
+              {ABOUT.methodology.steps.map((step, i) => (
+                <li key={step} className="flex items-center gap-4 border-t border-white/10 py-3.5 first:border-t-0">
+                  <span className="a-num grid h-9 w-9 shrink-0 place-items-center rounded-full bg-marigold text-[0.875rem] font-semibold text-label">
+                    {i + 1}
+                  </span>
+                  <span className="a-title3">{step}</span>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
 
       {/* History + Location */}
-      <section className="s-dark s-section bg-deodar text-snow">
-        <div className="s-container grid gap-14 lg:grid-cols-2 lg:gap-20">
-          <div>
-            <h2 className="t-h2">{ABOUT.history.title}</h2>
-            <p className="t-lead mt-6 text-snow/85">{ABOUT.history.body}</p>
+      <section className="a-on-dark a-band-dark py-[var(--a-section)]">
+        <div className="a-wrap grid gap-x-16 gap-y-14 lg:grid-cols-2">
+          <div className="a-reveal">
+            <h2 className="a-headline">{ABOUT.history.title}</h2>
+            <p className="a-lead mt-5 text-white/75">{ABOUT.history.body}</p>
           </div>
-          <div>
-            <h2 className="t-h2">{ABOUT.location.title}</h2>
-            <p className="t-lead mt-6 text-snow/85">{ABOUT.location.body}</p>
+          <div className="a-reveal">
+            <h2 className="a-headline">{ABOUT.location.title}</h2>
+            <p className="a-lead mt-5 text-white/75">{ABOUT.location.body}</p>
           </div>
         </div>
       </section>
 
       {/* Our Team */}
-      <section className="pt-[var(--space-section)]">
-        <div className="s-container">
-          <SectionHeading eyebrow="The people" title="Our Team" />
-          <Media
-            src={ABOUT.teamImage}
-            alt="The Project RISHI Berkeley team"
-            label="Team group photo"
-            className="mt-[var(--space-block)] aspect-[3/2] w-full"
-            rounded="rounded-[var(--r-media)]"
-            sizes="100vw"
-          />
+      <section className="pt-[var(--a-section)]">
+        <div className="a-wrap">
+          <div className="a-reveal text-center">
+            <SectionHeading eyebrow="The people" title="Our Team" align="center" />
+          </div>
+          <div className="a-reveal mt-12">
+            <Media
+              src={ABOUT.teamImage}
+              alt="The Project RISHI Berkeley team"
+              label="Team group photo"
+              className="aspect-[3/2] w-full"
+              rounded="rounded-[var(--a-r-lg)]"
+              sizes="100vw"
+            />
+          </div>
         </div>
       </section>
 
       {/* Life at Project RISHI — gallery */}
-      <section className="s-section">
-        <div className="s-container">
-          <SectionHeading eyebrow="In Action" title="Life at Project RISHI" />
-          <PhotoWall images={ABOUT.gallery.filter(Boolean) as string[]} />
+      <section className="py-[var(--a-section)]">
+        <div className="a-wrap">
+          <div className="a-reveal text-center">
+            <SectionHeading eyebrow="In Action" title="Life at Project RISHI" align="center" />
+          </div>
+          <div className="mt-4">
+            <PhotoWall images={ABOUT.gallery.filter(Boolean) as string[]} />
+          </div>
         </div>
       </section>
 
       {/* Chapters around the country */}
-      <section className="s-section bg-mist">
-        <div className="s-container">
-          <SectionHeading eyebrow="A national network" title="Chapters around the country" />
-          <ul className="mt-[var(--space-block)] grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
-            {ABOUT.chapters.map((c) => (
-              <li key={c.name}>
-                <a
-                  href={c.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center justify-between gap-4 border-t border-graphite/15 py-4 text-graphite transition-colors duration-150 hover:text-deodar"
-                >
-                  <span className="font-medium decoration-1 underline-offset-[0.2em] group-hover:underline">{c.name}</span>
-                  <ExternalArrow className="h-4 w-4 shrink-0 text-stone transition-[color,transform] duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-deodar" />
-                </a>
-              </li>
-            ))}
-          </ul>
+      <section className="bg-sand py-[var(--a-section)]">
+        <div className="a-wrap">
+          <div className="a-reveal text-center">
+            <SectionHeading eyebrow="A national network" title="Chapters around the country" align="center" />
+          </div>
+          <div className="a-reveal a-tile mt-12 p-3 sm:p-4">
+            <ul className="grid sm:grid-cols-2 lg:grid-cols-3">
+              {ABOUT.chapters.map((c) => (
+                <li key={c.name}>
+                  <a
+                    href={c.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex min-h-[52px] items-center justify-between gap-4 rounded-[var(--a-r-sm)] px-4 transition-colors duration-150 hover:bg-label/[0.04] active:bg-label/[0.08]"
+                  >
+                    <span className="font-medium">{c.name}</span>
+                    <span className="text-label-2 transition-[color,transform] duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-pine">
+                      <ArrowUpRight />
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Standout link to the national organization */}
-          <a
-            href={LINKS.nationalSite}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group s-dark mt-10 flex items-center justify-between gap-6 rounded-[var(--r-media)] bg-deodar px-[clamp(1.5rem,3vw,2.5rem)] py-7 text-snow transition-colors duration-150 hover:bg-deodar-deep"
-          >
-            <span className="t-h3">Visit the National Project RISHI Webpage</span>
-            <ExternalArrow className="h-6 w-6 shrink-0 text-saffron transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-          </a>
+          <div className="a-reveal mt-8 text-center">
+            <a
+              href={LINKS.nationalSite}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="a-btn a-btn-pine min-h-[52px] whitespace-normal px-7 py-3 text-center leading-snug"
+            >
+              Visit the National Project RISHI Webpage
+              <ArrowUpRight />
+            </a>
+          </div>
         </div>
       </section>
     </div>

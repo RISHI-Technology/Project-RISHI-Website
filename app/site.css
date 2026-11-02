@@ -1,158 +1,243 @@
 /* ==========================================================================
-   Public website — "Field Report" design system.
+   Public website design system — Apple-style.
 
-   Every colour, font, size and space used by the public pages is defined
-   here as a CSS variable, and the components read them (Tailwind colours
-   `deodar`, `saffron`, `mist`… in tailwind.config.ts map to these too).
+   Loaded BEFORE globals.css (see app/layout.tsx), so Tailwind utilities can
+   still override any class here. Everything is either a variable on :root or
+   a class used only by the public pages and the public header; the member
+   dashboard, the footer and the legal pages never use them.
 
-   Scope: everything below is either a variable on :root (inert until used)
-   or a class under `.site`, the wrapper on public pages and the public
-   header. The member dashboard and the footer never use them.
-
-   Brand (the site's original three colours)
-     Deodar   pine green — primary, dark sections   (#1E4D3A / #143628)
-     Marigold orange — actions and highlights        (#E2A02F)
-     Page     warm linen; Mist a sage-tinted alternate; Snow (white) only
-              for the top bar and raised cards
-   Type: Eczar (display; Rosetta, by Vaibhav Singh) + Mukta (text; Ek Type).
+   Colour  the site's own pine green and marigold, on a soft warm-neutral page
+           with white tiles. Brand colour is kept for primary actions and
+           immersive sections (HIG: color.md, branding.md).
+   Type    Anek Latin for headlines and Mukta for text, both from Ek Type
+           (Mumbai): warm and humanist — between a neutral system face and a
+           decorative one — with size-specific tracking and leading.
+   Glass   only on the floating layer — header and its menus (liquid-glass.md).
+   Motion  press feedback on pointer-down; springs for menus; scroll-linked
+           reveals that never hide content where unsupported; everything
+           calmer under prefers-reduced-motion (motion.md).
    ========================================================================== */
 
 :root {
-  /* Colour (space-separated RGB so Tailwind can apply opacity) */
-  --c-deodar: 30 77 58;          /* #1E4D3A — the original pine */
-  --c-deodar-deep: 20 54 40;     /* #143628 — the original pine-deep */
-  --c-marigold: 226 160 47;      /* #E2A02F */
-  --c-marigold-deep: 201 136 26; /* #C9881A */
-  --c-snow: 255 255 255;         /* pure white — top bar and raised cards only */
-  --c-page: 248 245 237;         /* #F8F5ED — warm linen, the page itself */
-  --c-mist: 238 239 229;         /* #EEEFE5 — sage-tinted linen, alternate sections */
-  --c-graphite: 24 33 29;        /* #18211D — body text */
-  --c-stone: 82 96 90;           /* #52605A — secondary text, 6:1 on white */
+  /* Colour — space-separated RGB so Tailwind can apply opacity */
+  --a-canvas: 247 243 236;     /* #F7F3EC  warm linen page */
+  --a-card: 255 255 255;       /* #FFFFFF  tiles */
+  --a-sand: 250 240 222;       /* #FAF0DE  marigold-tinted section */
+  --a-label: 31 29 26;         /* #1F1D1A  primary text   — 15.5:1 on canvas */
+  --a-label2: 95 91 85;        /* #5F5B55  secondary text —  6.1:1 on canvas, 5.6:1 on sand */
+  --a-pine: 30 77 58;          /* #1E4D3A  brand green    —  9.0:1 on canvas */
+  --a-pine-deep: 20 54 40;     /* #143628 */
+  --a-night: 13 37 28;         /* #0D251C  immersive sections */
+  --a-night-2: 24 56 43;       /* #18382B  tiles on night */
+  --a-marigold: 226 160 47;    /* #E2A02F  primary actions (label text on it: 7.9:1) */
+  --a-marigold-press: 204 140 28; /* #CC8C1C */
+  --a-saffron: 217 117 43;     /* #D9752B  deeper orange accent */
+  --a-saffron-ink: 160 76 18;  /* #A04C12  orange TEXT — 5.6:1 on canvas */
 
   /* Type */
-  --f-display: var(--font-eczar), "Iowan Old Style", Georgia, serif;
-  --f-text: var(--font-mukta), "Segoe UI", system-ui, sans-serif;
-  --fs-hero: clamp(4.5rem, 11vw, 10rem);
-  --fs-display: clamp(2.75rem, 5.6vw, 5rem);
-  --fs-h2: clamp(2.125rem, 3.7vw, 3.375rem);
-  --fs-h3: clamp(1.375rem, 1.9vw, 1.75rem);
-  --fs-lead: clamp(1.1875rem, 1.45vw, 1.375rem);
-  --fs-body: 1.0625rem;
-  --fs-small: 0.9375rem;
-  --fs-label: 0.875rem;
+  --a-font: var(--font-mukta), "Segoe UI", system-ui, sans-serif;            /* body + UI */
+  --a-display: var(--font-anek), var(--font-mukta), "Segoe UI", sans-serif; /* headlines */
 
   /* Space & shape */
-  --container: 1180px;
-  --gutter: 1.5rem;
-  --space-section: clamp(5rem, 9vw, 8.5rem);
-  --space-block: clamp(2.5rem, 4vw, 3.5rem);
-  --r-media: 6px;
-  --r-control: 8px;
+  --a-max: 1200px;
+  --a-gutter: 22px;
+  --a-section: clamp(5.5rem, 11vw, 10rem);
+  --a-r-lg: 28px;
+  --a-r-md: 18px;
+  --a-r-sm: 12px;
 
   /* Motion */
-  --t-ui: 180ms;
-  --t-hero: 900ms;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --a-ease: cubic-bezier(0.25, 1, 0.5, 1);   /* soft ease-out for CSS-only UI */
 }
-@media (min-width: 640px) {
-  :root { --gutter: 2rem; }
-}
+@media (min-width: 735px) { :root { --a-gutter: 40px; } }
 
-/* ---- Base ---------------------------------------------------------------- */
+/* ---- Base ------------------------------------------------------------- */
 .site {
-  font-family: var(--f-text);
-  font-size: var(--fs-body);
-  line-height: 1.6;
-  color: rgb(var(--c-graphite));
-  background: rgb(var(--c-page));
+  font-family: var(--a-font);
+  font-size: 1.0625rem;          /* 17px — the platform body default */
+  line-height: 1.55;
+  letter-spacing: 0;
+  color: rgb(var(--a-label));
+  background: rgb(var(--a-canvas));
+  -webkit-font-smoothing: antialiased;
+  font-optical-sizing: auto;
 }
+/* Headline face at its standard width. */
+.a-hero, .a-display, .a-headline, .a-title, .a-title2, .a-title3,
 .site :where(h1, h2, h3, h4), .site .font-display {
-  font-family: var(--f-display);
+  font-family: var(--a-display);
+  font-variation-settings: "wdth" 100;
+  font-optical-sizing: auto;
+}
+.site :where(h1, h2, h3, h4),
+.site .font-display {
   font-weight: 600;
-  letter-spacing: -0.012em;
+  text-wrap: balance;
 }
-.site ::selection { background: rgb(var(--c-marigold) / 0.4); color: rgb(var(--c-graphite)); }
+.site ::selection { background: rgb(var(--a-marigold) / 0.35); color: rgb(var(--a-label)); }
 
-.s-container {
+.a-wrap {
   width: 100%;
-  max-width: var(--container); /* same box as .container-rishi, so the footer lines up */
+  max-width: var(--a-max);
   margin-inline: auto;
-  padding-left: calc(var(--gutter) + var(--safe-left));
-  padding-right: calc(var(--gutter) + var(--safe-right));
+  padding-left: calc(var(--a-gutter) + var(--safe-left));
+  padding-right: calc(var(--a-gutter) + var(--safe-right));
 }
-/* For layouts where a photo bleeds to the viewport edge: text keeps the
-   container's left edge. */
-.s-bleed-left {
-  padding-left: max(calc(var(--gutter) + var(--safe-left)), calc((100vw - var(--container)) / 2 + var(--gutter)));
-}
-.s-section { padding-block: var(--space-section); }
+.a-section { padding-block: var(--a-section); }
 
-/* ---- Type roles ---------------------------------------------------------- */
-.t-hero { font-family: var(--f-display); font-size: var(--fs-hero); font-weight: 700; line-height: 0.84; letter-spacing: -0.03em; }
-.t-display { font-family: var(--f-display); font-size: var(--fs-display); font-weight: 600; line-height: 1.02; letter-spacing: -0.022em; }
-.t-h2 { font-family: var(--f-display); font-size: var(--fs-h2); font-weight: 600; line-height: 1.06; letter-spacing: -0.018em; }
-.t-h3 { font-family: var(--f-display); font-size: var(--fs-h3); font-weight: 600; line-height: 1.18; letter-spacing: -0.01em; }
-.t-lead { font-size: var(--fs-lead); line-height: 1.55; }
-.t-small { font-size: var(--fs-small); line-height: 1.55; }
-/* Small sentence-case marker label (never all caps). */
-.t-label { font-size: var(--fs-label); font-weight: 600; line-height: 1.3; letter-spacing: 0.01em; }
-.t-num { font-variant-numeric: tabular-nums lining-nums; }
+/* ---- Type scale (size-specific tracking and leading) -------------------- */
+.a-hero     { font-size: clamp(3.5rem, 10vw, 8rem);  font-weight: 600; line-height: 0.98; letter-spacing: -0.028em; }
+.a-display  { font-size: clamp(2.75rem, 6.2vw, 4.75rem); font-weight: 650; line-height: 1.04; letter-spacing: -0.025em; }
+.a-headline { font-size: clamp(2.25rem, 4.4vw, 3.375rem); font-weight: 650; line-height: 1.08; letter-spacing: -0.02em; }
+.a-title    { font-size: clamp(1.75rem, 2.7vw, 2.375rem); font-weight: 600; line-height: 1.12; letter-spacing: -0.015em; }
+.a-title2   { font-size: clamp(1.375rem, 1.9vw, 1.75rem); font-weight: 600; line-height: 1.18; letter-spacing: -0.01em; }
+.a-title3   { font-size: 1.3125rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.005em; }
+.a-lead     { font-size: clamp(1.1875rem, 1.6vw, 1.4375rem); font-weight: 400; line-height: 1.5; letter-spacing: 0; }
+.a-body     { font-size: 1.0625rem; line-height: 1.6; letter-spacing: 0; }
+.a-callout  { font-size: 0.9375rem; line-height: 1.55; letter-spacing: 0.003em; }
+.a-caption  { font-size: 0.875rem;  line-height: 1.45; letter-spacing: 0.01em; }
+.a-eyebrow  { font-size: 1.0625rem; font-weight: 600; line-height: 1.2; letter-spacing: 0.005em; color: rgb(var(--a-saffron-ink)); }
+.a-num      { font-variant-numeric: tabular-nums; }
 
-/* ---- Links & buttons ----------------------------------------------------- */
-.s-link {
-  color: rgb(var(--c-deodar));
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-  transition: text-decoration-thickness var(--t-ui) ease-out, color var(--t-ui) ease-out;
-}
-.s-link:hover { text-decoration-thickness: 2px; }
-.s-dark .s-link { color: rgb(var(--c-snow)); }
-
-.s-btn {
+/* ---- Controls ----------------------------------------------------------- */
+/* Pill buttons with feedback on pointer-down (scale 0.97, instant), and a
+   soft settle on release. 44px tall: the platform's comfortable target. */
+.a-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  min-height: 3rem;
+  gap: 0.375rem;
+  min-height: 44px;
   padding: 0 1.375rem;
-  border-radius: var(--r-control);
-  font-family: var(--f-text);
-  font-size: 1rem;
+  border-radius: 980px;
+  border: 1px solid transparent;
+  font-size: 1.0625rem;
   font-weight: 600;
+  letter-spacing: 0;
   line-height: 1;
   white-space: nowrap;
-  border: 1px solid transparent;
-  transition: background-color var(--t-ui) ease-out, color var(--t-ui) ease-out, border-color var(--t-ui) ease-out;
+  transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out, transform 220ms var(--a-ease);
+  -webkit-tap-highlight-color: transparent;
 }
-.s-btn svg { transition: transform var(--t-ui) ease-out; }
-.s-btn:hover svg { transform: translateX(2px); }
-.s-btn:active { transform: translateY(1px); }
-.s-btn-primary { background: rgb(var(--c-marigold)); color: rgb(var(--c-deodar-deep)); }
-.s-btn-primary:hover { background: rgb(var(--c-marigold-deep)); }
-.s-btn-dark { background: rgb(var(--c-deodar)); color: rgb(var(--c-snow)); }
-.s-btn-dark:hover { background: rgb(var(--c-deodar-deep)); }
-.s-btn-outline { border-color: rgb(var(--c-graphite) / 0.25); color: rgb(var(--c-graphite)); }
-.s-btn-outline:hover { border-color: rgb(var(--c-graphite) / 0.6); background: rgb(var(--c-graphite) / 0.04); }
-.s-btn-outline-light { border-color: rgb(var(--c-snow) / 0.45); color: rgb(var(--c-snow)); }
-.s-btn-outline-light:hover { background: rgb(var(--c-snow)); color: rgb(var(--c-deodar-deep)); }
+.a-btn:active { transform: scale(0.97); transition-duration: 80ms; }
+.a-btn-primary { background: rgb(var(--a-marigold)); color: rgb(var(--a-label)); }
+.a-btn-primary:hover { background: rgb(var(--a-marigold-press)); }
+.a-btn-pine { background: rgb(var(--a-pine)); color: #fff; }
+.a-btn-pine:hover { background: rgb(var(--a-pine-deep)); }
+.a-btn-light { background: #fff; color: rgb(var(--a-label)); }
+.a-btn-light:hover { background: rgb(255 255 255 / 0.86); }
+.a-btn-outline { border-color: rgb(var(--a-label) / 0.2); color: rgb(var(--a-label)); background: rgb(var(--a-card)); }
+.a-btn-outline:hover { border-color: rgb(var(--a-label) / 0.45); }
+.a-btn-outline-light { border-color: rgb(255 255 255 / 0.45); color: #fff; }
+.a-btn-outline-light:hover { background: rgb(255 255 255 / 0.12); }
+
+/* Plain text link with a chevron, Apple-style ("Learn more ›"). */
+.a-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 44px;
+  color: rgb(var(--a-pine));
+  font-weight: 600;
+}
+.a-more:hover > span { text-decoration: underline; text-underline-offset: 0.18em; }
+.a-more svg { transition: transform 220ms var(--a-ease); }
+.a-more:hover svg { transform: translateX(3px); }
+.a-on-dark .a-more { color: rgb(var(--a-marigold)); }
+
+.a-link { color: rgb(var(--a-pine)); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+.a-link:hover { text-decoration-thickness: 2px; }
+.a-on-dark .a-link { color: #fff; }
+
+/* Cards and tiles that are links: press in on pointer-down. */
+.a-press { transition: transform 260ms var(--a-ease); -webkit-tap-highlight-color: transparent; }
+.a-press:active { transform: scale(0.985); transition-duration: 90ms; }
 
 /* Focus: one ring everywhere on the public site, tuned per surface. */
-.site :focus-visible { outline: 2px solid rgb(var(--c-deodar)); outline-offset: 3px; }
-.site .s-dark :focus-visible,
-.site.s-dark :focus-visible { outline-color: rgb(var(--c-marigold)); }
+.site :focus-visible { outline: 2px solid rgb(var(--a-pine)); outline-offset: 3px; border-radius: 6px; }
+.site .a-on-dark :focus-visible, .site.a-on-dark :focus-visible { outline-color: rgb(var(--a-marigold)); }
 
-/* Small marker line before a page label (one colour, marigold). */
-.s-mark { display: inline-block; width: 2rem; height: 2px; background: rgb(var(--c-marigold)); }
-
-/* ---- The one orchestrated moment: the home hero arrives ------------------ */
-@keyframes s-reveal-photo {
-  from { clip-path: inset(0 0 100% 0); }
-  to { clip-path: inset(0 0 0 0); }
+/* ---- Surfaces ------------------------------------------------------------ */
+.a-tile { background: rgb(var(--a-card)); border-radius: var(--a-r-lg); overflow: hidden; }
+.a-on-dark { background-color: rgb(var(--a-night)); color: #fff; }
+/* Dark bands: a rich pine gradient rather than a flat near-black. */
+.a-band-dark { background-image: linear-gradient(165deg, rgb(var(--a-pine-deep)) 0%, rgb(var(--a-night)) 62%); }
+/* Warm light behind a hero: marigold from above, saffron at the edges. */
+.a-glow {
+  background-image:
+    radial-gradient(60% 58% at 50% 0%, rgb(var(--a-marigold) / 0.38), transparent 72%),
+    radial-gradient(38% 50% at 6% 28%, rgb(var(--a-saffron) / 0.16), transparent 70%),
+    radial-gradient(38% 50% at 94% 28%, rgb(var(--a-marigold) / 0.18), transparent 70%);
 }
-.s-hero-photo { animation: s-reveal-photo var(--t-hero) var(--ease-out) 120ms both; }
+/* The halo carried under a hero photo: warm light pooling beneath it. */
+.a-halo { box-shadow: 0 60px 140px -50px rgb(var(--a-marigold) / 0.6), 0 24px 60px -30px rgb(var(--a-saffron) / 0.35); }
+.a-tile-dark { background: rgb(var(--a-night-2)); border-radius: var(--a-r-lg); overflow: hidden; color: #fff; }
+
+/* The floating functional layer — the only place glass is used. */
+.a-glass {
+  background: rgb(var(--a-canvas) / 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+.a-glass-menu {
+  background: rgb(255 255 255 / 0.78);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  backdrop-filter: saturate(180%) blur(28px);
+  box-shadow: 0 18px 50px -12px rgb(var(--a-label) / 0.22), inset 0 0 0 0.5px rgb(var(--a-label) / 0.08);
+}
+
+/* Horizontal gallery: native scrolling (platform momentum, snapping and
+   rubber-banding), with the first card aligned to the page column. */
+.a-gallery {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 20px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: max(calc(var(--a-gutter) + var(--safe-left)), calc((100vw - var(--a-max)) / 2 + var(--a-gutter)));
+  padding-inline: max(calc(var(--a-gutter) + var(--safe-left)), calc((100vw - var(--a-max)) / 2 + var(--a-gutter)));
+  padding-block: 4px 8px;
+  scrollbar-width: none;
+}
+.a-gallery::-webkit-scrollbar { display: none; }
+.a-gallery > * { scroll-snap-align: start; }
+
+/* ---- Motion ------------------------------------------------------------- */
+/* Scroll-linked reveal: content rises into place as it enters the view.
+   Only where the browser supports scroll-driven animations and the visitor
+   hasn't asked for less motion — everywhere else the content is simply there,
+   never hidden waiting for a script. */
+@keyframes a-rise {
+  from { opacity: 0; transform: translateY(40px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes a-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .a-reveal {
+      animation: a-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+    .a-progress-fill {
+      transform-origin: left;
+      animation: a-grow-x linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 55%;
+    }
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .s-hero-photo { animation: none; }
-  .s-btn, .s-btn svg, .s-link { transition: none; }
+  .a-btn, .a-press, .a-more svg { transition: none; }
+  .a-btn:active, .a-press:active { transform: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .a-glass { background: rgb(var(--a-canvas)); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .a-glass-menu { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  .a-glass, .a-glass-menu { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 -1px 0 rgb(var(--a-label) / 0.4); }
+  .a-tile { box-shadow: inset 0 0 0 1px rgb(var(--a-label) / 0.25); }
 }

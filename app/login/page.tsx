@@ -3,7 +3,6 @@
 import { Suspense, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import SiteLabel from "@/components/SiteLabel";
 
 function LoginCard() {
   const { status } = useSession();
@@ -16,16 +15,16 @@ function LoginCard() {
   }, [status, router]);
 
   return (
-    <div className="w-full max-w-md rounded-[var(--r-media)] border border-graphite/10 bg-snow p-8 shadow-[0_24px_60px_-32px_rgb(var(--c-graphite)/0.35)] sm:p-10">
-      <SiteLabel>Members Only</SiteLabel>
-      <h1 className="t-h2 mt-6 text-deodar">Member Login</h1>
-      <p className="t-small mt-3 text-stone">
+    <div className="hero-rise a-tile w-full max-w-md p-8 text-center shadow-[0_30px_60px_-30px_rgb(var(--a-label)/0.25)] sm:p-10">
+      <p className="a-eyebrow">Members Only</p>
+      <h1 className="a-headline mt-2">Member Login</h1>
+      <p className="a-callout mt-3 text-label-2">
         Sign in with your Berkeley email to access the member
         dashboard.
       </p>
 
       {error && (
-        <p role="alert" className="t-small mt-6 rounded-[var(--r-control)] border border-red-700/20 bg-red-50 px-4 py-3 text-red-800">
+        <p role="alert" className="a-callout mt-6 rounded-[var(--a-r-sm)] bg-red-50 px-4 py-3 text-red-800">
           That account isn&rsquo;t on the member list. If this is a mistake,
           please inform Webmaster.
         </p>
@@ -33,7 +32,7 @@ function LoginCard() {
 
       <button
         onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-        className="s-btn s-btn-outline mt-8 w-full gap-3"
+        className="a-btn a-btn-outline mt-8 min-h-[52px] w-full gap-3"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
@@ -44,9 +43,9 @@ function LoginCard() {
         Sign in with Google
       </button>
 
-      <p className="t-small mt-6 text-stone">
+      <p className="a-caption mt-6 text-label-2">
         Access is limited to registered members. Not a member?{" "}
-        <a href="/apply" className="s-link font-medium">
+        <a href="/apply" className="a-link font-medium">
           Apply to join
         </a>
         .
@@ -57,7 +56,7 @@ function LoginCard() {
 
 export default function LoginPage() {
   return (
-    <section className="site flex min-h-[88vh] items-center justify-center bg-mist px-6 pb-16 pt-[calc(var(--header-h)+3rem)]">
+    <section className="site a-glow flex min-h-[88vh] items-center justify-center px-[var(--a-gutter)] pb-16 pt-[calc(var(--header-h)+3rem)]">
       <Suspense fallback={null}>
         <LoginCard />
       </Suspense>

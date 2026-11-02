@@ -1,198 +1,184 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import type { CSSProperties } from "react";
-import { placeholderFor } from "@/lib/imagePlaceholders";
 import Media from "@/components/Media";
 import SectionHeading from "@/components/SectionHeading";
-import SiteLabel from "@/components/SiteLabel";
+import ScrollWindow from "@/components/site/ScrollWindow";
+import Gallery from "@/components/site/Gallery";
+import { Chevron } from "@/components/site/Icons";
 import { HOME, PROJECTS, ABOUT, LINKS } from "@/lib/content";
 
-const Arrow = ({ className = "h-4 w-4" }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M5 12h14M13 6l6 6-6 6" />
-  </svg>
-);
-
 export default function Home() {
-  // The site's one orchestrated moment: the type rises in (.hero-rise,
-  // globals.css), the photo is revealed top-down (app/site.css). All CSS, so it starts at first paint; reduced
-  // motion shows everything at once.
+  // The page's one orchestrated moment: the headline rises in on load
+  // (.hero-rise, globals.css — CSS, so it starts at first paint; reduced motion
+  // shows it at once), then the Himalayas window opens as you scroll.
   const rise = (i: number) => ({ "--i": i }) as CSSProperties;
 
   return (
     <div className="site">
       {/* ---------------------------------------------------------------- HERO */}
-      <section className="bg-page pt-[var(--header-h)]">
-        <div className="grid lg:min-h-[calc(100svh-var(--header-h))] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)]">
-          <div className="s-bleed-left flex flex-col justify-center pb-14 pr-[var(--gutter)] pt-14 lg:py-20 lg:pr-14">
-            <span style={rise(0)} className="hero-rise">
-              <SiteLabel>{HOME.heroEyebrow}</SiteLabel>
-            </span>
-
-            <h1 className="mt-8 text-deodar">
-              <span style={rise(1)} className="hero-rise t-display block font-normal">
-                {HOME.heroLine1}
-              </span>
-              <span style={rise(2)} className="hero-rise t-hero block">
-                {HOME.heroLine2}
-              </span>
-            </h1>
-
-            <p style={rise(3)} className="hero-rise t-lead mt-8 max-w-md text-graphite/80">
-              {HOME.heroSub}
-            </p>
-
-            <div style={rise(4)} className="hero-rise mt-10 flex flex-wrap gap-3">
-              <a href={LINKS.interestForm} target="_blank" rel="noopener noreferrer" className="s-btn s-btn-primary">
-                Register your interest
-                <Arrow />
-              </a>
-              <Link href="/about" className="s-btn s-btn-outline">
-                Learn about us
-              </Link>
-            </div>
+      <section className="a-glow pb-[var(--a-section)] pt-[calc(var(--header-h)+clamp(3.5rem,8vw,6.5rem))]">
+        <div className="a-wrap text-center">
+          <p style={rise(0)} className="hero-rise a-eyebrow">{HOME.heroEyebrow}</p>
+          <h1 className="a-hero mt-3">
+            <span style={rise(1)} className="hero-rise inline-block">{HOME.heroLine1}</span>{" "}
+            <span style={rise(2)} className="hero-rise inline-block text-pine">{HOME.heroLine2}</span>
+          </h1>
+          <p style={rise(3)} className="hero-rise a-lead mx-auto mt-5 max-w-2xl text-label-2">
+            {HOME.heroSub}
+          </p>
+          <div style={rise(4)} className="hero-rise mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+            <a href={LINKS.interestForm} target="_blank" rel="noopener noreferrer" className="a-btn a-btn-primary">
+              Register your interest
+            </a>
+            <Link href="/about" className="a-more">
+              <span>Learn about us</span>
+              <Chevron />
+            </Link>
           </div>
+        </div>
 
-          <div className="relative min-h-[62svh] lg:min-h-0">
-            {HOME.heroImage && (
-              <div className="s-hero-photo absolute inset-0 overflow-hidden bg-deodar">
-                <Image
-                  src={HOME.heroImage}
-                  alt="Himalayan foothills near Bharog Baneri"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 55vw"
-                  placeholder={placeholderFor(HOME.heroImage) ? "blur" : "empty"}
-                  blurDataURL={placeholderFor(HOME.heroImage)?.blur}
-                  className="object-cover object-[50%_40%]"
-                />
-              </div>
-            )}
-          </div>
+        <div style={rise(5)} className="hero-rise mt-[clamp(3rem,6vw,5rem)]">
+          <ScrollWindow
+            src={HOME.heroImage}
+            alt="Himalayan foothills near Bharog Baneri"
+            priority
+            className="aspect-[4/5] sm:aspect-[16/10] lg:aspect-[2.1/1]"
+          />
         </div>
       </section>
 
       {/* ------------------------------------------------------------- MISSION */}
-      <section className="s-section">
-        <div className="s-container grid gap-12 lg:grid-cols-12 lg:gap-x-16">
-          <div className="lg:col-span-5 lg:pt-2">
-            <SectionHeading eyebrow="Why we exist" title={HOME.missionTitle} />
-            <p className="t-lead mt-6 text-graphite/80">{HOME.missionBody}</p>
-            <div className="mt-10 flex flex-wrap gap-3">
-              <Link href="/about" className="s-btn s-btn-dark">
+      <section className="pb-[var(--a-section)]">
+        <div className="a-wrap">
+          <div className="a-reveal mx-auto max-w-3xl text-center">
+            <SectionHeading eyebrow="Why we exist" title={HOME.missionTitle} align="center" />
+            <p className="a-lead mt-6 text-label-2">{HOME.missionBody}</p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+              <Link href="/about" className="a-btn a-btn-pine">
                 Our story
               </Link>
-              <Link href="/projects" className="s-btn s-btn-outline">
-                Explore projects
+              <Link href="/projects" className="a-more">
+                <span>Explore projects</span>
+                <Chevron />
               </Link>
             </div>
           </div>
-          <div className="lg:col-span-7">
-            <Media
-              src={HOME.missionImage}
-              alt="Project RISHI members in the field"
-              label="Mission / field photo"
-              className="aspect-[4/3] w-full"
-              rounded="rounded-[var(--r-media)]"
-              sizes="(max-width: 1024px) 100vw, 58vw"
-            />
+
+          {/* Photo + the chapter at a glance, as one bento */}
+          <div className="mt-[clamp(3rem,6vw,5rem)] grid gap-5 lg:grid-cols-3">
+            <div className="a-reveal lg:col-span-2 lg:row-span-3">
+              <Media
+                src={HOME.missionImage}
+                alt="Project RISHI members in the field"
+                label="Mission / field photo"
+                className="aspect-[4/3] h-full w-full lg:aspect-auto"
+                rounded="rounded-[var(--a-r-lg)]"
+                sizes="(max-width: 1024px) 100vw, 66vw"
+              />
+            </div>
+            <dl className="contents">
+              {HOME.stats.map((s) => (
+                <div key={s.label} className="a-reveal a-tile flex flex-col-reverse justify-center p-8">
+                  <dt className="a-callout mt-1 text-label-2">{s.label}</dt>
+                  <dd className="a-num font-display text-[clamp(2.75rem,4.5vw,3.75rem)] font-semibold leading-none tracking-[-0.03em] text-pine">
+                    {s.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </div>
-
-        <dl className="s-container mt-[var(--space-block)] grid gap-x-8 gap-y-10 sm:grid-cols-3">
-          {HOME.stats.map((s) => (
-            <div key={s.label} className="flex flex-col-reverse border-t-[3px] border-saffron pt-6">
-              <dt className="t-small mt-3 text-stone">{s.label}</dt>
-              <dd className="t-display t-num text-deodar">{s.value}</dd>
-            </div>
-          ))}
-        </dl>
       </section>
 
       {/* ------------------------------------------------------------ PROJECTS */}
-      <section className="s-section bg-mist">
-        <div className="s-container">
-          <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-6">
-              <SectionHeading eyebrow="What we do" title="Four teams, One village" />
-            </div>
-            <p className="t-lead text-graphite/75 lg:col-span-5 lg:col-start-8">
-              Our work in Bharog Baneri is carried out by four project teams, each
-              tackling a different pillar of sustainable development.
-            </p>
-          </div>
+      <section className="a-on-dark a-band-dark py-[var(--a-section)]">
+        <div className="a-wrap a-reveal">
+          <SectionHeading eyebrow="What we do" title="Four teams, One village" tone="dark" />
+          <p className="a-lead mt-5 max-w-2xl text-white/70">
+            Our work in Bharog Baneri is carried out by four project teams, each
+            tackling a different pillar of sustainable development.
+          </p>
+        </div>
 
-          <div className="mt-[var(--space-block)] grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12">
+          <Gallery tone="dark">
             {PROJECTS.map((p) => (
-              <article key={p.slug}>
-                <Link href={`/projects/${p.slug}`} className="group block rounded-[var(--r-media)]">
-                  <Media
-                    src={p.image}
-                    alt={p.name}
-                    label={`${p.name} cover`}
-                    className="aspect-[4/5] w-full"
-                    rounded="rounded-[var(--r-media)]"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  />
-                  <h3 className="t-h3 mt-5 flex items-center justify-between gap-3 text-deodar">
-                    <span className="decoration-2 underline-offset-[0.2em] group-hover:underline">{p.name}</span>
-                    <Arrow className="h-5 w-5 shrink-0 transition-transform duration-150 group-hover:translate-x-1" />
+              <Link
+                key={p.slug}
+                href={`/projects/${p.slug}`}
+                className="a-press group relative block w-[min(78vw,22rem)] overflow-hidden rounded-[var(--a-r-lg)] bg-night-2 sm:w-[24rem]"
+              >
+                <Media
+                  src={p.image}
+                  alt={p.name}
+                  label={`${p.name} cover`}
+                  className="aspect-[3/4] w-full [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover:[&_img]:scale-[1.04]"
+                  rounded="rounded-none"
+                  sizes="(max-width: 640px) 78vw, 24rem"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgb(var(--a-night)/0.92)_0%,rgb(var(--a-night)/0.55)_38%,rgb(var(--a-night)/0)_62%)]" />
+                <div className="absolute inset-x-0 bottom-0 p-7">
+                  <h3 className="a-title2 flex items-center justify-between gap-3 text-white">
+                    {p.name}
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 transition-colors duration-150 group-hover:bg-marigold group-hover:text-label">
+                      <Chevron className="h-4 w-4" />
+                    </span>
                   </h3>
-                  <p className="t-small mt-2 line-clamp-3 text-stone">{p.intro}</p>
-                </Link>
-              </article>
+                  <p className="a-callout mt-2 line-clamp-2 text-white/75">{p.intro}</p>
+                </div>
+              </Link>
             ))}
-          </div>
+          </Gallery>
         </div>
       </section>
 
       {/* --------------------------------------------------------- METHODOLOGY */}
-      {/* A real sequence, so it reads as one line: five stops, left to right
-          (top to bottom on phones). */}
-      <section className="s-dark s-section bg-deodar text-snow">
-        <div className="s-container">
-          <SectionHeading eyebrow="How we work" title={ABOUT.methodology.title} tone="dark" />
-          <ol className="relative mt-[var(--space-block)] grid gap-9 before:absolute before:bottom-3 before:left-[0.6875rem] before:top-3 before:w-px before:bg-snow/25 sm:grid-cols-5 sm:gap-6 sm:before:bottom-auto sm:before:left-0 sm:before:right-0 sm:before:top-[0.6875rem] sm:before:h-px sm:before:w-auto">
-            {ABOUT.methodology.steps.map((step, i) => (
-              <li key={step} className="relative grid grid-cols-[1.375rem_1fr] gap-x-5 sm:block">
-                <span className="relative z-10 mt-0.5 block h-[1.375rem] w-[1.375rem] rounded-full border-2 border-saffron bg-deodar sm:mt-0" aria-hidden />
-                <div className="sm:mt-6">
-                  <span className="t-label t-num block text-saffron">
+      {/* A real sequence: five stops on one line, the line filling in as the
+          section scrolls into view. */}
+      <section className="py-[var(--a-section)]">
+        <div className="a-wrap">
+          <div className="a-reveal text-center">
+            <SectionHeading eyebrow="How we work" title={ABOUT.methodology.title} align="center" />
+          </div>
+          <div className="relative mt-14">
+            <div className="absolute left-[1.375rem] top-0 h-full w-[2px] rounded-full bg-label/10 sm:left-0 sm:top-[1.375rem] sm:h-[2px] sm:w-full" aria-hidden>
+              <div className="a-progress-fill h-full w-full rounded-full bg-marigold" />
+            </div>
+            <ol className="relative grid gap-8 sm:grid-cols-5 sm:gap-4">
+              {ABOUT.methodology.steps.map((step, i) => (
+                <li key={step} className="flex items-center gap-5 sm:flex-col sm:items-start sm:gap-5">
+                  <span className="a-num grid h-11 w-11 shrink-0 place-items-center rounded-full bg-marigold text-[0.9375rem] font-semibold text-label ring-[6px] ring-canvas">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="t-h3 mt-1.5 block">{step}</span>
-                </div>
-              </li>
-            ))}
-          </ol>
+                  <span className="a-title2">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       </section>
 
       {/* ----------------------------------------------------------- GET INVOLVED */}
-      <section className="s-section">
-        <div className="s-container grid gap-4 lg:grid-cols-2">
-          <div className="flex flex-col items-start rounded-[var(--r-media)] bg-saffron p-[clamp(2rem,4vw,3.5rem)] text-deodar-deep">
-            <h2 className="t-h2">Join us</h2>
-            <p className="t-lead mb-10 mt-4 max-w-md">
-              Applications are open now!
-            </p>
-            <Link href="/apply" className="s-btn s-btn-dark mt-auto">
+      <section className="py-[var(--a-section)]">
+        <div className="a-wrap grid gap-5 lg:grid-cols-2">
+          <div className="a-reveal flex min-h-[22rem] flex-col items-start rounded-[var(--a-r-lg)] bg-marigold p-[clamp(2rem,4vw,3.5rem)] text-label">
+            <h2 className="a-display">Join us</h2>
+            <p className="a-lead mb-10 mt-3 max-w-md">Applications are open now!</p>
+            <Link href="/apply" className="a-btn a-btn-pine mt-auto">
               See recruitment dates
-              <Arrow />
             </Link>
           </div>
 
-          <div className="s-dark flex flex-col items-start rounded-[var(--r-media)] bg-deodar p-[clamp(2rem,4vw,3.5rem)] text-snow">
-            <h2 className="t-h2">Become a donor</h2>
-            <p className="t-lead mb-10 mt-4 max-w-md text-snow/90">
+          <div className="a-reveal a-on-dark flex min-h-[22rem] flex-col items-start rounded-[var(--a-r-lg)] bg-pine p-[clamp(2rem,4vw,3.5rem)]">
+            <h2 className="a-display">Become a donor</h2>
+            <p className="a-lead mb-10 mt-3 max-w-md text-white/80">
               We appreciate donations of all sizes — they keep us running and
               directly support our work in Bharog Baneri.
             </p>
-            <a href={LINKS.donate} className="s-btn s-btn-primary mt-auto">
+            <a href={LINKS.donate} className="a-btn a-btn-primary mt-auto">
               Donate now
-              <Arrow />
             </a>
           </div>
         </div>

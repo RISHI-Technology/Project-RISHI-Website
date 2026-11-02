@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import "./site.css";       // public website design system ("Field Report"; scoped to .site). Loaded
-                           // before globals.css so Tailwind utilities can override its classes.
+import "./site.css";       // public website design system (Apple-style; classes used only by public pages).
+                           // Loaded before globals.css so Tailwind utilities can override it.
 import "./globals.css";
 import "./dark-theme.css"; // dashboard dark mode (generated: scripts/gen-dark-theme.mjs)
 import "./ai-theme.css";   // RISHI AI light/dark (generated: scripts/gen-ai-theme.mjs)
@@ -30,13 +30,16 @@ const inter = localFont({
   display: "swap",
 });
 
-// Public website type (app/site.css): Eczar for display, Mukta for text.
-const eczar = localFont({
-  src: [{ path: "./fonts/Eczar.woff2", weight: "400 800", style: "normal" }],
-  variable: "--font-eczar",
+// Public website headline type (app/site.css): Anek Latin, a warm humanist
+// sans from Ek Type (Mumbai) — the same studio as Mukta below.
+const anek = localFont({
+  src: [{ path: "./fonts/AnekLatin.woff2", weight: "100 800", style: "normal" }],
+  variable: "--font-anek",
   display: "swap",
 });
 
+// Public website body type (app/site.css): Mukta, a warm humanist sans from
+// Ek Type (Mumbai). Headlines use Anek Latin, loaded above.
 const mukta = localFont({
   src: [
     { path: "./fonts/Mukta-400.woff2", weight: "400", style: "normal" },
@@ -77,7 +80,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${eczar.variable} ${mukta.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${mukta.variable} ${anek.variable}`} suppressHydrationWarning>
       <head>
         {/* Apply dashboard dark mode and the Liquid Glass interface (the default;
             "classic" opts out, RISHI AI is excluded — see components/GlassMode)

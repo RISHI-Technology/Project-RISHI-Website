@@ -1,81 +1,92 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import Media from "@/components/Media";
 import SectionHeading from "@/components/SectionHeading";
-import SiteLabel from "@/components/SiteLabel";
+import ScrollWindow from "@/components/site/ScrollWindow";
+import { Chevron } from "@/components/site/Icons";
 import { PROJECTS, LINKS } from "@/lib/content";
 
 type Project = (typeof PROJECTS)[number];
 
-const Arrow = ({ className = "h-4 w-4" }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M5 12h14M13 6l6 6-6 6" />
-  </svg>
-);
-
 export default function ProjectPage({ project }: { project: Project }) {
   const others = PROJECTS.filter((p) => p.slug !== project.slug);
+  const heroImage = (project as { heroImage?: string | null }).heroImage ?? null;
 
   return (
     <article className="site">
       {/* Hero */}
-      <section className="border-b border-graphite/10 pt-[var(--header-h)]">
-        <div className="s-container grid gap-12 pb-[clamp(3.5rem,6vw,5.5rem)] pt-[clamp(3rem,6vw,5rem)] lg:grid-cols-12 lg:items-center lg:gap-x-16">
-          <div className="lg:col-span-6">
-            <SiteLabel>Project Team</SiteLabel>
-            <h1 className="t-display mt-7 text-deodar">{project.name}</h1>
-            <p className="mt-6 max-w-[38rem] text-graphite/80">{project.intro}</p>
-          </div>
-          <div className="lg:col-span-6">
-            <Media
-              src={(project as { heroImage?: string | null }).heroImage ?? null}
+      <section className="a-glow pb-[var(--a-section)] pt-[calc(var(--header-h)+clamp(3.5rem,8vw,6.5rem))]">
+        <div className="a-wrap text-center">
+          <p className="hero-rise a-eyebrow">Project Team</p>
+          <h1 style={{ "--i": 1 } as CSSProperties} className="hero-rise a-display mt-3">{project.name}</h1>
+          <p style={{ "--i": 2 } as CSSProperties} className="hero-rise a-body mx-auto mt-6 max-w-3xl text-[1.1875rem] text-label-2">
+            {project.intro}
+          </p>
+        </div>
+        <div style={{ "--i": 3 } as CSSProperties} className="hero-rise mt-[clamp(3rem,6vw,4.5rem)]">
+          {heroImage ? (
+            <ScrollWindow
+              src={heroImage}
               alt={`${project.name} team in Bharog Baneri`}
-              label={`${project.name} hero photo`}
-              className="aspect-[4/3] w-full"
-              rounded="rounded-[var(--r-media)]"
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority
+              className="aspect-[4/3] sm:aspect-[16/9]"
+              objectPosition="50% 35%"
+              from={0.92}
             />
-          </div>
+          ) : (
+            <div className="a-wrap">
+              <Media
+                src={null}
+                alt={`${project.name} team in Bharog Baneri`}
+                label={`${project.name} hero photo`}
+                className="aspect-[16/9] w-full"
+                rounded="rounded-[var(--a-r-lg)]"
+              />
+            </div>
+          )}
         </div>
       </section>
 
       {/* Quote */}
       {project.quote && (
-        <section className="bg-mist">
-          <div className="s-container py-[clamp(4rem,7vw,6rem)]">
-            <figure className="mx-auto max-w-4xl">
-              <blockquote className="t-h2 text-center font-normal text-deodar">
-                &ldquo;{project.quote}&rdquo;
-              </blockquote>
-              {project.quoteAuthor && (
-                <figcaption className="t-small mt-6 text-center font-semibold text-stone">
-                  — {project.quoteAuthor}
-                </figcaption>
-              )}
-            </figure>
-          </div>
+        <section className="mb-[var(--a-section)] bg-sand py-[var(--a-section)]">
+          <figure className="a-reveal a-wrap max-w-[60rem] text-center">
+            <blockquote className="a-headline text-pine">
+              &ldquo;{project.quote}&rdquo;
+            </blockquote>
+            {project.quoteAuthor && (
+              <figcaption className="a-lead mt-6 text-label-2">
+                — {project.quoteAuthor}
+              </figcaption>
+            )}
+          </figure>
         </section>
       )}
 
       {/* Highlights */}
-      <section className="s-section">
-        <div className="s-container">
-          <SectionHeading eyebrow="This term" title="Project Highlights" />
+      <section className="pb-[var(--a-section)]">
+        <div className="a-wrap">
+          <div className="a-reveal">
+            <SectionHeading eyebrow="This term" title="Project Highlights" />
+          </div>
           <div
-            className={`mt-[var(--space-block)] grid gap-x-8 gap-y-14 ${
-              project.highlights.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"
+            className={`mt-12 grid gap-5 ${
+              project.highlights.length === 3 ? "lg:grid-cols-3" : "md:grid-cols-2"
             }`}
           >
             {project.highlights.map((h) => (
-              <article key={h.title}>
+              <article key={h.title} className="a-reveal a-tile flex flex-col">
                 <Media
                   src={h.image}
                   alt={h.title}
                   label={`${h.title} photo`}
                   className="aspect-[4/3] w-full"
-                  rounded="rounded-[var(--r-media)]"
+                  rounded="rounded-none"
                 />
-                <h3 className="t-h3 mt-6 text-deodar">{h.title}</h3>
-                <p className="t-small mt-3 text-graphite/80">{h.body}</p>
+                <div className="p-[clamp(1.5rem,2.5vw,2rem)]">
+                  <h3 className="a-title3">{h.title}</h3>
+                  <p className="a-callout mt-3 text-label-2">{h.body}</p>
+                </div>
               </article>
             ))}
           </div>
@@ -83,17 +94,19 @@ export default function ProjectPage({ project }: { project: Project }) {
       </section>
 
       {/* Past projects */}
-      <section className="s-dark s-section bg-deodar text-snow">
-        <div className="s-container">
-          <SectionHeading eyebrow="Our track record" title="Past Projects" accent="pine" tone="dark" />
-          <div className="mt-[var(--space-block)] grid gap-x-16 sm:grid-cols-2">
+      <section className="a-on-dark a-band-dark py-[var(--a-section)]">
+        <div className="a-wrap">
+          <div className="a-reveal">
+            <SectionHeading eyebrow="Our track record" title="Past Projects" accent="pine" tone="dark" />
+          </div>
+          <div className="mt-12 grid gap-5 md:grid-cols-2">
             {project.past.map((p, i) => (
-              <div key={p.title} className="border-t border-snow/20 pb-10 pt-6">
-                <span className="t-label t-num text-saffron">
+              <div key={p.title} className="a-reveal a-tile-dark p-[clamp(1.75rem,3vw,2.5rem)]">
+                <span className="a-num a-caption font-semibold text-marigold">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <h3 className="t-h3 mt-3">{p.title}</h3>
-                <p className="t-small mt-3 max-w-xl text-snow/80">{p.body}</p>
+                <h3 className="a-title3 mt-3">{p.title}</h3>
+                <p className="a-callout mt-3 text-white/70">{p.body}</p>
               </div>
             ))}
           </div>
@@ -101,41 +114,40 @@ export default function ProjectPage({ project }: { project: Project }) {
       </section>
 
       {/* CTA + other projects */}
-      <section className="s-section">
-        <div className="s-container">
-          <div className="grid gap-8 rounded-[var(--r-media)] bg-saffron p-[clamp(2rem,4vw,3.5rem)] text-deodar-deep lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-8">
-              <h2 className="t-h2">Want to work on {project.name}?</h2>
-              <p className="t-lead mt-4 max-w-xl">
-                We recruit at the start of every Fall and Spring semester. Come find
-                your team.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3 lg:col-span-4 lg:justify-end">
-              <Link href="/apply" className="s-btn s-btn-dark">
+      <section className="py-[var(--a-section)]">
+        <div className="a-wrap">
+          <div className="a-reveal rounded-[var(--a-r-lg)] bg-marigold px-[clamp(1.75rem,5vw,4rem)] py-[clamp(3rem,6vw,5rem)] text-center text-label">
+            <h2 className="a-headline mx-auto max-w-[18ch]">Want to work on {project.name}?</h2>
+            <p className="a-lead mx-auto mt-4 max-w-xl">
+              We recruit at the start of every Fall and Spring semester. Come find
+              your team.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+              <Link href="/apply" className="a-btn a-btn-pine">
                 Apply to join
               </Link>
-              <a href={LINKS.donate} className="s-btn border-deodar-deep/30 text-deodar-deep hover:border-deodar-deep hover:bg-deodar-deep/[0.06]">
+              <a href={LINKS.donate} className="a-btn bg-white/40 text-label hover:bg-white/60">
                 Support our work
               </a>
             </div>
           </div>
 
-          <div className="mt-[var(--space-block)]">
-            <SiteLabel>Other teams</SiteLabel>
-            <ul className="mt-6 grid gap-x-8 sm:grid-cols-3">
+          <div className="mt-16">
+            <p className="a-eyebrow">Other teams</p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
               {others.map((o) => (
-                <li key={o.slug}>
-                  <Link
-                    href={`/projects/${o.slug}`}
-                    className="group flex items-center justify-between gap-4 border-t border-graphite/15 py-5 text-deodar"
-                  >
-                    <span className="t-h3 decoration-2 underline-offset-[0.2em] group-hover:underline">{o.name}</span>
-                    <Arrow className="h-5 w-5 shrink-0 transition-transform duration-150 group-hover:translate-x-1" />
-                  </Link>
-                </li>
+                <Link
+                  key={o.slug}
+                  href={`/projects/${o.slug}`}
+                  className="a-press a-tile group flex min-h-[72px] items-center justify-between gap-4 px-6"
+                >
+                  <span className="a-title3">{o.name}</span>
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-label/[0.06] text-label transition-colors duration-150 group-hover:bg-pine group-hover:text-white">
+                    <Chevron className="h-4 w-4" />
+                  </span>
+                </Link>
               ))}
-            </ul>
+            </div>
           </div>
         </div>
       </section>
