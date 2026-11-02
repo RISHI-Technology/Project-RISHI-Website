@@ -73,6 +73,9 @@ async function run(req: Request) {
   let sent = 0;
 
   for (const t of tasks) {
+    // Archived tasks never get reminders. The query already excludes them; this
+    // keeps that true even if the query changes.
+    if (t.archived) continue;
     // Imported stand-ins: the due date isn't real and the address can't receive
     // mail. Real tasks — including ones created by the agenda import — still
     // get their normal reminders.

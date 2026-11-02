@@ -67,6 +67,12 @@ async function syncedJson(payload: unknown, init?: { status?: number }) {
  * Taking an approval back (unmark) simply re-runs this and unarchives as needed.
  * Idempotent: it only flips the archived flag when it actually needs to change,
  * and never emails (unlike the manual archive action).
+ *
+ * It only ever UNDOES its own auto-archiving, never a manager's manual archive.
+ * It used to un-archive every unfinished row whenever anyone in the group was
+ * approved, so "Archive for everyone" followed by approving a pending
+ * submission brought the unfinished assignees' rows back, and the hourly
+ * reminder job went back to emailing them every day.
  */
 async function syncGroupArchive(task: Task): Promise<void> {
   let rows = task.groupId ? await getTasksByGroup(task.groupId) : [];
@@ -76,13 +82,24 @@ async function syncGroupArchive(task: Task): Promise<void> {
   }
   if (rows.length === 0) return;
 
+  // Auto-archiving only ever archives COMPLETE rows. So an unfinished row that
+  // is archived (other than the one just unmarked, which may have been
+  // auto-archived while it was complete) was archived by a manager on purpose,
+  // and the whole task counts as manually archived.
+  const isManualArchive = (r: Task) => r.archived && r.status !== "complete" && r.id !== task.id;
+  const groupManuallyArchived = rows.some(isManualArchive);
+
   const allComplete = rows.every((r) => r.status === "complete");
   await Promise.all(
     rows.map(async (r) => {
       const assignee = findMember(r.assigneeEmail);
       const assigneeIsManager = assignee ? canManageTask(assignee, r) : false;
       const desired = allComplete ? true : r.status === "complete" && !assigneeIsManager;
-      if (r.archived !== desired) await setTaskArchived(r.id, desired);
+      if (r.archived === desired) return;
+      // Archiving is always safe. Un-archiving is only for reversing our own
+      // auto-archive, never for a task a manager archived.
+      if (!desired && (groupManuallyArchived || isManualArchive(r))) return;
+      await setTaskArchived(r.id, desired);
     }),
   );
 }
@@ -236,6 +253,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (body.action === "nudge") {
     if (!canManageTask(me, task))
       return NextResponse.json({ error: "You can't nudge this task." }, { status: 403 });
+    if (task.archived)
+      return NextResponse.json({ error: "This task is archived, so no reminder was sent." }, { status: 400 });
     await notifyTaskNudge(task, me.email).catch(() => {});
     const logged = await nudgeTask(task, me.email);
     return syncedJson({ ok: true, task: logged });
