@@ -1,111 +1,96 @@
 import type { Metadata } from "next";
-import Reveal from "@/components/Reveal";
+import Contours from "@/components/Contours";
 import { APPLY, LINKS } from "@/lib/content";
-import HeaderScenery from "@/components/landscape/HeaderScenery";
 
 export const metadata: Metadata = {
   title: "Apply",
   description: "Join Project RISHI at UC Berkeley. Recruitment dates and application.",
 };
 
+const Arrow = () => (
+  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M7 17 17 7M9 7h8v8" />
+  </svg>
+);
+
+/** One way in: a link card when the link exists, a quiet "Released soon" box otherwise. */
+function Action({ href, title, cta, primary = false }: { href: string; title: string; cta: string; primary?: boolean }) {
+  if (!href) {
+    return (
+      <div aria-disabled className="rounded-2xl border border-dashed border-pine/20 p-6">
+        <p className="font-display text-xl font-medium text-pine-deep/60">{title}</p>
+        <p className="mt-4 text-sm text-ink/55">Released soon</p>
+      </div>
+    );
+  }
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`group rounded-2xl p-6 transition-colors duration-150 ${
+        primary
+          ? "bg-pine text-paper hover:bg-pine-deep"
+          : "border border-pine/10 bg-paper text-pine-deep hover:border-pine/30"
+      }`}
+    >
+      <p className="font-display text-xl font-medium">{title}</p>
+      <span className={`mt-4 inline-flex items-center gap-2 text-sm font-medium ${primary ? "text-marigold-soft" : "text-pine"}`}>
+        {cta}
+        <Arrow />
+      </span>
+    </a>
+  );
+}
+
 export default function ApplyPage() {
   return (
     <>
-      <section className="dawn-header relative overflow-hidden pt-[var(--header-h)] text-paper">
-        <HeaderScenery photo="deodars" />
-        <div className="container-rishi relative z-10 py-10 lg:py-14">
-          <Reveal>
-            <span className="eyebrow text-marigold-soft">
-              <span className="h-1.5 w-1.5 rounded-full bg-marigold" />
-              {APPLY.termLabel}
-            </span>
-            <h1 className="mt-4 max-w-4xl font-display text-5xl font-semibold leading-[1.02] sm:text-6xl">
-              {APPLY.heading}
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg text-paper/90">{APPLY.blurb}</p>
-            {LINKS.application ? (
-              <a
-                href={LINKS.application}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-marigold px-8 py-3.5 text-base font-semibold text-pine-deep transition-transform hover:-translate-y-0.5"
-              >
-                Apply
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </a>
-            ) : null}
-          </Reveal>
+      <section className="relative overflow-hidden bg-pine pt-[var(--header-h)] text-paper">
+        <Contours className="absolute inset-0 h-full w-full text-paper" opacity={0.12} />
+        <div className="container-rishi relative z-10 py-20 lg:py-24">
+          <p className="eyebrow text-marigold-soft">{APPLY.termLabel}</p>
+          <h1 className="mt-4 max-w-4xl font-display text-5xl font-medium leading-[1.04] tracking-[-0.02em] sm:text-6xl">
+            {APPLY.heading}
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg text-paper/80">{APPLY.blurb}</p>
+          {LINKS.application ? (
+            <a
+              href={LINKS.application}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-accent mt-8"
+            >
+              Apply
+              <Arrow />
+            </a>
+          ) : null}
         </div>
       </section>
 
       {/* Timeline */}
       <section className="container-rishi py-20">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {APPLY.timeline.map((t, i) => (
-            <Reveal key={t.label} delay={i * 0.08}>
-              <div className="relative h-full rounded-2xl border border-pine/12 p-6">
-                <span className="font-display text-3xl font-semibold text-marigold-ink">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <p className="mt-3 text-sm font-semibold uppercase tracking-wider text-sage-deep">
-                  {t.label}
-                </p>
-                <p className="mt-1 font-display text-xl font-semibold text-pine-deep">
-                  {t.value}
-                </p>
-                {"time" in t && t.time ? (
-                  <p className="mt-1 text-sm font-medium uppercase tracking-widest text-marigold-ink">
-                    {t.time}
-                  </p>
-                ) : null}
-              </div>
-            </Reveal>
+        <h2 className="font-display text-3xl font-medium text-pine-deep sm:text-4xl">Dates</h2>
+        <ol className="mt-8 divide-y divide-pine/10 rounded-2xl border border-pine/10">
+          {APPLY.timeline.map((t) => (
+            <li key={t.label} className="grid gap-1 px-6 py-4 sm:grid-cols-[12rem_1fr_auto] sm:items-baseline sm:gap-6">
+              <span className="text-sm text-ink/70">{t.label}</span>
+              <span className="font-display text-xl font-medium tabular-nums text-pine-deep">{t.value}</span>
+              {"time" in t && t.time ? (
+                <span className="text-sm tabular-nums text-ink/70">{t.time}</span>
+              ) : (
+                <span className="hidden sm:block" />
+              )}
+            </li>
           ))}
-        </div>
+        </ol>
 
         {/* Actions */}
-        <Reveal delay={0.1}>
-          <div className="mt-12 grid gap-4 sm:grid-cols-3">
-            <a href={LINKS.interestForm} target="_blank" rel="noopener noreferrer" className="group rounded-2xl bg-pine p-6 text-paper transition-transform hover:-translate-y-1">
-              <p className="font-display text-xl font-semibold">Interest Form</p>
-              <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-marigold-soft">
-                Open form →
-              </span>
-            </a>
-            {LINKS.coffeeChats ? (
-              <a href={LINKS.coffeeChats} target="_blank" rel="noopener noreferrer" className="group rounded-2xl bg-marigold p-6 text-pine-deep transition-transform hover:-translate-y-1">
-                <p className="font-display text-xl font-semibold">Coffee Chats</p>
-                <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold">
-                  Book a slot →
-                </span>
-              </a>
-            ) : (
-              <div aria-disabled className="rounded-2xl border border-pine/15 bg-pine/[0.04] p-6 text-pine-deep/60">
-                <p className="font-display text-xl font-semibold text-pine-deep/70">Coffee Chats</p>
-                <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-pine-deep/45">
-                  Released soon
-                </span>
-              </div>
-            )}
-            {LINKS.application ? (
-              <a href={LINKS.application} target="_blank" rel="noopener noreferrer" className="group rounded-2xl bg-pine-deep p-6 text-paper transition-transform hover:-translate-y-1">
-                <p className="font-display text-xl font-semibold">Application</p>
-                <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-marigold-soft">
-                  Apply now →
-                </span>
-              </a>
-            ) : (
-              <div aria-disabled className="rounded-2xl border border-pine/15 bg-pine/[0.04] p-6 text-pine-deep/60">
-                <p className="font-display text-xl font-semibold text-pine-deep/70">Application</p>
-                <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-pine-deep/45">
-                  Released soon
-                </span>
-              </div>
-            )}
-          </div>
-        </Reveal>
+        <div className="mt-12 grid gap-4 sm:grid-cols-3">
+          <Action href={LINKS.interestForm} title="Interest form" cta="Open form" />
+          <Action href={LINKS.coffeeChats} title="Coffee chats" cta="Book a slot" />
+          <Action href={LINKS.application} title="Application" cta="Apply now" primary />
+        </div>
       </section>
     </>
   );

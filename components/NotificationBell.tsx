@@ -132,7 +132,7 @@ export default function NotificationBell() {
       className="w-[22rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-pine/25 text-ink shadow-2xl ring-1 ring-pine/10"
     >
       <div className="flex items-center justify-between border-b border-pine/15 px-4 py-3">
-        <p className="font-display text-sm font-semibold text-pine-deep">Notifications</p>
+        <p className="font-display text-sm font-medium text-pine-deep">Notifications</p>
         {items.some((n) => !n.read) && (
           <button onClick={() => markRead()} className="text-xs font-medium text-pine-deep hover:underline">Mark all read</button>
         )}
@@ -171,9 +171,9 @@ export default function NotificationBell() {
 
   const detail = selected && (
     <div className="fixed inset-0 grid place-items-center bg-ink/40 safe-overlay" style={{ zIndex: 1100 }} onClick={() => setSelected(null)}>
-      <div className="w-full max-w-md overflow-y-auto rounded-3xl p-6 shadow-xl" style={{ backgroundColor: PANEL_BG, maxHeight: "85vh" }} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md overflow-y-auto rounded-2xl p-6 shadow-xl" style={{ backgroundColor: PANEL_BG, maxHeight: "85vh" }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
-          <h3 className="font-display text-lg font-semibold text-pine-deep">{selected.title}</h3>
+          <h3 className="font-display text-lg font-medium text-pine-deep">{selected.title}</h3>
           <button onClick={() => setSelected(null)} className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink/70 hover:bg-ink/5" aria-label="Close">✕</button>
         </div>
         <p className="mt-1 text-xs text-ink/65">{fmtFull(selected.createdAt)}</p>

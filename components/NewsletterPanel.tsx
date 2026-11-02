@@ -131,19 +131,19 @@ export default function NewsletterPanel({ compact = false }: { compact?: boolean
   }
 
   return (
-    <div className={`flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-pine/15 bg-pine/[0.03] ${compact ? "p-4" : "p-8"}`}>
+    <div className={`flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-pine/15 bg-pine/[0.03] ${compact ? "p-4" : "p-8"}`}>
       <div className="flex items-center gap-3">
-        <span className={`grid place-items-center rounded-2xl bg-pine text-paper ${compact ? "h-9 w-9" : "h-12 w-12"}`}>
+        <span className={`grid place-items-center rounded-xl bg-pine/[0.07] text-pine ${compact ? "h-9 w-9" : "h-12 w-12"}`}>
           <Newspaper className={compact ? "h-5 w-5" : "h-6 w-6"} />
         </span>
         <div>
-          <h2 className={`font-display font-semibold text-pine-deep ${compact ? "text-lg" : "text-2xl"}`}>Newsletters</h2>
+          <h2 className={`font-display font-medium text-pine-deep ${compact ? "text-lg" : "text-2xl"}`}>Newsletters</h2>
           <p className={`${compact ? "text-[11px]" : "text-sm"} text-ink/70`}>{unread > 0 ? `${unread} unread` : "You're all caught up"}</p>
         </div>
       </div>
 
       <div className={`${compact ? "mt-1" : "mt-5"} -mx-2 min-h-0 max-h-72 flex-1 overflow-y-auto px-2`} tabIndex={0} role="region" aria-label="Newsletters">
-        {items.length === 0 && <p className={`${compact ? "py-1 text-[11px]" : "py-8 text-sm"} text-center text-ink/70`}>No newsletters yet.</p>}
+        {items.length === 0 && <p className={`${compact ? "py-1 text-[11px]" : "py-8 text-sm"} text-center text-ink/70`}>No newsletters yet</p>}
         {items.map((item) => (
           <button
             key={item.id}
@@ -179,7 +179,7 @@ export default function NewsletterPanel({ compact = false }: { compact?: boolean
 
       {openItem && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-ink/50 safe-overlay" onClick={closeModal}>
-          <div className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-paper p-6 text-ink shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-paper p-6 text-ink shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Avatar src={openItem.authorAvatar} name={openItem.authorName} size={40} />
@@ -205,7 +205,7 @@ export default function NewsletterPanel({ compact = false }: { compact?: boolean
                 </button>
               </div>
             </div>
-            <h3 className="mt-5 font-display text-2xl font-semibold text-pine-deep">{openItem.subject}</h3>
+            <h3 className="mt-5 font-display text-2xl font-medium text-pine-deep">{openItem.subject}</h3>
             <div className="rte-content mt-3 text-[15px]" dangerouslySetInnerHTML={{ __html: openItem.bodyHtml }} />
             {confirmDelete && (
               <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
@@ -222,9 +222,9 @@ export default function NewsletterPanel({ compact = false }: { compact?: boolean
 
       {showSubs && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-ink/50 safe-overlay" onClick={() => setShowSubs(false)}>
-          <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-3xl bg-paper p-6 text-ink shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl bg-paper p-6 text-ink shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between gap-3">
-              <h3 className="font-display text-xl font-semibold text-pine-deep">Newsletter subscribers</h3>
+              <h3 className="font-display text-xl font-medium text-pine-deep">Newsletter subscribers</h3>
               <button onClick={() => setShowSubs(false)} className="grid h-8 w-8 place-items-center rounded-full text-ink/70 hover:bg-ink/10">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </button>
@@ -234,7 +234,7 @@ export default function NewsletterPanel({ compact = false }: { compact?: boolean
               {subsError ? (
                 <p className="px-4 py-8 text-center text-sm text-red-600">Couldn&rsquo;t load subscribers: {subsError}</p>
               ) : subs.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-ink/70">No subscribers yet.</p>
+                <p className="px-4 py-8 text-center text-sm text-ink/70">No subscribers yet</p>
               ) : (
                 subs.map((e) => <p key={e} className="border-b border-ink/8 px-4 py-2 text-sm text-ink last:border-b-0">{e}</p>)
               )}

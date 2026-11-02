@@ -146,7 +146,7 @@ export default function DirectoryPage() {
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
             Back to dashboard
           </Link>
-          <h1 className="mt-4 font-display text-4xl font-semibold sm:text-5xl">Member Directory</h1>
+          <h1 className="mt-4 font-display text-4xl font-medium sm:text-5xl">Member Directory</h1>
         </div>
       </DashboardBanner>
 
@@ -172,7 +172,7 @@ export default function DirectoryPage() {
             <div className="mt-4 overflow-x-auto rounded-2xl border border-pine/12">
               <table className="w-full min-w-[860px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-pine/12 bg-pine/[0.03] text-xs uppercase tracking-wide text-ink/70">
+                  <tr className="border-b border-pine/12 bg-pine/[0.03] text-xs text-ink/70">
                     {["Name", "Role", "Project Group", "Year", "Email", "Phone"].map((h) => (
                       <th key={h} className="px-4 py-3 font-semibold">{h}</th>
                     ))}
@@ -232,7 +232,7 @@ export default function DirectoryPage() {
             <div className="mt-4 overflow-x-auto rounded-2xl border border-pine/12" tabIndex={0} role="region" aria-label="Member directory table">
               <table className="w-full min-w-[860px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-pine/12 bg-pine/[0.03] text-xs uppercase tracking-wide text-ink/70">
+                  <tr className="border-b border-pine/12 bg-pine/[0.03] text-xs text-ink/70">
                     <th className="px-4 py-3 font-semibold">Name</th>
                     <th className="px-4 py-3 font-semibold">Role</th>
                     <th className="px-4 py-3 font-semibold">Project Group</th>
@@ -282,9 +282,9 @@ export default function DirectoryPage() {
       {/* Member: request a change (emailed to the webmaster) */}
       {requesting && mine && (
         <div className="fixed inset-0 z-[1100] grid place-items-center bg-ink/40 safe-overlay" onClick={() => setRequesting(false)}>
-          <div className="w-full max-w-md rounded-3xl bg-paper p-6 shadow-xl" onClick={(ev) => ev.stopPropagation()}>
+          <div className="w-full max-w-md rounded-2xl bg-paper p-6 shadow-xl" onClick={(ev) => ev.stopPropagation()}>
             <div className="mb-3 flex items-start justify-between">
-              <h2 className="font-display text-xl font-semibold text-pine-deep">Request a contact info change</h2>
+              <h2 className="font-display text-xl font-medium text-pine-deep">Request a contact info change</h2>
               <button onClick={() => setRequesting(false)} className="grid h-8 w-8 place-items-center rounded-full text-ink/70 hover:bg-ink/5" aria-label="Close">✕</button>
             </div>
             <ContactRequestForm current={{ email: mine.email, phone: mine.phone }} onDone={() => setRequesting(false)} />
@@ -295,20 +295,20 @@ export default function DirectoryPage() {
       {/* Webmaster: edit anyone's contact info */}
       {editing && editTarget && canEditAll && (
         <div className="fixed inset-0 z-[1100] grid place-items-center bg-ink/40 safe-overlay" onClick={() => setEditing(false)}>
-          <div className="w-full max-w-md rounded-3xl bg-paper p-6 shadow-xl" onClick={(ev) => ev.stopPropagation()}>
+          <div className="w-full max-w-md rounded-2xl bg-paper p-6 shadow-xl" onClick={(ev) => ev.stopPropagation()}>
             <div className="flex items-start justify-between">
-              <h2 className="font-display text-xl font-semibold text-pine-deep">{editTarget.loginEmail === me ? "Your contact info" : `${editTarget.name}'s contact info`}</h2>
+              <h2 className="font-display text-xl font-medium text-pine-deep">{editTarget.loginEmail === me ? "Your contact info" : `${editTarget.name}'s contact info`}</h2>
               <button onClick={() => setEditing(false)} className="grid h-8 w-8 place-items-center rounded-full text-ink/70 hover:bg-ink/5" aria-label="Close">✕</button>
             </div>
             <p className="mt-1 text-xs text-ink/70">This only changes how you appear in this directory. It does not change the email you log in with.</p>
 
             <label className="mt-4 block">
-              <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Email</span>
+              <span className="text-xs font-semibold text-ink/70">Email</span>
               <input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="you@example.com"
                 className="mt-1.5 w-full rounded-xl border border-pine/20 px-4 py-2.5 text-sm outline-none focus:border-pine" />
             </label>
             <label className="mt-3 block">
-              <span className="text-xs font-semibold uppercase tracking-wide text-ink/70">Phone</span>
+              <span className="text-xs font-semibold text-ink/70">Phone</span>
               <input value={editPhone} onChange={(e) => setEditPhone(formatPhoneInput(e.target.value))} placeholder="(555) 123-4567"
                 className="mt-1.5 w-full rounded-xl border border-pine/20 px-4 py-2.5 text-sm outline-none focus:border-pine" />
             </label>

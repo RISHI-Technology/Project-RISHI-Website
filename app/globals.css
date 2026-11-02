@@ -138,22 +138,28 @@ body {
     padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
   }
 
-  /* Small uppercase label used as section eyebrows */
+  /* Small sentence-case label above a heading or a group of fields */
   .eyebrow {
-    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em];
+    @apply inline-flex items-center gap-2 text-sm font-medium;
   }
 
+  /* Buttons: a colour step on hover and a small press. Nothing lifts or glows. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 ease-out;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-medium transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98];
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
   .btn-primary {
-    @apply btn bg-pine text-paper hover:bg-pine-deep hover:-translate-y-0.5;
+    @apply btn bg-pine text-paper hover:bg-pine-deep;
   }
   .btn-accent {
-    @apply btn bg-marigold text-pine-deep hover:bg-marigold-deep hover:text-paper hover:-translate-y-0.5;
+    @apply btn bg-marigold text-pine-deep hover:bg-marigold-soft;
   }
   .btn-ghost {
-    @apply btn border border-pine/25 text-pine hover:border-pine hover:bg-pine hover:text-paper;
+    @apply btn border border-pine/20 text-pine hover:border-pine/40 hover:bg-pine/[0.05];
+  }
+  /* Secondary action on a dark surface (pine panels, the photo hero) */
+  .btn-ghost-dark {
+    @apply btn border border-paper/30 text-paper hover:border-paper/60 hover:bg-paper/10;
   }
 }
 
@@ -183,148 +189,18 @@ body {
   }
 }
 
-/* ============================================================================
-   DAWN HOME (app/page.tsx) + shared landscape pieces
-   Rules: nothing animates OUT; arrivals are tied to scroll position (never a
-   timer) so fast scrolling is never held up; native scrolling; only opacity
-   and transforms animate. Everything moving sits inside
-   prefers-reduced-motion: no-preference, and scroll-linked effects inside
-   @supports (animation-timeline: view()) — elsewhere the page is just still.
-   ========================================================================== */
-.dawn-home { overflow-x: clip; }
-/* IMPORTANT for every scroll-linked effect below: `overflow: hidden` makes an
-   element a scroll container, and view() timelines bind to the nearest one —
-   so anything animated inside a rounded, clipped box would freeze part-way.
-   `overflow: clip` clips identically (rounded corners included) without being
-   a scroll container. */
-.dawn-home .overflow-hidden, .dawn-header, .dawn-header .overflow-hidden { overflow: clip; }
-/* the photo journey (components/landscape/PhotoJourney.tsx) */
-.journey-layer { transform-origin: 50% 50%; will-change: transform, opacity; }
-.journey-vignette {
-  background:
-    radial-gradient(120% 90% at 50% 45%, transparent 55%, rgb(10 18 14 / 0.38) 100%),
-    linear-gradient(to bottom, rgb(10 18 14 / 0.18), transparent 22%);
+/* The home hero's load sequence — the site's one orchestrated motion moment.
+   CSS rather than JavaScript so it starts at first paint (never a blank hero
+   while scripts load). Uses the `translate` property, not `transform`, so it
+   doesn't fight Tailwind's -translate-x-1/2 centring. The reduced-motion
+   rule below collapses it to an instant appearance. */
+@keyframes hero-rise {
+  from { opacity: 0; translate: 0 8px; }
+  to { opacity: 1; translate: 0 0; }
 }
-/* home hero over the photo: a soft shade behind the centred title */
-.hero-scrim {
-  /* no shade pool behind the title (he found it too heavy): only a soft fall-off at the very bottom */
-  background: linear-gradient(to top, rgb(9 22 16 / 0.22), transparent 22%);
-}
-/* sunrise spilling in from the east (top right), warming the hero */
-.hero-glow {
-  background:
-    radial-gradient(55% 60% at 96% 6%, rgb(255 176 92 / 0.38), rgb(255 150 90 / 0.12) 55%, transparent 80%),
-    linear-gradient(to bottom, rgb(255 190 140 / 0.12), transparent 40%);
-  mix-blend-mode: screen;
-}
-/* pollen in the light */
-.mote { position: absolute; border-radius: 9999px; background: rgb(255 232 180); box-shadow: 0 0 6px 1px rgb(255 214 140 / 0.7); opacity: 0; }
-
-/* illustrated plants (components/landscape/Foliage.tsx) */
-.foliage img { user-select: none; }
-.foliage .f-blur { opacity: 0; }
-.foliage-drift, .foliage .f-sharp, .foliage .f-blur { will-change: transform, opacity; }
-
-/* the stats, each on its own soft tint */
-.stat-marigold { background: linear-gradient(160deg, #fdf1dc, #f8e3c0); }
-.stat-sage { background: linear-gradient(160deg, #f1f4e6, #e2ead3); }
-.stat-rose { background: linear-gradient(160deg, #fcece3, #f6d9cb); }
-
-/* a tight shadow that crisps the letter edges, not a halo */
-.hero-shadow { text-shadow: 0 1px 2px rgb(5 14 10 / 0.45), 0 2px 8px rgb(5 14 10 / 0.22); }
-/* solid paper panels, warmed like paper in morning light: content is always readable */
-.dawn-panel {
-  background: linear-gradient(165deg, #fdf7ec 0%, #f8ecd9 100%);
-  box-shadow: 0 40px 90px -45px rgb(20 54 40 / 0.45), inset 0 0 0 1px rgb(30 77 58 / 0.08);
-}
-/* inner-page headers (components/landscape/HeaderScenery.tsx): a real
-   landscape photograph under a shade, with light text */
-.dawn-header { background: #1d2c22; color: rgb(251 248 241); padding-bottom: clamp(12px, 2vw, 28px); }
-.dawn-header > .container-rishi { position: relative; z-index: 10; }
-
-/* shades over header photos, dark enough for light text over snow or cloud;
-   on narrow screens text runs the full width, so the shade is even */
-.header-shade-side {
-  background:
-    linear-gradient(90deg, rgb(9 22 16 / 0.86) 0%, rgb(9 22 16 / 0.74) 50%, rgb(9 22 16 / 0.45) 100%),
-    linear-gradient(to top, rgb(9 22 16 / 0.35), transparent 40%);
-}
-.header-shade-even { background: radial-gradient(80% 70% at 50% 45%, rgb(9 22 16 / 0.82), rgb(9 22 16 / 0.72) 70%, rgb(9 22 16 / 0.6)); }
-@media (max-width: 1023px) {
-  .header-shade-side { background: linear-gradient(rgb(9 22 16 / 0.76), rgb(9 22 16 / 0.7)); }
-}
-
-/* the methodology graph's steps (components/MethodGraph.tsx) */
-.method-node { display: block; width: 26px; height: 26px; }
-.method-dot {
-  position: absolute; inset: 0; border-radius: 9999px; background: rgb(251 248 241);
-  border: 3px solid rgb(30 77 58 / 0.28);
-  transition: background-color 350ms ease, border-color 350ms ease, box-shadow 500ms ease;
-}
-.method-node.is-lit .method-dot {
-  background: #e2a02f; border-color: #fbf8f1;
-  box-shadow: 0 0 0 5px rgb(226 160 47 / 0.22), 0 0 26px 2px rgb(226 160 47 / 0.6);
-}
-.method-ring { position: absolute; inset: 0; border-radius: 9999px; border: 2px solid #e2a02f; opacity: 0; pointer-events: none; }
-@keyframes method-ping { 0% { transform: scale(1); opacity: 0.95; } 100% { transform: scale(3.6); opacity: 0; } }
-@keyframes method-pop { 0% { transform: scale(0.55); } 55% { transform: scale(1.3); } 100% { transform: scale(1); } }
-
-/* hover: photos ease closer (the `scale` property, so it adds to any drift) */
-.card-zoom img { transition: scale 700ms cubic-bezier(0.16, 1, 0.3, 1); }
-@media (hover: hover) { .group:hover .card-zoom img { scale: 1.06; } }
-
-@keyframes dawn-rise { from { opacity: 0; translate: 0 28px; } to { opacity: 1; translate: 0 0; } }
-@media (prefers-reduced-motion: no-preference) {
-  /* hero lines rise in on load (CSS, starts at first paint) */
-  .dawn-rise { animation: dawn-rise 1000ms cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: calc(120ms + var(--i, 0) * 120ms); }
-  /* each methodology step pings once, the moment the line reaches it */
-  .method-node.is-pinged .method-ring { animation: method-ping 1100ms cubic-bezier(0.2, 0.6, 0.3, 1) both; }
-  .method-node.is-pinged .method-ring-2 { animation-delay: 200ms; }
-  .method-node.is-pinged .method-dot { animation: method-pop 520ms cubic-bezier(0.3, 1.6, 0.5, 1); }
-  /* plants sway from where they're attached; pollen rises and twinkles */
-  .foliage-sway { animation: foliage-sway 7s ease-in-out infinite; }
-  .foliage:nth-of-type(2n) .foliage-sway { animation-duration: 9s; animation-delay: -3s; }
-  .mote { animation: mote-rise var(--dur, 20s) linear var(--delay, 0s) infinite; }
-}
-@keyframes foliage-sway { 0%, 100% { rotate: -0.8deg; } 50% { rotate: 1deg; } }
-@keyframes mote-rise {
-  0% { transform: translate(0, 0); opacity: 0; }
-  12% { opacity: 0.85; }
-  50% { opacity: 0.35; }
-  70% { opacity: 0.8; }
-  100% { transform: translate(var(--drift, 0px), -46vh); opacity: 0; }
-}
-
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    /* arrivals: finished after 240px of scroll, whatever the element's size */
-    .rise-in { animation: rise-in linear both; animation-timeline: view(); animation-range: entry 0px entry 240px; }
-    @keyframes rise-in { from { opacity: 0; transform: translateY(46px); } to { opacity: 1; transform: none; } }
-
-    /* plants drift at their own depth and pull focus: soft → sharp → soft */
-    .foliage-drift { animation: fol-drift linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
-    @keyframes fol-drift { from { transform: translateY(calc(var(--depth, 0.6) * 22%)); } to { transform: translateY(calc(var(--depth, 0.6) * -22%)); } }
-    .foliage-cover .f-sharp { animation: fol-sharp linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
-    .foliage-cover .f-blur { animation: fol-blur linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
-    @keyframes fol-sharp { 0% { opacity: 0; } 28%, 72% { opacity: 1; } 100% { opacity: 0; } }
-    @keyframes fol-blur { 0% { opacity: 1; } 28%, 72% { opacity: 0; } 100% { opacity: 1; } }
-    /* plants on screen at load start sharp and soften (and rise away) as you scroll on */
-    .foliage-exit .foliage-drift { animation: fol-exit-drift linear both; animation-timeline: view(); animation-range: exit 0% exit 100%; }
-    @keyframes fol-exit-drift { to { transform: translateY(calc(var(--depth, 0.6) * -40%)); } }
-    .foliage-exit .f-sharp { animation: fol-exit-sharp linear both; animation-timeline: view(); animation-range: exit 0% exit 70%; }
-    .foliage-exit .f-blur { animation: fol-exit-blur linear both; animation-timeline: view(); animation-range: exit 0% exit 70%; }
-    @keyframes fol-exit-sharp { to { opacity: 0; } }
-    @keyframes fol-exit-blur { to { opacity: 1; } }
-
-    /* photos drift a little inside their frames */
-    .drift-photo img { animation: photo-drift linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
-    @keyframes photo-drift { from { transform: translateY(-5%) scale(1.12); } to { transform: translateY(5%) scale(1.12); } }
-
-    /* inner-page header photos settle slowly as you scroll away */
-    .header-photo { view-timeline: --hdr block; view-timeline-inset: 0px; }
-    .header-photo img { animation: hdr-drift linear both; animation-timeline: --hdr; animation-range: exit 0% exit 100%; }
-    @keyframes hdr-drift { from { transform: scale(1.06); } to { transform: translateY(8%) scale(1.14); } }
-  }
+.hero-rise {
+  animation: hero-rise 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(60ms + var(--i, 0) * 50ms);
 }
 
 /* View transitions.

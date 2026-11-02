@@ -80,7 +80,7 @@ export default function AgendaDocPanel({
         >
           <div className="flex h-full w-full flex-col bg-paper" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 border-b border-pine/10 px-5 py-3">
-              <h3 className="min-w-0 flex-1 truncate font-display text-lg font-semibold text-pine-deep">
+              <h3 className="min-w-0 flex-1 truncate font-display text-lg font-medium text-pine-deep">
                 {docName || `${groupLabel} agenda`}
               </h3>
               <a

@@ -97,10 +97,10 @@ export default function ProfilePhotoModal({
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/50 safe-overlay" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-3xl bg-paper p-6 shadow-xl"
+        className="w-full max-w-md rounded-2xl bg-paper p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="font-display text-xl font-semibold text-pine-deep">Profile photo</h3>
+        <h3 className="font-display text-xl font-medium text-pine-deep">Profile photo</h3>
         <p className="mt-1 text-sm text-ink/75">Choose a photo, then drag and zoom to frame it.</p>
 
         <div className="relative mt-5 h-64 w-full overflow-hidden rounded-2xl bg-ink/5">

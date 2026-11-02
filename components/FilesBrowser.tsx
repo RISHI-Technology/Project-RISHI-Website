@@ -496,7 +496,7 @@ export default function FilesBrowser() {
             ))}
           </div>
         ) : empty ? (
-          <p className="rounded-3xl border border-dashed border-pine/20 px-6 py-12 text-center text-sm text-ink/70">
+          <p className="rounded-2xl border border-dashed border-pine/20 px-6 py-12 text-center text-sm text-ink/70">
             {empty}
           </p>
         ) : results ? (
@@ -559,13 +559,13 @@ export default function FilesBrowser() {
         >
           <div
             className={`flex w-full flex-col overflow-hidden bg-paper shadow-2xl ${
-              expanded ? "h-full max-w-none rounded-none" : "mx-auto h-full max-w-5xl rounded-3xl"
+              expanded ? "h-full max-w-none rounded-none" : "mx-auto h-full max-w-5xl rounded-2xl"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3 border-b border-pine/10 px-5 py-3.5">
               <div className="min-w-0 flex-1">
-                <h3 className="truncate font-display text-lg font-semibold text-pine-deep">
+                <h3 className="truncate font-display text-lg font-medium text-pine-deep">
                   {preview.name}
                 </h3>
                 <p className="mt-0.5 truncate text-xs text-ink/70">

@@ -51,7 +51,7 @@ export default function TemplateEditor({ params }: { params: { group: string } }
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
             {label} meetings
           </Link>
-          <h1 className="mt-4 font-display text-4xl font-semibold sm:text-5xl">{label} Template</h1>
+          <h1 className="mt-4 font-display text-4xl font-medium sm:text-5xl">{label} Template</h1>
           <p className="mt-2 max-w-2xl text-paper/70">The starting outline for every new {label} meeting — standing sections, the icebreaker, recurring topics. Editing it doesn't change past meetings.</p>
         </div>
       </DashboardBanner>

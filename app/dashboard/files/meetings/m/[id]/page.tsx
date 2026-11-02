@@ -217,16 +217,16 @@ export default function MeetingPage({ params }: { params: { id: string } }) {
           </div>
           {canEdit ? (
             <input value={m.title} onChange={(e) => update({ title: e.target.value })} placeholder="Meeting title"
-              className="mt-4 w-full bg-transparent font-display text-4xl font-semibold text-paper outline-none placeholder:text-paper/40 sm:text-5xl" />
+              className="mt-4 w-full bg-transparent font-display text-4xl font-medium text-paper outline-none placeholder:text-paper/40 sm:text-5xl" />
           ) : (
-            <h1 className="mt-4 font-display text-4xl font-semibold sm:text-5xl">{m.title || "Untitled meeting"}</h1>
+            <h1 className="mt-4 font-display text-4xl font-medium sm:text-5xl">{m.title || "Untitled meeting"}</h1>
           )}
         </div>
       </DashboardBanner>
 
       <section className="container-rishi max-w-4xl py-8">
         {/* ---- header details ---- */}
-        <div className="grid gap-4 rounded-3xl border border-pine/12 bg-pine/[0.02] p-6 sm:grid-cols-2">
+        <div className="grid gap-4 rounded-2xl border border-pine/12 bg-pine/[0.02] p-6 sm:grid-cols-2">
           <Field label="Date">
             {canEdit ? <input type="date" value={m.date ?? ""} onChange={(e) => update({ date: e.target.value })} className="field" />
               : <span className="text-ink/80">{m.date ? new Date(m.date + "T00:00:00").toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "—"}</span>}
@@ -244,7 +244,7 @@ export default function MeetingPage({ params }: { params: { id: string } }) {
               : <span className="text-ink/80">{m.snack || "—"}</span>}
           </Field>
           <div className="sm:col-span-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink/65">Attendees</p>
+            <p className="text-xs font-semibold text-ink/65">Attendees</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {m.attendees.length === 0 && <span className="text-sm text-ink/65">None yet</span>}
               {m.attendees.map((e) => (
@@ -271,7 +271,7 @@ export default function MeetingPage({ params }: { params: { id: string } }) {
             component and the `body` column are untouched, so this is
             reversible: restore the block in git history to bring it back. */}
         <div className="mt-8">
-          <h2 className="font-display text-2xl font-semibold text-pine-deep">Agenda</h2>
+          <h2 className="font-display text-2xl font-medium text-pine-deep">Agenda</h2>
           <div className="mt-3">
             <AgendaDocPanel
               docId={AGENDA_DOCS[m.group as ProjectGroup]?.id ?? null}
@@ -286,7 +286,7 @@ export default function MeetingPage({ params }: { params: { id: string } }) {
         {pendingOrdered.length > 0 && (
           <section data-tour="meeting-pending-approval" className="mt-8">
             <div className="flex flex-wrap items-baseline gap-3">
-              <h2 className="font-display text-2xl font-semibold text-pine-deep">Pending Your Approval</h2>
+              <h2 className="font-display text-2xl font-medium text-pine-deep">Pending Your Approval</h2>
               <span className="rounded-full bg-marigold-soft px-2.5 py-0.5 text-xs font-semibold text-marigold-ink">
                 {pendingOrdered.length} {pendingOrdered.length === 1 ? "task" : "tasks"}
               </span>
@@ -312,19 +312,19 @@ export default function MeetingPage({ params }: { params: { id: string } }) {
         {/* ---- tasks (real dashboard tasks) ---- */}
         <div className="mt-8">
           <div className="flex items-center justify-between">
-            <h2 data-tour="meeting-tasks-head" className="font-display text-2xl font-semibold text-pine-deep">Tasks</h2>
+            <h2 data-tour="meeting-tasks-head" className="font-display text-2xl font-medium text-pine-deep">Tasks</h2>
             {canManage && (
               <button data-tour="meeting-assign" onClick={() => setAssignOpen(true)} className="rounded-full bg-pine px-4 py-2 text-sm font-semibold text-paper hover:bg-pine-deep">
                 + Assign task
               </button>
             )}
           </div>
-          <div className="mt-3 overflow-hidden rounded-3xl border border-pine/12">
+          <div className="mt-3 overflow-hidden rounded-2xl border border-pine/12">
             {tableGroups.length === 0 ? (
               <p className="p-6 text-sm text-ink/65">{tasks.length > 0 ? "Everything from this meeting is waiting on your approval above." : "No tasks assigned from this meeting yet."}{canManage ? " Use “Assign task” to create real dashboard tasks that everyone tracks." : ""}</p>
             ) : (
               <table className="w-full text-left text-sm">
-                <thead><tr className="border-b border-pine/10 bg-pine/[0.03] text-xs uppercase tracking-wide text-ink/70">
+                <thead><tr className="border-b border-pine/10 bg-pine/[0.03] text-xs text-ink/70">
                   <th className="px-4 py-3 font-semibold">Task</th><th className="px-4 py-3 font-semibold">Description</th>
                   <th className="px-4 py-3 font-semibold">Assigned to</th>
                   <th className="px-4 py-3 font-semibold">Due</th><th className="px-4 py-3 font-semibold">Progress</th>
@@ -422,7 +422,7 @@ export default function MeetingPage({ params }: { params: { id: string } }) {
 }
 
 function Field({ label, children, ...rest }: { label: string; children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
-  return (<div {...rest}><p className="text-xs font-semibold uppercase tracking-wide text-ink/65">{label}</p><div className="mt-1">{children}</div></div>);
+  return (<div {...rest}><p className="text-xs font-semibold text-ink/65">{label}</p><div className="mt-1">{children}</div></div>);
 }
 
 function Shell({ children }: { children: React.ReactNode }) {

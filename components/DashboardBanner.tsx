@@ -176,16 +176,16 @@ function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }
 
   return createPortal(
     <div className="fixed inset-x-0 bottom-0 z-[70] p-3 pb-[calc(0.75rem+var(--safe-bottom))] sm:bottom-4 sm:left-auto sm:right-4 sm:w-[440px] sm:p-0" role="dialog" aria-modal="false" aria-labelledby="banner-picker-title">
-      <div className="max-h-[70vh] overflow-y-auto rounded-3xl border border-pine/15 bg-paper p-5 text-ink shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+      <div className="max-h-[70vh] overflow-y-auto rounded-2xl border border-pine/15 bg-paper p-5 text-ink shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 id="banner-picker-title" className="font-display text-xl font-semibold text-pine-deep">Your banner</h2>
+            <h2 id="banner-picker-title" className="font-display text-xl font-medium text-pine-deep">Your banner</h2>
             <p className="mt-0.5 text-xs text-ink/70">Previewing live above. Only you see your banner.</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full text-ink/70 hover:bg-ink/5 hover:text-ink">✕</button>
         </div>
 
-        <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-ink/65">Colours</p>
+        <p className="mt-5 text-xs font-semibold text-ink/65">Colours</p>
         <div className="mt-2 grid grid-cols-4 gap-2">
           {BANNER_PRESETS.map((p) => (
             <button key={p.id} onClick={() => setDraft({ ...draft, choice: { kind: "preset", id: p.id }, pendingImage: undefined })}
@@ -196,7 +196,7 @@ function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }
           ))}
         </div>
 
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/65">Club photos</p>
+        <p className="mt-4 text-xs font-semibold text-ink/65">Club photos</p>
         <div className="mt-2 grid grid-cols-4 gap-2">
           {BANNER_PHOTOS.map((p) => (
             <button key={p.id} onClick={() => setDraft({ ...draft, choice: { kind: "photo", id: p.id, pos: p.pos }, pendingImage: undefined })}
@@ -207,7 +207,7 @@ function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }
           ))}
         </div>
 
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-ink/65">Your own photo</p>
+        <p className="mt-4 text-xs font-semibold text-ink/65">Your own photo</p>
         <div className="mt-2 flex items-center gap-2">
           {hasUpload && (
             <button onClick={() => setDraft({ ...draft, choice: { kind: "upload", path: "pending", pos: c.kind === "upload" ? c.pos : saved.choice.kind === "upload" ? saved.choice.pos : 50 } })}
@@ -224,7 +224,7 @@ function Picker({ saved: savedRaw, fallback, draft, setDraft, onClose, onSaved }
 
         {(c.kind === "photo" || c.kind === "upload") && (
           <label className="mt-4 block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-ink/65">Photo position</span>
+            <span className="text-xs font-semibold text-ink/65">Photo position</span>
             <input type="range" min={0} max={100} value={c.pos} aria-label="Photo position (top to bottom)"
               onChange={(e) => setDraft({ ...draft, choice: { ...c, pos: Number(e.target.value) } })}
               className="mt-2 w-full accent-[#E2A02F]" />

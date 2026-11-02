@@ -94,18 +94,18 @@ export default function Navbar() {
                 <AnimatePresence>
                   {projOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: 8 }}
+                      initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
+                      exit={{ opacity: 0, y: 4 }}
                       transition={menuSpring}
                       className="absolute left-0 top-full w-60 pt-2"
                     >
-                      <div className="overflow-hidden rounded-2xl border border-pine/10 bg-paper p-2 shadow-xl shadow-pine/10">
+                      <div className="overflow-hidden rounded-xl border border-pine/10 bg-paper p-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
                         {item.children.map((child) => (
                           <Link
                             key={child.href}
                             href={child.href}
-                            className={`block rounded-xl px-4 py-2.5 text-sm transition-colors ${
+                            className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
                               pathname === child.href
                                 ? "bg-pine/5 text-pine"
                                 : "text-ink/75 hover:bg-pine/5 hover:text-pine"
@@ -136,7 +136,7 @@ export default function Navbar() {
           {isMember && (
             <Link
               href="/dashboard"
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 isActive("/dashboard")
                   ? "text-pine"
                   : "text-pine/90 hover:text-pine"
@@ -145,8 +145,8 @@ export default function Navbar() {
               Dashboard
             </Link>
           )}
-          <Link href="/apply" className="btn-accent ml-2 px-5 py-2.5 text-sm">
-            Join Us
+          <Link href="/apply" className="btn-accent ml-2 h-9 px-4">
+            Join us
           </Link>
         </div>
 
@@ -159,18 +159,18 @@ export default function Navbar() {
         >
           <div className="relative h-4 w-6">
             <span
-              className={`absolute left-0 h-0.5 w-6 bg-current transition-all duration-300 ${
-                mobileOpen ? "top-1.5 rotate-45" : "top-0"
+              className={`absolute left-0 h-0.5 w-6 bg-current transition-[transform,opacity] duration-200 ${
+                mobileOpen ? "top-0 translate-y-1.5 rotate-45" : "top-0"
               }`}
             />
             <span
-              className={`absolute left-0 top-1.5 h-0.5 w-6 bg-current transition-all duration-300 ${
+              className={`absolute left-0 top-1.5 h-0.5 w-6 bg-current transition-opacity duration-200 ${
                 mobileOpen ? "opacity-0" : "opacity-100"
               }`}
             />
             <span
-              className={`absolute left-0 h-0.5 w-6 bg-current transition-all duration-300 ${
-                mobileOpen ? "top-1.5 -rotate-45" : "top-3"
+              className={`absolute left-0 h-0.5 w-6 bg-current transition-[transform,opacity] duration-200 ${
+                mobileOpen ? "top-3 -translate-y-1.5 -rotate-45" : "top-3"
               }`}
             />
           </div>
@@ -181,9 +181,9 @@ export default function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
             transition={menuSpring}
             className="overflow-hidden border-t border-pine/10 bg-paper lg:hidden"
           >
@@ -192,7 +192,7 @@ export default function Navbar() {
                 <div key={item.label}>
                   <Link
                     href={item.href}
-                    className="block rounded-xl px-3 py-2.5 text-base font-medium text-ink/80"
+                    className="block rounded-lg px-3 py-2.5 text-base font-medium text-ink/80"
                   >
                     {item.label}
                   </Link>
@@ -202,7 +202,7 @@ export default function Navbar() {
                         <Link
                           key={child.href}
                           href={child.href}
-                          className="block rounded-xl px-3 py-2 text-sm text-ink/65"
+                          className="block rounded-lg px-3 py-2 text-sm text-ink/70"
                         >
                           {child.label}
                         </Link>
@@ -214,13 +214,13 @@ export default function Navbar() {
               {isMember && (
                 <Link
                   href="/dashboard"
-                  className="block rounded-xl px-3 py-2.5 text-base font-semibold text-pine"
+                  className="block rounded-lg px-3 py-2.5 text-base font-medium text-pine"
                 >
                   Dashboard
                 </Link>
               )}
               <Link href="/apply" className="btn-accent mt-3 w-full">
-                Join Us
+                Join us
               </Link>
             </div>
           </motion.div>

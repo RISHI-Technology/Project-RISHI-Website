@@ -19,16 +19,16 @@ export default function FilesHome() {
             </svg>
             Back to dashboard
           </Link>
-          <h1 className="mt-4 font-display text-4xl font-semibold sm:text-5xl">Files</h1>
+          <h1 className="mt-4 font-display text-4xl font-medium sm:text-5xl">Files</h1>
           
         </div>
       </DashboardBanner>
 
       {/* Meetings — pinned above the folders, since it's the thing people open most. */}
       <section className="container-rishi pt-10">
-        <div className="rounded-3xl border border-pine/15 bg-pine/[0.03] p-6 sm:p-7">
+        <div className="rounded-2xl border border-pine/15 bg-pine/[0.03] p-6 sm:p-7">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="font-display text-2xl font-semibold text-pine-deep">Meeting notes</h2>
+            <h2 className="font-display text-2xl font-medium text-pine-deep">Meeting notes</h2>
             <Link href="/dashboard/files/meetings" className="text-sm font-semibold text-pine hover:underline">
               All meetings
             </Link>
@@ -40,7 +40,7 @@ export default function FilesHome() {
                 href={`/dashboard/files/meetings/g/${g}`}
                 className="group flex items-center justify-between gap-3 rounded-2xl border border-pine/15 bg-paper p-4 transition-colors hover:border-pine hover:bg-pine hover:text-paper"
               >
-                <span className="font-display text-base font-semibold leading-tight">
+                <span className="font-display text-base font-medium leading-tight">
                   {PROJECT_GROUP_LABELS[g]}
                 </span>
                 <svg

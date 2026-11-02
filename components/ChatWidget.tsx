@@ -199,14 +199,14 @@ export default function ChatWidget() {
       {!open && (
         <button
           onClick={() => { setOpen(true); setView("list"); }}
-          className="fixed bottom-6 right-6 z-[900] grid h-14 w-14 place-items-center rounded-full bg-pine text-paper shadow-xl transition-transform hover:scale-105"
+          className="fixed bottom-6 right-6 z-[900] grid h-14 w-14 place-items-center rounded-full bg-pine text-paper shadow-[0_8px_24px_rgba(0,0,0,0.16)] transition-[background-color,transform] duration-150 hover:bg-pine-deep active:scale-[0.97]"
           aria-label="Open chat"
         >
           <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z" />
           </svg>
           {unreadCount > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-marigold px-1 text-[11px] font-bold text-pine-deep">
+            <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-marigold px-1 text-[11px] font-semibold tabular-nums text-pine-deep">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -222,22 +222,22 @@ export default function ChatWidget() {
           {/* Header */}
           <div className="flex items-center gap-2 border-b border-pine/12 bg-pine px-3 py-2.5 text-paper">
             {view === "thread" || view === "new" ? (
-              <button onClick={() => { setView("list"); setActiveId(null); }} className="grid h-8 w-8 place-items-center rounded-full hover:bg-paper/10" aria-label="Back">←</button>
+              <button onClick={() => { setView("list"); setActiveId(null); }} className="grid h-8 w-8 place-items-center rounded-full hover:bg-paper/10" aria-label="Back"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M19 12H5" /><path d="M11 6l-6 6 6 6" /></svg></button>
             ) : (
               <span className="grid h-8 w-8 place-items-center rounded-full bg-paper/10">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z" /></svg>
               </span>
             )}
-            <p className="flex-1 truncate font-display text-sm font-semibold">
+            <p className="flex-1 truncate font-display text-sm font-medium">
               {view === "thread" && activeId
                 ? (chats.find((c) => c.id === activeId) ? chatTitle(chats.find((c) => c.id === activeId)!) : "Chat")
                 : view === "new" ? "New chat" : "Messages"}
             </p>
             <button onClick={() => setSize(size === "normal" ? "large" : size === "large" ? "full" : "normal")}
               className="grid h-8 w-8 place-items-center rounded-full text-xs hover:bg-paper/10" title="Resize" aria-label="Resize">
-              {size === "full" ? "🗗" : "⤢"}
+              {size === "full" ? <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M4 14h6v6" /><path d="M20 10h-6V4" /><path d="M14 10l7-7" /><path d="M3 21l7-7" /></svg> : <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" /></svg>}
             </button>
-            <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full hover:bg-paper/10" aria-label="Close">✕</button>
+            <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full hover:bg-paper/10" aria-label="Close"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18" /><path d="M6 6l12 12" /></svg></button>
           </div>
 
           {/* Body */}
@@ -250,7 +250,7 @@ export default function ChatWidget() {
               )}
               <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
                 {chats.length === 0 ? (
-                  <p className="px-3 py-8 text-center text-sm text-ink/65">No conversations yet. Start one!</p>
+                  <p className="px-3 py-8 text-center text-sm text-ink/65">No conversations yet</p>
                 ) : chats.map((c) => {
                   const seen = lastSeenMap();
                   const unread = c.lastAt && (!seen[c.id] || c.lastAt > seen[c.id]);
@@ -315,7 +315,7 @@ export default function ChatWidget() {
           {view === "thread" && (
             <div className="flex min-h-0 flex-1 flex-col">
               <div ref={scrollRef} className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-3">
-                {messages.length === 0 && <p className="py-8 text-center text-sm text-ink/65">Say hello 👋</p>}
+                {messages.length === 0 && <p className="py-8 text-center text-sm text-ink/65">No messages yet</p>}
                 {messages.map((m, i) => {
                   const mine = m.senderEmail.toLowerCase() === me.toLowerCase();
                   const prev = messages[i - 1];
@@ -370,7 +370,7 @@ export default function ChatWidget() {
                   </div>
                 )}
                 <div className="flex items-end gap-1.5">
-                  <button onClick={() => setShowEmoji((v) => !v)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-lg hover:bg-pine/10" aria-label="Emoji">😊</button>
+                  <button onClick={() => setShowEmoji((v) => !v)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink/65 hover:bg-pine/10 hover:text-ink" aria-label="Emoji"><svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01" /><path d="M15 9h.01" /></svg></button>
                   <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}

@@ -23,7 +23,7 @@ export default function Newsletter() {
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d?.error || "Couldn't sign you up. Please try again.");
+        throw new Error(d?.error || "Couldn’t sign you up. Please try again.");
       }
       setDone(true);
     } catch (err) {
@@ -33,7 +33,7 @@ export default function Newsletter() {
 
   return (
     <div>
-      <p className="font-display text-xl font-semibold text-paper">
+      <p className="font-display text-xl font-medium text-paper">
         Sign up for our newsletter
       </p>
       {done ? (
@@ -48,13 +48,13 @@ export default function Newsletter() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@berkeley.edu"
-            className="min-w-0 flex-1 rounded-full border border-paper/20 bg-paper/5 px-4 py-2.5 text-sm text-paper placeholder:text-paper/40 focus:border-marigold focus:outline-none"
+            className="min-w-0 flex-1 rounded-full border border-paper/20 bg-paper/5 px-4 py-2.5 text-sm text-paper placeholder:text-paper/50 focus:border-marigold-soft/70 focus:outline-none"
           />
           <button
             type="submit"
-            className="shrink-0 rounded-full bg-marigold px-5 py-2.5 text-sm font-semibold text-pine-deep transition-colors hover:bg-marigold-deep hover:text-paper"
+            className="shrink-0 rounded-full bg-marigold px-5 py-2.5 text-sm font-medium text-pine-deep transition-colors hover:bg-marigold-soft active:scale-[0.98]"
           >
-            Submit
+            Subscribe
           </button>
         </form>
       )}
