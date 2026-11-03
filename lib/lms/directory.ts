@@ -56,13 +56,18 @@ export const POSITION_ORDER = [
   "Women's Empowerment Lead",
 ] as const;
 
+// Everyone without a listed title is a General Member — except newbies, who get
+// their own bucket, listed just below General Member.
 const GENERAL = "General Member";
+const NEWBIE = "Newbie"; // the exact label memberRoleLabel gives a newbie-only member
 function positionRank(label: string): number {
   const i = (POSITION_ORDER as readonly string[]).indexOf(label);
-  return i === -1 ? POSITION_ORDER.length : i;
+  if (i !== -1) return i;
+  return label === NEWBIE ? POSITION_ORDER.length + 1 : POSITION_ORDER.length;
 }
 function positionCategory(label: string): string {
-  return (POSITION_ORDER as readonly string[]).includes(label) ? label : GENERAL;
+  if ((POSITION_ORDER as readonly string[]).includes(label)) return label;
+  return label === NEWBIE ? NEWBIE : GENERAL;
 }
 
 // In-memory fallback, keyed by login email.
