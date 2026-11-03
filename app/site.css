@@ -9,9 +9,10 @@
    Colour  the site's own pine green and marigold, on a soft warm-neutral page
            with white tiles. Brand colour is kept for primary actions and
            immersive sections (HIG: color.md, branding.md).
-   Type    Anek Latin for headlines and Mukta for text, both from Ek Type
-           (Mumbai): warm and humanist — between a neutral system face and a
-           decorative one — with size-specific tracking and leading.
+   Type    Fraunces for headlines — a warm, soft-edged serif, the same face
+           the member dashboard uses, so the public site and the dashboard
+           share one voice — and Mukta (Ek Type, Mumbai) for text, a warm
+           humanist sans. Size-specific tracking and leading.
    Glass   only on the floating layer — header and its menus (liquid-glass.md).
    Motion  press feedback on pointer-down; springs for menus; scroll-linked
            reveals that never hide content where unsupported; everything
@@ -36,7 +37,7 @@
 
   /* Type */
   --a-font: var(--font-mukta), "Segoe UI", system-ui, sans-serif;            /* body + UI */
-  --a-display: var(--font-anek), var(--font-mukta), "Segoe UI", sans-serif; /* headlines */
+  --a-display: var(--font-fraunces), Georgia, "Times New Roman", serif;  /* headlines */
 
   /* Space & shape */
   --a-max: 1200px;
@@ -62,12 +63,13 @@
   -webkit-font-smoothing: antialiased;
   font-optical-sizing: auto;
 }
-/* Headline face at its standard width. */
+/* Headline face: Fraunces with its optical size following the type size,
+   a little softening, and the "wonky" alternates off — warm, not whimsical. */
 .a-hero, .a-display, .a-headline, .a-title, .a-title2, .a-title3,
 .site :where(h1, h2, h3, h4), .site .font-display {
   font-family: var(--a-display);
-  font-variation-settings: "wdth" 100;
   font-optical-sizing: auto;
+  font-variation-settings: "SOFT" 30, "WONK" 0;
 }
 .site :where(h1, h2, h3, h4),
 .site .font-display {
@@ -86,12 +88,15 @@
 .a-section { padding-block: var(--a-section); }
 
 /* ---- Type scale (size-specific tracking and leading) -------------------- */
-.a-hero     { font-size: clamp(3.5rem, 10vw, 8rem);  font-weight: 600; line-height: 0.98; letter-spacing: -0.028em; }
-.a-display  { font-size: clamp(2.75rem, 6.2vw, 4.75rem); font-weight: 650; line-height: 1.04; letter-spacing: -0.025em; }
-.a-headline { font-size: clamp(2.25rem, 4.4vw, 3.375rem); font-weight: 650; line-height: 1.08; letter-spacing: -0.02em; }
-.a-title    { font-size: clamp(1.75rem, 2.7vw, 2.375rem); font-weight: 600; line-height: 1.12; letter-spacing: -0.015em; }
-.a-title2   { font-size: clamp(1.375rem, 1.9vw, 1.75rem); font-weight: 600; line-height: 1.18; letter-spacing: -0.01em; }
-.a-title3   { font-size: 1.3125rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.005em; }
+/* Fraunces is a serif: it wants less negative tracking than a grotesque, and
+   a touch more leading on multi-line sizes. Display sizes sit a step lighter,
+   where the serif's contrast carries the weight. */
+.a-hero     { font-size: clamp(3.5rem, 10vw, 8rem);  font-weight: 560; line-height: 1;    letter-spacing: -0.022em; }
+.a-display  { font-size: clamp(2.75rem, 6.2vw, 4.75rem); font-weight: 580; line-height: 1.06; letter-spacing: -0.018em; }
+.a-headline { font-size: clamp(2.25rem, 4.4vw, 3.375rem); font-weight: 580; line-height: 1.1; letter-spacing: -0.014em; }
+.a-title    { font-size: clamp(1.75rem, 2.7vw, 2.375rem); font-weight: 600; line-height: 1.14; letter-spacing: -0.01em; }
+.a-title2   { font-size: clamp(1.375rem, 1.9vw, 1.75rem); font-weight: 600; line-height: 1.2; letter-spacing: -0.005em; }
+.a-title3   { font-size: 1.3125rem; font-weight: 600; line-height: 1.27; letter-spacing: 0; }
 .a-lead     { font-size: clamp(1.1875rem, 1.6vw, 1.4375rem); font-weight: 400; line-height: 1.5; letter-spacing: 0; }
 .a-body     { font-size: 1.0625rem; line-height: 1.6; letter-spacing: 0; }
 .a-callout  { font-size: 0.9375rem; line-height: 1.55; letter-spacing: 0.003em; }

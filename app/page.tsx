@@ -1,31 +1,74 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { useRef, type CSSProperties } from "react";
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import Media from "@/components/Media";
 import SectionHeading from "@/components/SectionHeading";
-import ScrollWindow from "@/components/site/ScrollWindow";
-import Gallery from "@/components/site/Gallery";
 import { Chevron } from "@/components/site/Icons";
+import { placeholderFor } from "@/lib/imagePlaceholders";
 import { HOME, PROJECTS, ABOUT, LINKS } from "@/lib/content";
+
+/**
+ * The foothills photograph as the hero's background, edge to edge.
+ *
+ * Same motion principle as the site's ScrollWindow: driven by native scroll
+ * (no scroll-jacking, so it follows if you stop or reverse), smoothed by a
+ * critically damped spring, and only `transform` animates. As the hero
+ * scrolls away the photo drifts down and in slightly, so the hills recede
+ * behind the page. Reduced motion: a still photo.
+ */
+function HeroBackdrop({ src, alt }: { src: string; alt: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const smooth = useSpring(scrollYProgress, { stiffness: 260, damping: 40, mass: 0.6 });
+  // Pinned rather than removed under reduced motion, so no stale transform lingers.
+  const y = useTransform(smooth, [0, 1], reduce ? ["0%", "0%"] : ["0%", "12%"]);
+  const scale = useTransform(smooth, [0, 1], reduce ? [1, 1] : [1, 1.06]);
+  const ph = placeholderFor(src);
+
+  return (
+    <div ref={ref} className="absolute inset-0 -z-10 overflow-hidden bg-night">
+      <motion.div style={{ y, scale }} className="absolute inset-0 will-change-transform">
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          priority
+          sizes="100vw"
+          placeholder={ph ? "blur" : "empty"}
+          blurDataURL={ph?.blur}
+          className="object-cover object-[50%_60%]"
+        />
+      </motion.div>
+      {/* Shade only where the words sit: a soft pine pool behind the centred
+          headline, deepening a little at the foot, so the sky, clouds and
+          ridges around it keep their colour. */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_44%_at_50%_54%,rgb(var(--a-night)/0.72)_0%,rgb(var(--a-night)/0.5)_45%,rgb(var(--a-night)/0)_100%),linear-gradient(to_top,rgb(var(--a-night)/0.6)_0%,rgb(var(--a-night)/0)_35%)]" />
+    </div>
+  );
+}
 
 export default function Home() {
   // The page's one orchestrated moment: the headline rises in on load
   // (.hero-rise, globals.css — CSS, so it starts at first paint; reduced motion
-  // shows it at once), then the Himalayas window opens as you scroll.
+  // shows it at once) over the Himalayas, which drift back as you scroll.
   const rise = (i: number) => ({ "--i": i }) as CSSProperties;
 
   return (
     <div className="site">
       {/* ---------------------------------------------------------------- HERO */}
-      <section className="a-glow pb-[var(--a-section)] pt-[calc(var(--header-h)+clamp(3.5rem,8vw,6.5rem))]">
-        <div className="a-wrap text-center">
-          <p style={rise(0)} className="hero-rise a-eyebrow">{HOME.heroEyebrow}</p>
-          <h1 className="a-hero mt-3">
+      <section className="a-on-dark relative isolate flex min-h-[92svh] flex-col justify-center overflow-hidden">
+        {HOME.heroImage && <HeroBackdrop src={HOME.heroImage} alt="Himalayan foothills near Bharog Baneri" />}
+        <div className="a-wrap pb-[clamp(3rem,6vw,5rem)] pt-[calc(var(--header-h)+clamp(3rem,6vw,5rem))] text-center">
+          <p style={rise(0)} className="hero-rise a-eyebrow text-marigold-soft">{HOME.heroEyebrow}</p>
+          <h1 className="a-hero mt-3 text-white">
             <span style={rise(1)} className="hero-rise inline-block">{HOME.heroLine1}</span>{" "}
-            <span style={rise(2)} className="hero-rise inline-block text-pine">{HOME.heroLine2}</span>
+            <span style={rise(2)} className="hero-rise inline-block text-marigold">{HOME.heroLine2}</span>
           </h1>
-          <p style={rise(3)} className="hero-rise a-lead mx-auto mt-5 max-w-2xl text-label-2">
+          <p style={rise(3)} className="hero-rise a-lead mx-auto mt-5 max-w-2xl text-white/90">
             {HOME.heroSub}
           </p>
           <div style={rise(4)} className="hero-rise mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
@@ -38,19 +81,10 @@ export default function Home() {
             </Link>
           </div>
         </div>
-
-        <div style={rise(5)} className="hero-rise mt-[clamp(3rem,6vw,5rem)]">
-          <ScrollWindow
-            src={HOME.heroImage}
-            alt="Himalayan foothills near Bharog Baneri"
-            priority
-            className="aspect-[4/5] sm:aspect-[16/10] lg:aspect-[2.1/1]"
-          />
-        </div>
       </section>
 
       {/* ------------------------------------------------------------- MISSION */}
-      <section className="pb-[var(--a-section)]">
+      <section className="py-[var(--a-section)]">
         <div className="a-wrap">
           <div className="a-reveal mx-auto max-w-3xl text-center">
             <SectionHeading eyebrow="Why we exist" title={HOME.missionTitle} align="center" />
@@ -93,6 +127,8 @@ export default function Home() {
       </section>
 
       {/* ------------------------------------------------------------ PROJECTS */}
+      {/* All four teams at once — one row on wide screens, two by two on
+          phones — so none sits off-screen behind a sideways scroll. */}
       <section className="a-on-dark a-band-dark py-[var(--a-section)]">
         <div className="a-wrap a-reveal">
           <SectionHeading eyebrow="What we do" title="Four teams, One village" tone="dark" />
@@ -100,37 +136,36 @@ export default function Home() {
             Our work in Bharog Baneri is carried out by four project teams, each
             tackling a different pillar of sustainable development.
           </p>
-        </div>
 
-        <div className="mt-12">
-          <Gallery tone="dark">
+          <ul className="mt-12 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
             {PROJECTS.map((p) => (
-              <Link
-                key={p.slug}
-                href={`/projects/${p.slug}`}
-                className="a-press group relative block w-[min(78vw,22rem)] overflow-hidden rounded-[var(--a-r-lg)] bg-night-2 sm:w-[24rem]"
-              >
-                <Media
-                  src={p.image}
-                  alt={p.name}
-                  label={`${p.name} cover`}
-                  className="aspect-[3/4] w-full [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover:[&_img]:scale-[1.04]"
-                  rounded="rounded-none"
-                  sizes="(max-width: 640px) 78vw, 24rem"
-                />
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgb(var(--a-night)/0.92)_0%,rgb(var(--a-night)/0.55)_38%,rgb(var(--a-night)/0)_62%)]" />
-                <div className="absolute inset-x-0 bottom-0 p-7">
-                  <h3 className="a-title2 flex items-center justify-between gap-3 text-white">
-                    {p.name}
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 transition-colors duration-150 group-hover:bg-marigold group-hover:text-label">
-                      <Chevron className="h-4 w-4" />
-                    </span>
-                  </h3>
-                  <p className="a-callout mt-2 line-clamp-2 text-white/75">{p.intro}</p>
-                </div>
-              </Link>
+              <li key={p.slug}>
+                <Link
+                  href={`/projects/${p.slug}`}
+                  className="a-press group relative block overflow-hidden rounded-[var(--a-r-md)] bg-night-2 sm:rounded-[var(--a-r-lg)]"
+                >
+                  <Media
+                    src={p.image}
+                    alt={p.name}
+                    label={`${p.name} cover`}
+                    className="aspect-[3/4] w-full [&_img]:transition-transform [&_img]:duration-700 [&_img]:ease-out group-hover:[&_img]:scale-[1.04]"
+                    rounded="rounded-none"
+                    sizes="(max-width: 1024px) 50vw, 18rem"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgb(var(--a-night)/0.92)_0%,rgb(var(--a-night)/0.55)_38%,rgb(var(--a-night)/0)_62%)]" />
+                  <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
+                    <h3 className="a-title3 flex items-end justify-between gap-3 text-white max-sm:text-[1.0625rem]">
+                      {p.name}
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15 transition-colors duration-150 group-hover:bg-marigold group-hover:text-label max-sm:hidden">
+                        <Chevron className="h-4 w-4" />
+                      </span>
+                    </h3>
+                    <p className="a-callout mt-2 line-clamp-2 text-white/75 max-sm:hidden">{p.intro}</p>
+                  </div>
+                </Link>
+              </li>
             ))}
-          </Gallery>
+          </ul>
         </div>
       </section>
 

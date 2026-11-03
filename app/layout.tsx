@@ -30,14 +30,6 @@ const inter = localFont({
   display: "swap",
 });
 
-// Public website headline type (app/site.css): Anek Latin, a warm humanist
-// sans from Ek Type (Mumbai) — the same studio as Mukta below.
-const anek = localFont({
-  src: [{ path: "./fonts/AnekLatin.woff2", weight: "100 800", style: "normal" }],
-  variable: "--font-anek",
-  display: "swap",
-});
-
 // Public website body type (app/site.css): Mukta, a warm humanist sans from
 // Ek Type (Mumbai). Headlines use Anek Latin, loaded above.
 const mukta = localFont({
@@ -80,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${mukta.variable} ${anek.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${mukta.variable}`} suppressHydrationWarning>
       <head>
         {/* Apply dashboard dark mode and the Liquid Glass interface (the default;
             "classic" opts out, RISHI AI is excluded — see components/GlassMode)
