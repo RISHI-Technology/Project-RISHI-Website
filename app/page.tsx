@@ -40,13 +40,13 @@ function HeroBackdrop({ src, alt }: { src: string; alt: string }) {
           sizes="100vw"
           placeholder={ph ? "blur" : "empty"}
           blurDataURL={ph?.blur}
-          className="object-cover object-[50%_60%]"
+          className="scale-110 object-cover object-[50%_60%] blur-[3px]"
         />
       </motion.div>
-      {/* Shade only where the words sit: a soft pine pool behind the centred
-          headline, deepening a little at the foot, so the sky, clouds and
-          ridges around it keep their colour. */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_44%_at_50%_54%,rgb(var(--a-night)/0.72)_0%,rgb(var(--a-night)/0.5)_45%,rgb(var(--a-night)/0)_100%),linear-gradient(to_top,rgb(var(--a-night)/0.6)_0%,rgb(var(--a-night)/0)_35%)]" />
+      {/* The photo is softened (3px blur, scaled so the blurred edges stay
+          off-screen) and washed in pine top to bottom, deepest at the foot,
+          so it reads as a backdrop rather than a full-strength picture. */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgb(var(--a-night)/0.3)_0%,rgb(var(--a-night)/0.35)_50%,rgb(var(--a-night)/0.75)_100%)]" />
     </div>
   );
 }
@@ -65,9 +65,9 @@ export default function Home() {
         <div className="a-wrap pb-[clamp(3rem,6vw,5rem)] pt-[calc(var(--header-h)+clamp(3rem,6vw,5rem))] text-center">
           <p style={rise(0)} className="hero-rise a-eyebrow text-marigold-soft">{HOME.heroEyebrow}</p>
           <h1 className="a-hero mt-3 text-white">
-            {/* Side by side on wider screens; stacked on phones. */}
-            <span style={rise(1)} className="hero-rise inline-block max-sm:block">{HOME.heroLine1}</span>{" "}
-            <span style={rise(2)} className="hero-rise inline-block text-marigold max-sm:block">{HOME.heroLine2}</span>
+            {/* Stacked at every size: "Project" above "RISHI". */}
+            <span style={rise(1)} className="hero-rise block">{HOME.heroLine1}</span>{" "}
+            <span style={rise(2)} className="hero-rise block text-marigold">{HOME.heroLine2}</span>
           </h1>
           <p style={rise(3)} className="hero-rise a-lead mx-auto mt-5 max-w-2xl text-white/90">
             {HOME.heroSub}
