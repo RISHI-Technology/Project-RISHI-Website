@@ -65,8 +65,9 @@ export default function Home() {
         <div className="a-wrap pb-[clamp(3rem,6vw,5rem)] pt-[calc(var(--header-h)+clamp(3rem,6vw,5rem))] text-center">
           <p style={rise(0)} className="hero-rise a-eyebrow text-marigold-soft">{HOME.heroEyebrow}</p>
           <h1 className="a-hero mt-3 text-white">
-            <span style={rise(1)} className="hero-rise inline-block">{HOME.heroLine1}</span>{" "}
-            <span style={rise(2)} className="hero-rise inline-block text-marigold">{HOME.heroLine2}</span>
+            {/* Side by side on wider screens; stacked on phones. */}
+            <span style={rise(1)} className="hero-rise inline-block max-sm:block">{HOME.heroLine1}</span>{" "}
+            <span style={rise(2)} className="hero-rise inline-block text-marigold max-sm:block">{HOME.heroLine2}</span>
           </h1>
           <p style={rise(3)} className="hero-rise a-lead mx-auto mt-5 max-w-2xl text-white/90">
             {HOME.heroSub}
