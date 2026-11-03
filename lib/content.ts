@@ -178,6 +178,8 @@ export const PROJECTS = [
     color: "marigold",
     image: "/images/projects/womens-empowerment.jpg" as string | null,
     heroImage: "/images/projects/womens-empowerment-hero.jpg" as string | null,
+    // The back row's heads sit near the photo's top edge; anchor the crop there.
+    heroPosition: "50% 0%",
     quote: "Women are the future of society.",
     quoteAuthor: "",
     intro:

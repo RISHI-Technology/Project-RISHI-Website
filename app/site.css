@@ -218,6 +218,14 @@
   to   { opacity: 1; transform: none; }
 }
 @keyframes a-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes a-grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+/* A step's number lights up (white → marigold, settling to full size) as
+   the line reaches it. Solid colours rather than opacity, so the line never
+   shows through the dot's ring. */
+@keyframes a-step-on {
+  from { background-color: rgb(var(--a-card)); color: rgb(var(--a-label2)); transform: scale(0.8); }
+  to   { background-color: rgb(var(--a-marigold)); color: rgb(var(--a-label)); transform: none; }
+}
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .a-reveal {
@@ -225,11 +233,35 @@
       animation-timeline: view();
       animation-range: entry 0% entry 55%;
     }
+    /* The methodology steps: one timeline for the whole row, so the line and
+       the numbers stay in step. It starts once the row is well onto the
+       screen (~80% down) and finishes around a third of the way down, so the
+       whole 1 → 5 sequence plays while the steps are in view. */
+    .a-steps { view-timeline: --steps block; }
     .a-progress-fill {
-      transform-origin: left;
-      animation: a-grow-x linear both;
-      animation-timeline: view();
-      animation-range: entry 40% cover 55%;
+      transform-origin: top;
+      animation: a-grow-y linear both;
+      animation-timeline: --steps;
+      animation-range: cover 20% cover 60%;
+    }
+    @media (min-width: 640px) {
+      .a-progress-fill { transform-origin: left; animation-name: a-grow-x; }
+    }
+    /* Each number finishes lighting just as the line reaches it. Phones: the
+       steps are stacked, so they sit at quarters of the line. */
+    .a-step-dot { animation: a-step-on linear both; animation-timeline: --steps; }
+    .a-steps li:nth-child(1) .a-step-dot { animation-range: cover 14% cover 20%; }
+    .a-steps li:nth-child(2) .a-step-dot { animation-range: cover 24% cover 30%; }
+    .a-steps li:nth-child(3) .a-step-dot { animation-range: cover 34% cover 40%; }
+    .a-steps li:nth-child(4) .a-step-dot { animation-range: cover 44% cover 50%; }
+    .a-steps li:nth-child(5) .a-step-dot { animation-range: cover 54% cover 60%; }
+    /* Wider screens: five columns, so the numbers sit at fifths of the line. */
+    @media (min-width: 640px) {
+      .a-steps li:nth-child(1) .a-step-dot { animation-range: cover 14% cover 20%; }
+      .a-steps li:nth-child(2) .a-step-dot { animation-range: cover 22% cover 28%; }
+      .a-steps li:nth-child(3) .a-step-dot { animation-range: cover 30% cover 36%; }
+      .a-steps li:nth-child(4) .a-step-dot { animation-range: cover 38% cover 44%; }
+      .a-steps li:nth-child(5) .a-step-dot { animation-range: cover 46% cover 52%; }
     }
   }
 }

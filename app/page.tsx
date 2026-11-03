@@ -171,21 +171,22 @@ export default function Home() {
       </section>
 
       {/* --------------------------------------------------------- METHODOLOGY */}
-      {/* A real sequence: five stops on one line, the line filling in as the
-          section scrolls into view. */}
+      {/* A real sequence: five stops on one line. As the row scrolls into
+          view the line fills and each number lights up in turn (.a-steps,
+          site.css). */}
       <section className="py-[var(--a-section)]">
         <div className="a-wrap">
           <div className="a-reveal text-center">
             <SectionHeading eyebrow="How we work" title={ABOUT.methodology.title} align="center" />
           </div>
-          <div className="relative mt-14">
-            <div className="absolute left-[1.375rem] top-0 h-full w-[2px] rounded-full bg-label/10 sm:left-0 sm:top-[1.375rem] sm:h-[2px] sm:w-full" aria-hidden>
+          <div className="a-steps relative mt-14">
+            <div className="absolute left-[calc(1.375rem-1.5px)] top-0 h-full w-[3px] rounded-full bg-label/15 sm:left-0 sm:top-[calc(1.375rem-1.5px)] sm:h-[3px] sm:w-full" aria-hidden>
               <div className="a-progress-fill h-full w-full rounded-full bg-marigold" />
             </div>
             <ol className="relative grid gap-8 sm:grid-cols-5 sm:gap-4">
               {ABOUT.methodology.steps.map((step, i) => (
                 <li key={step} className="flex items-center gap-5 sm:flex-col sm:items-start sm:gap-5">
-                  <span className="a-num grid h-11 w-11 shrink-0 place-items-center rounded-full bg-marigold text-[0.9375rem] font-semibold text-label ring-[6px] ring-canvas">
+                  <span className="a-step-dot a-num grid h-11 w-11 shrink-0 place-items-center rounded-full bg-marigold text-[0.9375rem] font-semibold text-label ring-[6px] ring-canvas">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="a-title2">{step}</span>

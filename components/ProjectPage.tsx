@@ -11,6 +11,8 @@ type Project = (typeof PROJECTS)[number];
 export default function ProjectPage({ project }: { project: Project }) {
   const others = PROJECTS.filter((p) => p.slug !== project.slug);
   const heroImage = (project as { heroImage?: string | null }).heroImage ?? null;
+  // Where the hero crop is anchored; a project can override it in content.ts.
+  const heroPosition = (project as { heroPosition?: string }).heroPosition ?? "50% 35%";
 
   return (
     <article className="site">
@@ -30,7 +32,7 @@ export default function ProjectPage({ project }: { project: Project }) {
               alt={`${project.name} team in Bharog Baneri`}
               priority
               className="aspect-[4/3] sm:aspect-[16/9]"
-              objectPosition="50% 35%"
+              objectPosition={heroPosition}
               from={0.92}
             />
           ) : (
