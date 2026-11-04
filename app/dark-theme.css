@@ -263,7 +263,6 @@ html.dark .hover\:bg-pine:hover:not(:where([data-theme-fixed], [data-theme-fixed
 html.dark .hover\:bg-pine-deep:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){background-color:rgb(15 42 31 / 1)}
 html.dark .hover\:bg-pine\/\[0\.02\]:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){background-color:rgb(124 196 160 / 0.028)}
 html.dark .hover\:bg-pine\/\[0\.03\]:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){background-color:rgb(124 196 160 / 0.042)}
-html.dark .hover\:bg-pine\/\[0\.035\]:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){background-color:rgb(124 196 160 / 0.049)}
 html.dark .hover\:bg-pine\/\[0\.04\]:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){background-color:rgb(124 196 160 / 0.056)}
 html.dark .hover\:bg-pine\/\[0\.05\]:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){background-color:rgb(124 196 160 / 0.07)}
 html.dark .hover\:bg-pine\/\[0\.06\]:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){background-color:rgb(124 196 160 / 0.084)}
@@ -283,6 +282,7 @@ html.dark .hover\:border-pine:hover:not(:where([data-theme-fixed], [data-theme-f
 html.dark .hover\:border-pine\/30:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){border-color:rgb(124 196 160 / 0.375)}
 html.dark .hover\:border-pine\/40:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){border-color:rgb(124 196 160 / 0.5)}
 html.dark .hover\:border-pine\/45:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){border-color:rgb(124 196 160 / 0.563)}
+html.dark .hover\:border-pine\/55:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){border-color:rgb(124 196 160 / 0.688)}
 html.dark .hover\:ring-pine\/40:hover:not(:where([data-theme-fixed], [data-theme-fixed] *)){--tw-ring-color:rgb(124 196 160 / 0.5)}
 html.dark .hover\:text-ink:hover:not(.hover\:bg-marigold):not(:where([data-theme-fixed], [data-theme-fixed] *)){color:rgb(230 226 213 / 1)}
 html.dark .hover\:text-ink\/70:hover:not(.hover\:bg-marigold):not(:where([data-theme-fixed], [data-theme-fixed] *)){color:rgb(230 226 213 / 0.7)}

@@ -4,7 +4,7 @@ import { useState, type KeyboardEvent } from "react";
 import type { ColKey, SortKey } from "@/components/fullDirectory/filters";
 import type { Row, Section } from "@/components/fullDirectory/results";
 import { groupsOf, isCurrent, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
-import { ChevronIcon, GroupChip, Highlight, Initials, SortIcon, YearStrip } from "@/components/fullDirectory/ui";
+import { ArrowRightIcon, ChevronIcon, GroupChip, Highlight, Initials, SortIcon, YearStrip } from "@/components/fullDirectory/ui";
 
 const TYPE_DOT = { exec: "bg-marigold", lead: "bg-pine", other: "bg-sage", member: "bg-ink/20" } as const;
 
@@ -135,13 +135,15 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
       data-slug={p.slug}
       tabIndex={tabbable ? 0 : -1}
       onClick={onOpen}
-      className="cursor-pointer transition-colors hover:bg-pine/[0.035] focus-visible:bg-marigold-soft/25 focus-visible:outline-none"
+      className="group cursor-pointer transition-colors duration-150 hover:bg-pine/[0.07] focus-visible:bg-marigold-soft/25 focus-visible:outline-none"
     >
-      <td className={`${td} pl-5`}>
+      {/* The thin marigold bar on the left edge + the arrow say "this opens". */}
+      <td className={`${td} pl-5 shadow-[inset_3px_0_0_transparent] transition-shadow duration-150 group-hover:shadow-[inset_3px_0_0_#E2A02F] group-focus-visible:shadow-[inset_3px_0_0_#E2A02F]`}>
         <div className="flex items-center gap-3">
           <Initials name={p.name} slug={p.slug} size={34} />
-          <div className="min-w-0">
-            <div className="truncate font-semibold text-ink" title={p.name}><Highlight text={p.name} tokens={tokens} /></div>
+          <div className="flex min-w-0 items-center gap-1">
+            <div className="truncate font-semibold text-ink transition-colors group-hover:text-pine" title={p.name}><Highlight text={p.name} tokens={tokens} /></div>
+            <ArrowRightIcon className="h-3.5 w-3.5 shrink-0 -translate-x-1 text-pine opacity-0 transition duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:opacity-100" />
           </div>
         </div>
       </td>
@@ -164,7 +166,7 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
               <td key={c} className={td}>
                 <div className="flex flex-wrap gap-1">
                   {groups.slice(0, 2).map((g) => <GroupChip key={g} group={g} tokens={tokens} small />)}
-                  {groups.length > 2 && <span className="rounded-full bg-ink/[0.06] px-2 py-0.5 text-[11px] font-medium text-ink/65" title={groups.slice(2).join(", ")}>+{groups.length - 2}</span>}
+                  {groups.length > 2 && <span className="rounded-full bg-ink/[0.06] px-2 py-0.5 text-[11px] font-medium text-ink/65" title={`Also: ${groups.slice(2).join(", ")}`}>+{groups.length - 2}</span>}
                   {!groups.length && <span className="text-ink/40">{row.context.some((m) => m.notYetPlaced) ? "Not yet placed" : "—"}</span>}
                 </div>
               </td>
@@ -174,7 +176,8 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
               <td key={c} className={td}>
                 <div className="flex items-start gap-2">
                   <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TYPE_DOT[role.type]}`} aria-hidden />
-                  <span className="min-w-0">
+                  {/* At most two lines (keeps rows even); the full title is in the hover tooltip. */}
+                  <span className="line-clamp-2 min-w-0" title={role.year && role.type !== "member" ? `${role.label} (${shortYear(role.year)})` : role.label}>
                     <span className="text-ink/85"><Highlight text={role.label} tokens={tokens} /></span>
                     {role.year && p.years.length > 1 && role.type !== "member" && <span className="ml-1.5 whitespace-nowrap text-xs text-ink/50">{shortYear(role.year)}</span>}
                   </span>
@@ -188,7 +191,7 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
               </td>
             );
           case "major":
-            return <td key={c} className={`${td} text-ink/75`}>{p.major ? <Highlight text={p.major} tokens={tokens} /> : <span className="text-ink/35">—</span>}</td>;
+            return <td key={c} className={`${td} text-ink/75`}>{p.major ? <span className="line-clamp-2" title={p.major}><Highlight text={p.major} tokens={tokens} /></span> : <span className="text-ink/35">—</span>}</td>;
           case "trip":
             return <td key={c} className={`${td} text-ink/75`}>{p.indiaTrips.length ? p.indiaTrips.map((t) => t.replace("India Trip ", "")).join(", ") : <span className="text-ink/35">—</span>}</td>;
           case "hindi":
@@ -207,7 +210,7 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
                   </span>
                 ) : !phone && <span className="text-ink/35">—</span>}
                 {phone && (
-                  <a href={`tel:${phone.replace(/[^\d+]/g, "")}`} onClick={(e) => e.stopPropagation()} className="mt-0.5 block truncate text-xs tabular-nums text-ink/60 hover:underline">
+                  <a href={`tel:${phone.replace(/[^\d+]/g, "")}`} onClick={(e) => e.stopPropagation()} title={phone} className="mt-0.5 block truncate text-xs tabular-nums text-ink/60 hover:underline">
                     <Highlight text={phone} tokens={tokens} />
                   </a>
                 )}

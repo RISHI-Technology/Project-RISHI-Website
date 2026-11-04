@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Section } from "@/components/fullDirectory/results";
 import { groupsOf, isCurrent, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
-import { ChevronIcon, GlobeIcon, GroupChip, Highlight, Initials, YearStrip } from "@/components/fullDirectory/ui";
+import { ArrowRightIcon, ChevronIcon, GlobeIcon, GroupChip, Highlight, Initials, YearStrip } from "@/components/fullDirectory/ui";
 
 const TYPE_DOT = { exec: "bg-marigold", lead: "bg-pine", other: "bg-sage", member: "bg-ink/20" } as const;
 
@@ -39,12 +39,16 @@ export default function CardGrid({ sections, onOpen, tokens, allYears, grouped }
                       <button
                         type="button"
                         onClick={() => onOpen(p.slug)}
-                        className="flex h-full w-full flex-col rounded-3xl border border-pine/12 bg-paper/70 p-5 text-left transition-[border-color,box-shadow] hover:border-pine/40 hover:shadow-[0_14px_36px_-18px_rgb(20_54_40/0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine"
+                        className="group relative flex h-full w-full flex-col rounded-3xl border border-pine/12 bg-paper/70 p-5 text-left transition-[border-color,box-shadow,transform,background-color] duration-200 hover:-translate-y-0.5 hover:border-pine/55 hover:bg-paper hover:shadow-[0_18px_40px_-16px_rgb(20_54_40/0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                       >
-                        <span className="flex items-start gap-3">
+                        {/* Fades in on hover: a quiet "opens a profile" cue. */}
+                        <span aria-hidden className="absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full bg-pine/[0.08] text-pine opacity-0 transition duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                          <ArrowRightIcon className="h-3.5 w-3.5" />
+                        </span>
+                        <span className="flex items-start gap-3 pr-6">
                           <Initials name={p.name} slug={p.slug} size={44} />
                           <span className="min-w-0 flex-1">
-                            <span className="block font-display text-lg font-semibold leading-tight text-ink">
+                            <span className="block font-display text-lg font-semibold leading-tight text-ink transition-colors group-hover:text-pine">
                               <Highlight text={p.name} tokens={tokens} />
                             </span>
                             <span className="mt-0.5 flex items-center gap-2 text-xs text-ink/60">
@@ -56,7 +60,7 @@ export default function CardGrid({ sections, onOpen, tokens, allYears, grouped }
                         <span className="mt-4 block"><YearStrip allYears={allYears} years={p.years} focus={r.context.map((m) => m.year)} /></span>
                         <span className="mt-3 flex items-start gap-2 text-sm text-ink/85">
                           <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TYPE_DOT[role.type]}`} aria-hidden />
-                          <span className="min-w-0">
+                          <span className="line-clamp-2 min-w-0" title={role.label}>
                             <Highlight text={role.label} tokens={tokens} />
                             {role.year && role.type !== "member" && p.years.length > 1 && <span className="ml-1.5 text-xs text-ink/50">{shortYear(role.year)}</span>}
                           </span>
@@ -64,7 +68,7 @@ export default function CardGrid({ sections, onOpen, tokens, allYears, grouped }
                         {groups.length > 0 && (
                           <span className="mt-3 flex flex-wrap gap-1">
                             {groups.slice(0, 3).map((g) => <GroupChip key={g} group={g} tokens={tokens} small />)}
-                            {groups.length > 3 && <span className="rounded-full bg-ink/[0.06] px-2 py-0.5 text-[11px] text-ink/60">+{groups.length - 3}</span>}
+                            {groups.length > 3 && <span className="rounded-full bg-ink/[0.06] px-2 py-0.5 text-[11px] text-ink/60" title={`Also: ${groups.slice(3).join(", ")}`}>+{groups.length - 3}</span>}
                           </span>
                         )}
                         {(p.gradYear || p.indiaTrips.length > 0) && (
