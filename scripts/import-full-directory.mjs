@@ -251,6 +251,18 @@ const POSITION_ALIASES = {
   "director of finance (fall 2019)": "Director of Finance",
   "finance & fundraising": "Director of Finance",
   "finance director": "Director of Finance",
+  // Project lead titles: each group's variants are the same role.
+  "water & sanitation (watsan) project lead": "Water & Sanitation Lead",
+  "water & sanitation lead": "Water & Sanitation Lead",
+  "watsan lead": "Water & Sanitation Lead",
+  "women's lead": "Women's Empowerment Lead",
+  "womens lead": "Women's Empowerment Lead",
+  "women's empowerment project lead": "Women's Empowerment Lead",
+  "women's empowerment lead": "Women's Empowerment Lead",
+  "education lead": "Education Lead",
+  "education project lead": "Education Lead",
+  "health lead": "Health Lead",
+  "health project lead": "Health Lead",
 };
 function positionsOf(raw) {
   // "Vice President, Projects" is one title (VP of Projects), not two roles.
