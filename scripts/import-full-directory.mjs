@@ -258,8 +258,11 @@ function positionsOf(raw) {
   return uniq(splitTop(s, [";", "→", ",", "\n"]).map(cleanPosition).map((p) => POSITION_ALIASES[p.toLowerCase()] ?? p));
 }
 const TYPE_RANK = { member: 0, other: 1, lead: 2, exec: 3 };
+// Titles that say "Director" but are not exec positions (per the club).
+const NOT_EXEC = new Set(["director of technology"]);
 function positionType(p) {
   const s = p.toLowerCase().replace(/\(.*?\)/g, "").trim();
+  if (NOT_EXEC.has(s)) return "other";
   if (/\bpresident\b|\bvice president\b|\bvp\b|\bdirector\b|^exec\b|\btreasurer\b|\bsecretary\b/.test(s)) return "exec";
   if (/\blead\b/.test(s)) return "lead";
   if (!s || /^(general |new )?member$/.test(s) || /\bmember$/.test(s)) return "member";

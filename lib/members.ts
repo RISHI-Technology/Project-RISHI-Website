@@ -214,6 +214,8 @@ export const MEMBER_TITLES: Record<string, string> = {
   "kaavya_pravin@berkeley.edu": "Health Senior Lead",
   "surabhikhanna@berkeley.edu": "Education Senior Lead",
   "jiya.dharne@berkeley.edu": "Water & Sanitation Senior Lead",
+  // Not an exec position; no extra permissions.
+  "sachitk@berkeley.edu": "Director of Technology",
 };
 
 export function memberTitle(email?: string | null): string {

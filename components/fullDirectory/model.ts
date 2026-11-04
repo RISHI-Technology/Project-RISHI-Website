@@ -41,6 +41,7 @@ export function roleOf(ms: FullMembership[]): { label: string; type: PositionTyp
 /** Client-side mirror of the import script's rule, used only to order titles within one year. */
 function typeOfTitle(t: string): PositionType {
   const s = t.toLowerCase();
+  if (s === "director of technology") return "other"; // not an exec position
   if (/\bpresident\b|\bdirector\b|^exec\b/.test(s)) return "exec";
   if (/\blead\b/.test(s)) return "lead";
   if (/member$/.test(s)) return "member";
