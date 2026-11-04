@@ -8,7 +8,7 @@
 // ============================================================================
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { MEMBERS, memberFullName, memberRoleLabel, memberYear } from "@/lib/members";
+import { MEMBERS, memberDisplayRole, memberFullName, memberRoleLabel, memberTitle, memberYear } from "@/lib/members";
 import { PROJECT_GROUP_LABELS } from "@/lib/lms/types";
 import { formatPhone } from "@/lib/lms/phone";
 
@@ -64,6 +64,17 @@ function positionRank(label: string): number {
   const i = (POSITION_ORDER as readonly string[]).indexOf(label);
   if (i !== -1) return i;
   return label === NEWBIE ? POSITION_ORDER.length + 1 : POSITION_ORDER.length;
+}
+// Display-only Senior Lead titles (MEMBER_TITLES) get their own bucket, just
+// after the leads — but only for someone who'd otherwise be a General Member;
+// a real role (e.g. a director) keeps its own bucket.
+const SENIOR_LEAD = "Senior Lead";
+function categoryFor(base: string, title: string): string {
+  const c = positionCategory(base);
+  return c === GENERAL && /Senior Lead$/.test(title) ? SENIOR_LEAD : c;
+}
+function rankFor(base: string, title: string): number {
+  return categoryFor(base, title) === SENIOR_LEAD ? POSITION_ORDER.length - 0.5 : positionRank(base);
 }
 function positionCategory(label: string): string {
   if ((POSITION_ORDER as readonly string[]).includes(label)) return label;
@@ -128,7 +139,11 @@ export async function listDirectory(): Promise<DirectoryEntry[]> {
   return MEMBERS.filter((m) => !m.hidden)
     .map((m) => {
       const o = overrides.get(lc(m.email));
-      const role = memberRoleLabel(m);
+      // `base` comes from the member's roles (what they can do); `role` adds any
+      // display-only title such as Senior Lead (shown, never a permission).
+      const base = memberRoleLabel(m);
+      const title = memberTitle(m.email);
+      const role = memberDisplayRole(m);
       return {
         loginEmail: lc(m.email),
         name: memberFullName(m),
@@ -137,8 +152,8 @@ export async function listDirectory(): Promise<DirectoryEntry[]> {
         email: o?.contactEmail ?? m.email,
         phone: formatPhone(o?.phone ?? m.phone ?? ""),
         year: memberYear(m.email),
-        positionCategory: positionCategory(role),
-        positionRank: positionRank(role),
+        positionCategory: categoryFor(base, title),
+        positionRank: rankFor(base, title),
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));

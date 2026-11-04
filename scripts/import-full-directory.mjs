@@ -244,7 +244,14 @@ function cleanPosition(p) {
     return term ? ` (${term[1]})` : "";
   }).replace(/\s+/g, " ").trim();
 }
-const POSITION_ALIASES = { gm: "General Member" };
+// Different spellings of one title (keys lower-case). The finance variants are all
+// the same role, per the club: one consolidated "Director of Finance".
+const POSITION_ALIASES = {
+  gm: "General Member",
+  "director of finance (fall 2019)": "Director of Finance",
+  "finance & fundraising": "Director of Finance",
+  "finance director": "Director of Finance",
+};
 function positionsOf(raw) {
   // "Vice President, Projects" is one title (VP of Projects), not two roles.
   const s = (raw ?? "").replace(/\b(Vice President|President|Director),\s*(Projects|Internal|External|Finance|Outreach)\b/g, "$1 of $2");
