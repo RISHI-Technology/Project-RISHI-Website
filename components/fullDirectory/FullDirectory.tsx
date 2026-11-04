@@ -64,10 +64,14 @@ export default function FullDirectory({ switcher }: { switcher?: ReactNode }) {
   const state = useMemo(() => parseState(new URLSearchParams(sp.toString())), [sp]);
 
   // Writes go straight to the address bar (no navigation, no refetch). Next keeps
-  // useSearchParams in step with history.replaceState.
+  // useSearchParams in step with history.replaceState — but ONLY when the state
+  // argument isn't its own: passing window.history.state (which carries Next's
+  // internal __NA marker) makes Next treat the call as internal and skip the
+  // sync, so the UI wouldn't update until a reload. Pass null; Next copies its
+  // internal state over by itself.
   const update = useCallback((patch: Partial<DirState>) => {
     const next = { ...parseState(new URLSearchParams(window.location.search)), ...patch };
-    window.history.replaceState(window.history.state, "", `${window.location.pathname}?${toQuery(next)}`);
+    window.history.replaceState(null, "", `${window.location.pathname}?${toQuery(next)}`);
   }, []);
 
   // ---------------------------------------------------------------- data
