@@ -1,0 +1,80 @@
+// Full Directory — small pure helpers shared by the views.
+import {
+  ALUMNI_YEAR, CURRENT_YEAR, type FullMembership, type FullPerson, type PositionType,
+} from "@/lib/fullDirectory/types";
+
+export const TYPE_RANK: Record<PositionType, number> = { exec: 3, lead: 2, other: 1, member: 0 };
+
+/** "2019-2020" → "2019–20"; "alumni" → "Alumni". */
+export const shortYear = (y: string) => (y === ALUMNI_YEAR ? "Alumni" : `${y.slice(0, 4)}–${y.slice(7, 9)}`);
+/** "2019-2020" → "2019–2020"; "alumni" → "Alumni (years unknown)". */
+export const longYear = (y: string) => (y === ALUMNI_YEAR ? "Alumni (years unknown)" : y.replace("-", "–"));
+
+export const isCurrent = (p: FullPerson) => p.years.includes(CURRENT_YEAR);
+
+/** "2019–2023", "2021–22", or "Alumni". */
+export function yearSpan(p: FullPerson): string {
+  if (p.firstYear === null || p.lastYear === null) return "Alumni";
+  if (p.firstYear === p.lastYear) return `${p.firstYear}–${String(p.firstYear + 1).slice(2)}`;
+  return `${p.firstYear}–${p.lastYear + 1}`;
+}
+
+/** Most senior membership; ties go to the most recent year. */
+export function topMembership(ms: FullMembership[]): FullMembership | null {
+  let best: FullMembership | null = null;
+  for (const m of ms) {
+    if (!best) { best = m; continue; }
+    const d = TYPE_RANK[m.positionType] - TYPE_RANK[best.positionType];
+    if (d > 0 || (d === 0 && (m.yearStart ?? -1) > (best.yearStart ?? -1))) best = m;
+  }
+  return best;
+}
+
+/** The role to show for a set of memberships: its most senior title. */
+export function roleOf(ms: FullMembership[]): { label: string; type: PositionType; year: string | null } {
+  const top = topMembership(ms);
+  if (!top || !top.positions.length) return { label: "General Member", type: "member", year: top?.year ?? null };
+  const sorted = [...top.positions].sort((a, b) => TYPE_RANK[typeOfTitle(b)] - TYPE_RANK[typeOfTitle(a)]);
+  return { label: sorted.join(" · "), type: top.positionType, year: top.year };
+}
+
+/** Client-side mirror of the import script's rule, used only to order titles within one year. */
+function typeOfTitle(t: string): PositionType {
+  const s = t.toLowerCase();
+  if (/\bpresident\b|\bdirector\b|^exec\b/.test(s)) return "exec";
+  if (/\blead\b/.test(s)) return "lead";
+  if (/member$/.test(s)) return "member";
+  return "other";
+}
+
+/** Distinct groups across memberships, most recent first. */
+export function groupsOf(ms: FullMembership[]): string[] {
+  const out: string[] = [];
+  for (const m of [...ms].sort((a, b) => (b.yearStart ?? -1) - (a.yearStart ?? -1)))
+    for (const g of m.groups) if (!out.includes(g)) out.push(g);
+  return out;
+}
+
+/** Colours per group — the dashboard's lane colours (light + dark values in CSS variables). */
+export function laneFor(group: string): { background: string; color: string } {
+  const lane =
+    /education/i.test(group) ? "e"
+    : /water|watsan|rainwater/i.test(group) ? "r"
+    : /women/i.test(group) ? "w"
+    : /health/i.test(group) ? "h"
+    : /agriculture/i.test(group) ? "nmt"
+    : "other";
+  return { background: `var(--lane-${lane}-bg)`, color: `var(--lane-${lane}-fg)` };
+}
+
+export const initialsOf = (name: string) =>
+  name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+
+/** Stable tint per person so the grid isn't a wall of identical circles. */
+export function tintFor(slug: string): number {
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+  return h % 4;
+}
+
+export const personHref = (slug: string) => `/dashboard/directory?view=full&person=${encodeURIComponent(slug)}`;
