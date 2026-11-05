@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import type { Section } from "@/components/fullDirectory/results";
-import { groupsOf, isCurrent, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
-import { ArrowRightIcon, ChevronIcon, GlobeIcon, GroupChip, Highlight, Initials, YearStrip } from "@/components/fullDirectory/ui";
+import { groupsOf, isCurrent, otherRoles, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
+import { ArrowRightIcon, ChevronIcon, GlobeIcon, GroupChip, Highlight, Initials, MoreRoles, YearStrip } from "@/components/fullDirectory/ui";
 
 const TYPE_DOT = { exec: "bg-marigold", lead: "bg-pine", other: "bg-sage", member: "bg-ink/20" } as const;
 
@@ -64,6 +64,7 @@ export default function CardGrid({ sections, onOpen, tokens, allYears, grouped }
                             <Highlight text={role.label} tokens={tokens} />
                             {role.year && role.type !== "member" && p.years.length > 1 && <span className="ml-1.5 text-xs text-ink/50">{shortYear(role.year)}</span>}
                           </span>
+                          <MoreRoles roles={otherRoles(p.memberships, role.label)} />
                         </span>
                         {groups.length > 0 && (
                           <span className="mt-3 flex flex-wrap gap-1">

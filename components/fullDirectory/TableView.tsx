@@ -3,8 +3,8 @@
 import { useState, type KeyboardEvent } from "react";
 import type { ColKey, SortKey } from "@/components/fullDirectory/filters";
 import type { Row, Section } from "@/components/fullDirectory/results";
-import { groupsOf, isCurrent, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
-import { ArrowRightIcon, ChevronIcon, GroupChip, Highlight, Initials, SortIcon, YearStrip } from "@/components/fullDirectory/ui";
+import { groupsOf, isCurrent, otherRoles, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
+import { ArrowRightIcon, ChevronIcon, GroupChip, Highlight, Initials, MoreRoles, PlusIcon, SortIcon, YearStrip } from "@/components/fullDirectory/ui";
 
 const TYPE_DOT = { exec: "bg-marigold", lead: "bg-pine", other: "bg-sage", member: "bg-ink/20" } as const;
 
@@ -21,16 +21,22 @@ const HEADERS: Record<ColKey, { label: string; sort?: SortKey; width: number | n
   contact: { label: "Contact", width: 226 },
 };
 const NAME_WIDTH = 232;
+const ADD_WIDTH = 44;
 const FLEX_MIN = 230;
 
 /** Berkeley address first (it's the one people actually use for club mail). */
 const emailsInOrder = (emails: string[]) =>
   [...emails].sort((a, b) => Number(/@berkeley\.edu$/i.test(b)) - Number(/@berkeley\.edu$/i.test(a)));
 
-export default function TableView({ sections, cols, sort, dir, onSort, onOpen, tokens, allYears, grouped }: {
+export default function TableView({ sections, cols, sort, dir, onSort, onOpen, tokens, allYears, grouped, autoCol, hiddenLabels, onAddColumns }: {
   sections: Section[]; cols: ColKey[]; sort: SortKey; dir: "asc" | "desc";
   onSort: (k: SortKey) => void; onOpen: (slug: string) => void;
   tokens: string[]; allYears: string[]; grouped: boolean;
+  /** A column that's only showing because the table is sorted by it. */
+  autoCol?: ColKey | null;
+  /** Labels of columns that are switched off (for the "+" header's tooltip). */
+  hiddenLabels: string[];
+  onAddColumns: () => void;
 }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [focusKey, setFocusKey] = useState<string | null>(null);
@@ -52,14 +58,16 @@ export default function TableView({ sections, cols, sort, dir, onSort, onOpen, t
     if (next) { e.preventDefault(); next.focus(); setFocusKey(next.dataset.row!); }
   };
 
-  const colCount = cols.length + 1;
-  const minWidth = NAME_WIDTH + cols.reduce((n, c) => n + (HEADERS[c].width ?? FLEX_MIN), 0) + (cols.includes("position") ? 0 : FLEX_MIN);
+  const colCount = cols.length + 2; // name + cols + the "+" column
+  const minWidth = NAME_WIDTH + ADD_WIDTH + cols.reduce((n, c) => n + (HEADERS[c].width ?? FLEX_MIN), 0) + (cols.includes("position") ? 0 : FLEX_MIN);
+  const addTitle = hiddenLabels.length ? `Show more columns: ${hiddenLabels.join(", ")}` : "Choose columns";
   return (
     <div className="max-h-[calc(100dvh-8rem)] overflow-auto rounded-2xl border border-pine/12" role="region" aria-label="Full directory table" tabIndex={-1}>
       <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm" style={{ minWidth }}>
         <colgroup>
           <col style={{ width: NAME_WIDTH }} />
           {cols.map((c) => <col key={c} style={HEADERS[c].width ? { width: HEADERS[c].width! } : undefined} />)}
+          <col style={{ width: ADD_WIDTH }} />
         </colgroup>
         <thead>
           <tr className="text-xs text-ink/70">
@@ -79,9 +87,27 @@ export default function TableView({ sections, cols, sort, dir, onSort, onOpen, t
                       <SortIcon dir={dir} active={active} />
                     </button>
                   ) : h.label}
+                  {c === autoCol && (
+                    <span className="ml-1.5 align-middle text-[10px] font-medium normal-case tracking-normal text-ink/45" title="Shown because the table is sorted by it. Turn it on in Columns to keep it.">
+                      · sorted
+                    </span>
+                  )}
                 </th>
               );
             })}
+            {/* Spreadsheet-style "add column": quiet until hovered, and pinned to the
+                right edge so it stays in view even when the table scrolls sideways. */}
+            <th scope="col" className="sticky right-0 top-0 z-20 border-b border-pine/12 bg-paper px-1 py-2 text-center">
+              <button
+                type="button"
+                onClick={onAddColumns}
+                title={addTitle}
+                aria-label={addTitle}
+                className="inline-grid h-7 w-7 place-items-center rounded-full border border-dashed border-pine/30 text-pine/70 transition-colors hover:border-solid hover:border-pine hover:bg-pine/[0.07] hover:text-pine-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine"
+              >
+                <PlusIcon className="h-3.5 w-3.5" />
+              </button>
+            </th>
           </tr>
         </thead>
         {sections.map((s) => {
@@ -181,6 +207,7 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
                     <span className="text-ink/85"><Highlight text={role.label} tokens={tokens} /></span>
                     {role.year && p.years.length > 1 && role.type !== "member" && <span className="ml-1.5 whitespace-nowrap text-xs text-ink/50">{shortYear(role.year)}</span>}
                   </span>
+                  <MoreRoles roles={otherRoles(p.memberships, role.label)} />
                 </div>
               </td>
             );
@@ -219,6 +246,7 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
           }
         }
       })}
+      <td className={td.replace("px-4", "px-0")} aria-hidden />
     </tr>
   );
 }

@@ -6,7 +6,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { highlightRuns } from "@/components/fullDirectory/search";
-import { initialsOf, laneFor, shortYear, tintFor } from "@/components/fullDirectory/model";
+import { initialsOf, laneFor, shortYear, tintFor, type PastRole } from "@/components/fullDirectory/model";
 import type { Option } from "@/components/fullDirectory/filters";
 
 // ---------------------------------------------------------------- initials
@@ -49,6 +49,22 @@ export function GroupChip({ group, tokens = [], small = false }: { group: string
       title={group}
     >
       <span className="truncate"><Highlight text={group.replace(/\s*\(.*\)$/, "")} tokens={tokens} /></span>
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------- other roles
+/** "+n" beside a role: other non-member roles this person held. Hover lists them. */
+export function MoreRoles({ roles }: { roles: PastRole[] }) {
+  if (!roles.length) return null;
+  const list = roles.map((r) => `${r.title} (${r.years.map(shortYear).join(", ")})`);
+  return (
+    <span
+      title={`Also held: ${list.join("; ")}`}
+      aria-label={`Also held ${roles.length} other ${roles.length === 1 ? "role" : "roles"}: ${list.join("; ")}`}
+      className="ml-1 inline-flex shrink-0 cursor-help items-center rounded-full bg-pine/[0.09] px-1.5 py-px text-[11px] font-semibold tabular-nums text-pine-deep"
+    >
+      +{roles.length}
     </span>
   );
 }
@@ -101,10 +117,19 @@ export function Segmented<T extends string>({ value, onChange, options, label, s
 
 // ---------------------------------------------------------------- popover
 /** A pill button that opens a panel; closes on outside click or Escape. */
-export function Popover({ label, badge = 0, children, align = "left", width = "w-72", icon }: {
+export function Popover({ label, badge = 0, children, align = "left", width = "w-72", icon, hint, title, open: openProp, onOpenChange }: {
   label: string; badge?: number; children: ReactNode; align?: "left" | "right"; width?: string; icon?: ReactNode;
+  /** Quiet text after the label (e.g. "+3"). */ hint?: ReactNode; title?: string;
+  /** Optional controlled mode, so something else (the table's "+" header) can open it. */
+  open?: boolean; onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (next: boolean | ((o: boolean) => boolean)) => {
+    const v = typeof next === "function" ? next(open) : next;
+    if (openProp === undefined) setOpenState(v);
+    onOpenChange?.(v);
+  };
   const root = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const id = useId();
@@ -125,13 +150,15 @@ export function Popover({ label, badge = 0, children, align = "left", width = "w
         aria-expanded={open}
         aria-controls={id}
         onClick={() => setOpen((o) => !o)}
+        title={title}
         className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
           active ? "border-pine bg-pine/[0.07] text-pine-deep" : "border-pine/20 bg-paper text-ink/80 hover:border-pine/45 hover:text-pine-deep"
         }`}
       >
         {icon}
         {label}
-        {active && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-pine px-1.5 text-[11px] font-semibold text-paper">{badge}</span>}
+        {hint}
+        {active &&<span className="grid h-5 min-w-5 place-items-center rounded-full bg-pine px-1.5 text-[11px] font-semibold text-paper">{badge}</span>}
         <ChevronIcon className={`h-3.5 w-3.5 opacity-60 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
@@ -176,7 +203,7 @@ export function OptionList({ options, selected, onToggle, searchable = false, pl
             <li key={o.value}>
               <label className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-pine/[0.06] ${o.count === 0 && !on ? "opacity-45" : ""}`}>
                 <input type="checkbox" checked={on} onChange={() => onToggle(o.value)} className="h-4 w-4 shrink-0 accent-pine" />
-                <span className="min-w-0 flex-1 truncate text-ink">{o.label}</span>
+                <span className="min-w-0 flex-1 truncate text-ink" title={o.hint ? `${o.label} (${o.hint})` : o.label}>{o.label}</span>
                 {o.hint && <span className="shrink-0 text-[11px] text-ink/50">{o.hint}</span>}
                 <span className="shrink-0 text-xs tabular-nums text-ink/50">{o.count}</span>
               </label>
@@ -206,7 +233,8 @@ export const TableIcon = svg(<><rect x="3" y="4" width="18" height="16" rx="2" /
 export const GridIcon = svg(<><rect x="3" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" /></>, 1.8);
 export const DownloadIcon = svg(<><path d="M12 3v12M7 10l5 5 5-5" /><path d="M5 21h14" /></>);
 export const ColumnsIcon = svg(<><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16M15 4v16" /></>, 1.8);
-export const FilterIcon = svg(<path d="M4 6h16M7 12h10M10 18h4" />);
+export const PlusIcon = svg(<path d="M12 5v14M5 12h14" />);
+export const FilterIcon =svg(<path d="M4 6h16M7 12h10M10 18h4" />);
 export const CopyIcon = svg(<><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></>, 1.8);
 export const LinkIcon = svg(<><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1" /><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1" /></>, 1.8);
 export const CheckIcon = svg(<path d="m5 12 5 5 9-10" />);

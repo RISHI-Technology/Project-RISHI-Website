@@ -48,6 +48,20 @@ function typeOfTitle(t: string): PositionType {
   return "other";
 }
 
+export type PastRole = { title: string; years: string[] };
+/** Every other non-member title a person held (any year), minus the ones on display.
+ *  Feeds the small "+n" bubble beside the role. Oldest first. */
+export function otherRoles(ms: FullMembership[], shownLabel: string): PastRole[] {
+  const shown = new Set(shownLabel.split(" · "));
+  const byTitle = new Map<string, string[]>();
+  for (const m of [...ms].sort((a, b) => (a.yearStart ?? 9999) - (b.yearStart ?? 9999)))
+    for (const t of m.positions) {
+      if (typeOfTitle(t) === "member" || shown.has(t)) continue;
+      byTitle.set(t, [...(byTitle.get(t) ?? []), m.year]);
+    }
+  return Array.from(byTitle, ([title, years]) => ({ title, years }));
+}
+
 /** Distinct groups across memberships, most recent first. */
 export function groupsOf(ms: FullMembership[]): string[] {
   const out: string[] = [];

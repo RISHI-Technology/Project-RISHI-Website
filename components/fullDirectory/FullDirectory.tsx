@@ -16,7 +16,7 @@ import DashboardBanner from "@/components/DashboardBanner";
 import { Block, Line, SkeletonRegion, useShowAfter } from "@/components/Skeleton";
 import { ALUMNI_YEAR, type FullDirectoryResponse, type FullPerson } from "@/lib/fullDirectory/types";
 import {
-  ALL_COLS, DEFAULT_COLS, EMPTY_FILTERS, activeCount, applyFilters, chipsFor, facetOptions, parseState, toQuery,
+  ALL_COLS, DEFAULT_COLS, EMPTY_FILTERS, SORT_COL, activeCount, applyFilters, chipsFor, facetOptions, parseState, toQuery,
   type ColKey, type DirState, type GroupBy, type Layout, type SortKey,
 } from "@/components/fullDirectory/filters";
 import { buildIndex, queryTokens, scoreEntry } from "@/components/fullDirectory/search";
@@ -171,6 +171,17 @@ export default function FullDirectory({ switcher }: { switcher?: ReactNode }) {
     setStoredCols(next);
     update({ cols: next });
   };
+  // Sorting by a hidden column shows it (temporarily: the saved choice is untouched).
+  const sortCol = SORT_COL[sortKey];
+  const autoCol = sortCol && !cols.includes(sortCol) ? sortCol : null;
+  const shownCols = autoCol ? ALL_COLS.map((c) => c.key).filter((k) => k === autoCol || cols.includes(k)) : cols;
+  const hiddenLabels = ALL_COLS.filter((c) => !shownCols.includes(c.key)).map((c) => c.label);
+  const [colsOpen, setColsOpen] = useState(false);
+  const colsAnchor = useRef<HTMLDivElement>(null);
+  const openColumns = () => {
+    colsAnchor.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    setColsOpen(true);
+  };
 
   const clearAll = () => { setQInput(""); lastPushed.current = ""; update({ ...EMPTY_FILTERS, q: "" }); };
   const onSort = (k: SortKey) => update(sortKey === k ? { sort: k, dir: state.dir === "asc" ? "desc" : "asc" } : { sort: k, dir: "asc" });
@@ -295,8 +306,16 @@ export default function FullDirectory({ switcher }: { switcher?: ReactNode }) {
                   />
                 </div>
                 {layout === "table" && (
-                  <div className="hidden md:block">
-                    <Popover label="Columns" icon={<ColumnsIcon />} align="right" width="w-56">
+                  <div className="hidden md:block" ref={colsAnchor}>
+                    <Popover
+                      label="Columns" icon={<ColumnsIcon />} align="right" width="w-60"
+                      open={colsOpen} onOpenChange={setColsOpen}
+                      title={hiddenLabels.length ? `More columns available: ${hiddenLabels.join(", ")}` : undefined}
+                      hint={hiddenLabels.length > 0 && (
+                        <span className="rounded-full bg-ink/[0.07] px-1.5 text-[11px] font-semibold tabular-nums text-ink/60">+{hiddenLabels.length}</span>
+                      )}
+                    >
+                      <p className="mb-1.5 px-2 text-xs text-ink/55">Choose what the table shows.</p>
                       <ul className="space-y-0.5" aria-label="Visible columns">
                         {ALL_COLS.map((c) => (
                           <li key={c.key}>
@@ -305,6 +324,7 @@ export default function FullDirectory({ switcher }: { switcher?: ReactNode }) {
                                 onChange={() => setCols(cols.includes(c.key) ? cols.filter((x) => x !== c.key) : ALL_COLS.map((x) => x.key).filter((k) => k === c.key || cols.includes(k)))} />
                               {c.label}
                               {c.key === "contact" && <span className="ml-auto text-[11px] text-ink/45">{canSeePrivate ? "email + phone" : "email"}</span>}
+                              {c.key === autoCol && <span className="ml-auto text-[11px] text-ink/45">shown while sorted</span>}
                             </label>
                           </li>
                         ))}
@@ -368,8 +388,9 @@ export default function FullDirectory({ switcher }: { switcher?: ReactNode }) {
                   </div>
                 </div>
               ) : layout === "table" ? (
-                <TableView sections={sections} cols={cols} sort={sortKey} dir={state.dir} onSort={onSort}
-                  onOpen={(slug) => update({ person: slug })} tokens={tokens} allYears={allYears} grouped={!!state.groupBy} />
+                <TableView sections={sections} cols={shownCols} sort={sortKey} dir={state.dir} onSort={onSort}
+                  onOpen={(slug) => update({ person: slug })} tokens={tokens} allYears={allYears} grouped={!!state.groupBy}
+                  autoCol={autoCol} hiddenLabels={hiddenLabels} onAddColumns={openColumns} />
               ) : (
                 <CardGrid sections={sections} onOpen={(slug) => update({ person: slug })} tokens={tokens} allYears={allYears} grouped={!!state.groupBy} />
               )}

@@ -30,6 +30,11 @@ export const ALL_COLS: { key: ColKey; label: string }[] = [
 ];
 export const DEFAULT_COLS: ColKey[] = ["years", "group", "position", "grad", "contact"];
 
+/** The column each sort reads from: sorting by it shows that column even if hidden. */
+export const SORT_COL: Partial<Record<SortKey, ColKey>> = {
+  years: "years", group: "group", position: "position", grad: "grad", major: "major",
+};
+
 export type DirState = {
   q: string;
   years: string[];
