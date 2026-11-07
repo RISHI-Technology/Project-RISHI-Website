@@ -172,9 +172,6 @@ export default function PersonDrawer({ person, canSeePrivate, allYears, position
             {!canSeePrivate && <p className="mt-2 text-xs text-ink/50">Phone numbers and personal emails are visible to exec only.</p>}
           </section>
 
-          {/* Career */}
-          {p.employment.length > 0 && <Career key={p.slug} jobs={p.employment} />}
-
           {/* Facts */}
           {(facts.length > 0 || p.otherInfo.length > 0) && (
             <section className="mt-8" aria-labelledby="fd-about">
@@ -223,6 +220,9 @@ export default function PersonDrawer({ person, canSeePrivate, allYears, position
               })}
             </ol>
           </section>
+
+          {/* Career — after the RISHI timeline */}
+          {p.employment.length > 0 && <Career key={p.slug} jobs={p.employment} />}
         </div>
       </motion.div>
     </div>

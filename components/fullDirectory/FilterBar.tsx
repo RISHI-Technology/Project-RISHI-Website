@@ -95,6 +95,16 @@ function useSections(s: DirState, set: Set_, o: Options, canSeePrivate: boolean)
       body: <OptionList label="majors" searchable placeholder="Search majors…" options={o.majors} selected={s.majors} onToggle={(v) => set({ majors: toggleIn(s.majors, v) })} />,
     },
     {
+      key: "company", label: "Company", badge: s.companies.length,
+      body: (
+        <div>
+          <OptionList label="companies" searchable placeholder="Search companies…" options={o.companies} selected={s.companies}
+            onToggle={(v) => set({ companies: toggleIn(s.companies, v) })} />
+          <p className="mt-2 px-2 text-[11px] leading-snug text-ink/50">Anyone who has worked there, now or in the past.</p>
+        </div>
+      ),
+    },
+    {
       key: "hindi", label: "Hindi", badge: s.hindi.length,
       body: <OptionList label="Hindi levels" options={o.hindi} selected={s.hindi} onToggle={(v) => set({ hindi: toggleIn(s.hindi, v) })} />,
     },

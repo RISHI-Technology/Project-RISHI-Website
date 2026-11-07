@@ -47,6 +47,7 @@ export type DirState = {
   trips: string[]; // "any" = has any India trip
   grads: string[];
   majors: string[];
+  companies: string[];
   hindi: string[];
   status: "" | "current" | "alumni";
   contact: ("email" | "phone")[];
@@ -60,9 +61,9 @@ export type DirState = {
 };
 
 export const EMPTY_FILTERS: Pick<DirState,
-  "years" | "yearMode" | "from" | "to" | "groups" | "ptypes" | "positions" | "trips" | "grads" | "majors" | "hindi" | "status" | "contact" | "hiatus"> = {
+  "years" | "yearMode" | "from" | "to" | "groups" | "ptypes" | "positions" | "trips" | "grads" | "majors" | "companies" | "hindi" | "status" | "contact" | "hiatus"> = {
   years: [], yearMode: "any", from: null, to: null, groups: [], ptypes: [], positions: [], trips: [],
-  grads: [], majors: [], hindi: [], status: "", contact: [], hiatus: false,
+  grads: [], majors: [], companies: [], hindi: [], status: "", contact: [], hiatus: false,
 };
 
 const PTYPES: PositionType[] = ["exec", "lead", "member", "other"];
@@ -90,6 +91,7 @@ export function parseState(sp: URLSearchParams): DirState {
     trips: list("trip"),
     grads: list("grad"),
     majors: list("major"),
+    companies: list("co"),
     hindi: list("hindi"),
     status: status === "current" || status === "alumni" ? status : "",
     contact: list("contact").filter((c): c is "email" | "phone" => c === "email" || c === "phone"),
@@ -123,6 +125,7 @@ export function toQuery(s: DirState): string {
   setList("trip", s.trips);
   setList("grad", s.grads);
   setList("major", s.majors);
+  setList("co", s.companies);
   setList("hindi", s.hindi);
   if (s.status) p.set("status", s.status);
   setList("contact", s.contact);
@@ -137,12 +140,15 @@ export function toQuery(s: DirState): string {
 }
 
 // ----------------------------------------------------------------- filtering
-export type Facet = "years" | "groups" | "ptypes" | "positions" | "trips" | "grads" | "majors" | "hindi" | "status" | "contact" | "hiatus";
+export type Facet = "years" | "groups" | "ptypes" | "positions" | "trips" | "grads" | "majors" | "companies" | "hindi" | "status" | "contact" | "hiatus";
 
 /** A person who passed the filters, with the years that made them pass. */
 export type Match = { person: FullPerson; context: FullMembership[] };
 
 const hindiValues = (s: string | null) => (s ?? "").split("|").map((x) => x.trim()).filter(Boolean);
+/** Every employer in a person's history (current & past), as written. */
+export const personCompanies = (p: FullPerson) =>
+  Array.from(new Set(p.employment.map((j) => j.company).filter((c): c is string => !!c)));
 export const personHindi = (p: FullPerson) =>
   Array.from(new Set([...hindiValues(p.hindi), ...p.memberships.flatMap((m) => hindiValues(m.hindi))]));
 
@@ -152,7 +158,7 @@ export function hasFilters(s: DirState, canSeePrivate: boolean): boolean {
 export function activeCount(s: DirState, canSeePrivate: boolean): number {
   return (s.yearMode === "range" ? (s.from !== null || s.to !== null ? 1 : 0) : s.years.length)
     + s.groups.length + s.ptypes.length + s.positions.length + s.trips.length + s.grads.length
-    + s.majors.length + s.hindi.length + (s.status ? 1 : 0) + (canSeePrivate ? s.contact.length : 0) + (s.hiatus ? 1 : 0);
+    + s.majors.length + s.companies.length + s.hindi.length + (s.status ? 1 : 0) + (canSeePrivate ? s.contact.length : 0) + (s.hiatus ? 1 : 0);
 }
 
 export function applyFilters(people: FullPerson[], s: DirState, canSeePrivate: boolean, skip?: Facet): Match[] {
@@ -180,6 +186,7 @@ export function applyFilters(people: FullPerson[], s: DirState, canSeePrivate: b
     }
     if (use("grads") && s.grads.length && !(p.gradYear && s.grads.includes(String(p.gradYear)))) continue;
     if (use("majors") && s.majors.length && !(p.major && s.majors.includes(p.major))) continue;
+    if (use("companies") && s.companies.length && !personCompanies(p).some((c) => s.companies.includes(c))) continue;
     if (use("hindi") && s.hindi.length && !personHindi(p).some((h) => s.hindi.includes(h))) continue;
     if (use("status") && s.status === "current" && !isCurrent(p)) continue;
     if (use("status") && s.status === "alumni" && isCurrent(p)) continue;
@@ -225,6 +232,7 @@ export function facetOptions(people: FullPerson[], s: DirState, canSeePrivate: b
   const gradC = tally(base("grads"), (m) => (m.person.gradYear ? [String(m.person.gradYear)] : []));
   const majorC = tally(base("majors"), (m) => (m.person.major ? [m.person.major] : []));
   const hindiC = tally(base("hindi"), (m) => personHindi(m.person));
+  const companyC = tally(base("companies"), (m) => personCompanies(m.person));
   const statusC = tally(base("status"), (m) => [isCurrent(m.person) ? "current" : "alumni"]);
   const contactC = tally(base("contact"), (m) => [
     ...(m.person.emails.length ? ["email"] : []), ...(m.person.phones?.length ? ["phone"] : []),
@@ -253,6 +261,8 @@ export function facetOptions(people: FullPerson[], s: DirState, canSeePrivate: b
       .map((g) => ({ value: g, label: `Class of ${g}`, count: count(gradC, g), hint: inferredGrad.has(g) && !statedGrad.has(g) ? "estimated" : inferredGrad.has(g) ? "some estimated" : undefined })),
     majors: distinct((p) => (p.major ? [p.major] : [])).sort((a, b) => a.localeCompare(b))
       .map((m) => ({ value: m, label: m, count: count(majorC, m) })),
+    companies: distinct(personCompanies).sort((a, b) => a.localeCompare(b))
+      .map((c) => ({ value: c, label: c, count: count(companyC, c) })),
     hindi: distinct(personHindi).sort().map((h) => ({ value: h, label: h, count: count(hindiC, h) })),
     status: [
       { value: "current", label: `Current (${shortYear(CURRENT_YEAR)})`, count: count(statusC, "current") },
@@ -286,6 +296,7 @@ export function chipsFor(s: DirState, canSeePrivate: boolean): Chip[] {
   for (const t of s.trips) chips.push({ key: `tr:${t}`, label: t === "any" ? "Any India trip" : t, remove: without("trips", t) });
   for (const g of s.grads) chips.push({ key: `gr:${g}`, label: `Class of ${g}`, remove: without("grads", g) });
   for (const m of s.majors) chips.push({ key: `m:${m}`, label: m, remove: without("majors", m) });
+  for (const c of s.companies) chips.push({ key: `co:${c}`, label: c, remove: without("companies", c) });
   for (const h of s.hindi) chips.push({ key: `h:${h}`, label: `Hindi: ${h}`, remove: without("hindi", h) });
   if (s.status) chips.push({ key: "status", label: s.status === "current" ? "Current members" : "Alumni", remove: { status: "" } });
   if (canSeePrivate) for (const c of s.contact)
