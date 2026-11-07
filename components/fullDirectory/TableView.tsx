@@ -3,8 +3,8 @@
 import { useState, type KeyboardEvent } from "react";
 import type { ColKey, SortKey } from "@/components/fullDirectory/filters";
 import type { Row, Section } from "@/components/fullDirectory/results";
-import { groupsOf, isCurrent, otherRoles, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
-import { ArrowRightIcon, ChevronIcon, GroupChip, Highlight, Initials, MoreRoles, PlusIcon, SortIcon, YearStrip } from "@/components/fullDirectory/ui";
+import { currentRoleOf, groupsOf, isCurrent, otherRoles, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
+import { ArrowRightIcon, ChevronIcon, GroupChip, Highlight, Initials, LinkedInIcon, MoreRoles, PlusIcon, SortIcon, YearStrip } from "@/components/fullDirectory/ui";
 
 const TYPE_DOT = { exec: "bg-marigold", lead: "bg-pine", other: "bg-sage", member: "bg-ink/20" } as const;
 
@@ -154,7 +154,8 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
   const p = row.person;
   const role = roleOf(row.best && tokens.length ? [row.best] : row.context);
   const groups = groupsOf(row.context);
-  const td = "border-b border-pine/8 px-4 py-3 align-middle";
+  const nowRole = currentRoleOf(p);
+  const td ="border-b border-pine/8 px-4 py-3 align-middle";
   return (
     <tr
       data-row={rowKey}
@@ -167,9 +168,23 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
       <td className={`${td} pl-5 shadow-[inset_3px_0_0_transparent] transition-shadow duration-150 group-hover:shadow-[inset_3px_0_0_#E2A02F] group-focus-visible:shadow-[inset_3px_0_0_#E2A02F]`}>
         <div className="flex items-center gap-3">
           <Initials name={p.name} slug={p.slug} size={34} />
-          <div className="flex min-w-0 items-center gap-1">
-            <div className="truncate font-semibold text-ink transition-colors group-hover:text-pine" title={p.name}><Highlight text={p.name} tokens={tokens} /></div>
-            <ArrowRightIcon className="h-3.5 w-3.5 shrink-0 -translate-x-1 text-pine opacity-0 transition duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:opacity-100" />
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-1">
+              <div className="truncate font-semibold text-ink transition-colors group-hover:text-pine" title={p.name}><Highlight text={p.name} tokens={tokens} /></div>
+              {p.linkedin && (
+                <a href={p.linkedin} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+                  title="LinkedIn profile (opens in a new tab)" aria-label={`${p.name} on LinkedIn (opens in a new tab)`}
+                  className="grid h-5 w-5 shrink-0 place-items-center rounded text-ink/40 transition-colors hover:bg-pine/[0.08] hover:text-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-pine">
+                  <LinkedInIcon className="h-3.5 w-3.5" />
+                </a>
+              )}
+              <ArrowRightIcon className="h-3.5 w-3.5 shrink-0 -translate-x-1 text-pine opacity-0 transition duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:opacity-100" />
+            </div>
+            {nowRole && (
+              <div className="truncate text-xs text-ink/60" title={nowRole}>
+                <Highlight text={nowRole} tokens={tokens} />
+              </div>
+            )}
           </div>
         </div>
       </td>

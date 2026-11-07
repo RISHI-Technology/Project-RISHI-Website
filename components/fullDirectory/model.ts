@@ -1,6 +1,6 @@
 // Full Directory — small pure helpers shared by the views.
 import {
-  ALUMNI_YEAR, CURRENT_YEAR, type FullMembership, type FullPerson, type PositionType,
+  ALUMNI_YEAR, CURRENT_YEAR, type FullMembership, type FullPerson, type Job, type PositionType,
 } from "@/lib/fullDirectory/types";
 
 export const TYPE_RANK: Record<PositionType, number> = { exec: 3, lead: 2, other: 1, member: 0 };
@@ -42,7 +42,7 @@ export function roleOf(ms: FullMembership[]): { label: string; type: PositionTyp
 function typeOfTitle(t: string): PositionType {
   const s = t.toLowerCase();
   if (s === "director of technology") return "other"; // not an exec position
-  if (/\bpresident\b|\bdirector\b|^exec\b/.test(s)) return "exec";
+  if (/\bco-?founder\b|\bpresident\b|\bdirector\b|^exec\b/.test(s)) return "exec";
   if (/\blead\b/.test(s)) return "lead";
   if (/member$/.test(s)) return "member";
   return "other";
@@ -92,4 +92,51 @@ export function tintFor(slug: string): number {
   return h % 4;
 }
 
-export const personHref = (slug: string) => `/dashboard/directory?view=full&person=${encodeURIComponent(slug)}`;
+// ------------------------------------------------------------------ career
+/** Consecutive jobs at one employer, shown together (newest first). */
+export type JobGroup = { company: string | null; jobs: Job[]; start: number | null; end: number | null; current: boolean };
+
+const sameEmployer = (a: string | null, b: string | null) =>
+  !!a && !!b && a.toLowerCase().replace(/[^a-z0-9]/g, "") === b.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+export function groupJobs(jobs: Job[]): JobGroup[] {
+  const out: JobGroup[] = [];
+  for (const j of jobs) {
+    const last = out[out.length - 1];
+    if (last && sameEmployer(last.company, j.company)) last.jobs.push(j);
+    else out.push({ company: j.company, jobs: [j], start: null, end: null, current: false });
+  }
+  for (const g of out) {
+    const starts = g.jobs.map((j) => j.start).filter((y): y is number => y !== null);
+    const ends = g.jobs.map((j) => j.end ?? j.start).filter((y): y is number => y !== null);
+    g.start = starts.length ? Math.min(...starts) : null;
+    g.current = g.jobs.some((j) => j.current);
+    g.end = g.current ? null : ends.length ? Math.max(...ends) : null;
+  }
+  return out;
+}
+
+/** "2021 – 2023", "2023 – Present", "2022". */
+export function jobDates(start: number | null, end: number | null, current: boolean): string {
+  if (start === null) return current ? "Present" : end !== null ? String(end) : "";
+  if (current) return `${start} – Present`;
+  if (end === null || end === start) return String(start);
+  return `${start} – ${end}`;
+}
+
+/** "3 yrs" — years only, since the sheet has no months; "" when under a year or undated. */
+export function jobLength(start: number | null, end: number | null, current: boolean, now = new Date().getFullYear()): string {
+  if (start === null) return "";
+  const n = (current ? now : end ?? start) - start;
+  return n >= 1 ? `${n} ${n === 1 ? "yr" : "yrs"}` : "";
+}
+
+/** The person's present job, for one-line display: the "Current role" column, else
+ *  their current employment entry. */
+export function currentRoleOf(p: FullPerson): string | null {
+  if (p.currentRole) return p.currentRole;
+  const j = p.employment.find((x) => x.current);
+  return j ? [j.title, j.company].filter(Boolean).join(", ") : null;
+}
+
+export const personHref =(slug: string) => `/dashboard/directory?view=full&person=${encodeURIComponent(slug)}`;

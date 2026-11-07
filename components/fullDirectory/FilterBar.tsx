@@ -82,7 +82,7 @@ function useSections(s: DirState, set: Set_, o: Options, canSeePrivate: boolean)
       body: <OptionList label="India trips" options={o.trips} selected={s.trips} onToggle={(v) => set({ trips: toggleIn(s.trips, v) })} />,
     },
     {
-      key: "grad", label: "Class of", badge: s.grads.length,
+      key: "grad", label: "Graduation year", badge: s.grads.length,
       body: (
         <div>
           <OptionList label="graduation years" options={o.grads} selected={s.grads} onToggle={(v) => set({ grads: toggleIn(s.grads, v) })} />

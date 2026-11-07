@@ -1,12 +1,15 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "@/components/Toast";
-import { POSITION_TYPE_LABELS, type FullPerson } from "@/lib/fullDirectory/types";
-import { isCurrent, longYear, personHref, roleOf, yearSpan } from "@/components/fullDirectory/model";
+import { POSITION_TYPE_LABELS, type FullPerson, type Job } from "@/lib/fullDirectory/types";
 import {
-  ArrowLeftIcon, ArrowRightIcon, CloseIcon, CopyIcon, GroupChip, Initials, LinkIcon, YearStrip,
+  currentRoleOf, groupJobs, isCurrent, jobDates, jobLength, longYear, personHref, roleOf, yearSpan, type JobGroup,
+} from "@/components/fullDirectory/model";
+import {
+  ArrowLeftIcon, ArrowRightIcon, BriefcaseIcon, CloseIcon, CopyIcon, ExternalIcon, GroupChip, Initials, LinkIcon,
+  LinkedInIcon, YearStrip,
 } from "@/components/fullDirectory/ui";
 
 const NODE = {
@@ -71,13 +74,14 @@ export default function PersonDrawer({ person, canSeePrivate, allYears, position
   const p = person;
   const role = roleOf(p.memberships);
   const facts: [string, ReactNode][] = [];
+  const nowRole = currentRoleOf(p);
   if (p.gradYear) facts.push(["Class of", <>{p.gradYear}{p.gradYearInferred && <span className="ml-1 text-ink/50">(estimated)</span>}</>]);
+  if (p.berkeleyYears) facts.push(["Years at Berkeley", p.berkeleyYears]);
   if (p.major) facts.push(["Major", p.major]);
   if (p.joined) facts.push(["Joined RISHI", <>{p.joined}{p.joinedApprox && <span className="ml-1 text-ink/50">(approx.)</span>}</>]);
   if (p.birthday) facts.push(["Birthday", p.birthday]);
   if (p.indiaTrips.length) facts.push(["India trips", p.indiaTrips.join(", ")]);
   if (p.hindi) facts.push(["Hindi", p.hindi]);
-  if (p.linkedin) facts.push(["LinkedIn", <a key="li" href={p.linkedin} target="_blank" rel="noopener noreferrer" className="break-all text-pine hover:underline">{p.linkedin.replace(/^https?:\/\/(www\.)?/, "")}</a>]);
   if (p.postGradPlans) facts.push(["Post-grad plans", p.postGradPlans]);
 
   return (
@@ -138,6 +142,19 @@ export default function PersonDrawer({ person, canSeePrivate, allYears, position
                 {isCurrent(p) && <span className="rounded-full bg-marigold-soft/60 px-2 py-0.5 text-[11px] font-semibold text-marigold-ink">Current member</span>}
               </p>
               {role.type !== "member" && <p className="mt-2 text-sm font-medium text-ink/85">{role.label}</p>}
+              {nowRole && (
+                <p className="mt-1.5 flex items-start gap-1.5 text-sm text-ink/70">
+                  <BriefcaseIcon className="mt-0.5 h-4 w-4 shrink-0 text-ink/45" />
+                  <span><span className="sr-only">Now: </span>{nowRole}</span>
+                </p>
+              )}
+              {p.linkedin && (
+                <a href={p.linkedin} target="_blank" rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-pine/20 px-3 py-1.5 text-xs font-semibold text-pine-deep transition-colors hover:border-pine/45 hover:bg-pine/[0.06]">
+                  <LinkedInIcon className="h-3.5 w-3.5" /> LinkedIn profile <ExternalIcon className="h-3 w-3 text-ink/45" />
+                  <span className="sr-only">(opens in a new tab)</span>
+                </a>
+              )}
             </div>
           </div>
           {p.years.length > 0 && <div className="mt-5"><YearStrip allYears={allYears} years={p.years} /></div>}
@@ -154,6 +171,9 @@ export default function PersonDrawer({ person, canSeePrivate, allYears, position
             </ul>
             {!canSeePrivate && <p className="mt-2 text-xs text-ink/50">Phone numbers and personal emails are visible to exec only.</p>}
           </section>
+
+          {/* Career */}
+          {p.employment.length > 0 && <Career key={p.slug} jobs={p.employment} />}
 
           {/* Facts */}
           {(facts.length > 0 || p.otherInfo.length > 0) && (
@@ -206,6 +226,86 @@ export default function PersonDrawer({ person, canSeePrivate, allYears, position
         </div>
       </motion.div>
     </div>
+  );
+}
+
+// ------------------------------------------------------------------ career
+const SHOW_FIRST = 4;
+const STOP = new Set(["of", "the", "and", "&", "at", "for", "-", "–"]);
+const monogram = (company: string | null) =>
+  (company ?? "?").replace(/[(),.]/g, " ").split(/\s+/).filter((w) => w && !STOP.has(w.toLowerCase()))
+    .slice(0, 2).map((w) => w[0]!.toUpperCase()).join("") || "?";
+
+/** Employment history, newest first. Consecutive roles at one employer sit under
+ *  that employer (a promotion reads as one story, not two unrelated rows). */
+function Career({ jobs }: { jobs: Job[] }) {
+  const groups = groupJobs(jobs);
+  const [all, setAll] = useState(groups.length <= SHOW_FIRST + 1);
+  const shown = all ? groups : groups.slice(0, SHOW_FIRST);
+  return (
+    <section className="mt-8" aria-labelledby="fd-career">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 id="fd-career" className="font-sans text-xs font-semibold uppercase tracking-wide text-ink/55">Career</h3>
+        <span className="text-xs text-ink/45">{jobs.length} {jobs.length === 1 ? "role" : "roles"}</span>
+      </div>
+      <ol className="mt-2 divide-y divide-pine/8 rounded-2xl border border-pine/12">
+        {shown.map((g, i) => <EmployerItem key={i} group={g} />)}
+      </ol>
+      {!all && (
+        <button type="button" onClick={() => setAll(true)}
+          className="mt-2 rounded-full px-3 py-1.5 text-xs font-semibold text-pine hover:bg-pine/[0.07] hover:text-pine-deep">
+          Show {groups.length - SHOW_FIRST} earlier {groups.length - SHOW_FIRST === 1 ? "employer" : "employers"}
+        </button>
+      )}
+    </section>
+  );
+}
+
+function NowPill() {
+  return <span className="ml-2 inline-block rounded-full bg-marigold-soft/60 px-2 py-px align-[1px] text-[10px] font-semibold uppercase tracking-wide text-marigold-ink">Now</span>;
+}
+
+function Dates({ start, end, current }: { start: number | null; end: number | null; current: boolean }) {
+  const d = jobDates(start, end, current);
+  const len = jobLength(start, end, current);
+  if (!d) return null;
+  return <p className="mt-0.5 text-xs tabular-nums text-ink/55">{d}{len && <span className="text-ink/40"> · {len}</span>}</p>;
+}
+
+function EmployerItem({ group: g }: { group: JobGroup }) {
+  const single = g.jobs.length === 1;
+  const j = g.jobs[0];
+  return (
+    <li className="flex gap-3 px-4 py-3.5">
+      <span aria-hidden
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[13px] font-semibold ${g.current ? "bg-marigold-soft/55 text-marigold-ink" : "bg-pine/[0.07] text-pine-deep"}`}>
+        {monogram(g.company)}
+      </span>
+      <div className="min-w-0 flex-1">
+        {single ? (
+          <>
+            <p className="text-sm font-semibold leading-snug text-ink">{j.title ?? j.company}{j.current && <NowPill />}</p>
+            {j.title && j.company && <p className="text-sm leading-snug text-ink/75">{j.company}</p>}
+            <Dates start={j.start} end={j.end} current={j.current} />
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-semibold leading-snug text-ink">{g.company}{g.current && <NowPill />}</p>
+            <Dates start={g.start} end={g.end} current={g.current} />
+            {/* Roles at this employer, newest first, on a thin rail. */}
+            <ol className="mt-2.5 space-y-2.5 border-l border-pine/15 pl-3.5">
+              {g.jobs.map((x, i) => (
+                <li key={i} className="relative">
+                  <span aria-hidden className={`absolute -left-[18.5px] top-[7px] h-2 w-2 rounded-full ring-2 ring-paper ${x.current ? "bg-marigold" : "bg-pine/35"}`} />
+                  <p className="text-sm leading-snug text-ink/90">{x.title ?? "Role"}</p>
+                  <p className="text-xs tabular-nums text-ink/50">{jobDates(x.start, x.end, x.current)}</p>
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
+      </div>
+    </li>
   );
 }
 

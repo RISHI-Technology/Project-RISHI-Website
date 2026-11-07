@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import type { Section } from "@/components/fullDirectory/results";
-import { groupsOf, isCurrent, otherRoles, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
-import { ArrowRightIcon, ChevronIcon, GlobeIcon, GroupChip, Highlight, Initials, MoreRoles, YearStrip } from "@/components/fullDirectory/ui";
+import { currentRoleOf, groupsOf, isCurrent, otherRoles, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
+import { ArrowRightIcon, BriefcaseIcon, ChevronIcon, GlobeIcon, GroupChip, Highlight, Initials, MoreRoles, YearStrip } from "@/components/fullDirectory/ui";
 
 const TYPE_DOT = { exec: "bg-marigold", lead: "bg-pine", other: "bg-sage", member: "bg-ink/20" } as const;
 
@@ -57,6 +57,12 @@ export default function CardGrid({ sections, onOpen, tokens, allYears, grouped }
                             </span>
                           </span>
                         </span>
+                        {currentRoleOf(p) && (
+                          <span className="mt-3 flex items-start gap-1.5 text-xs text-ink/65" title={currentRoleOf(p)!}>
+                            <BriefcaseIcon className="mt-px h-3.5 w-3.5 shrink-0 text-ink/40" />
+                            <span className="line-clamp-2 min-w-0"><Highlight text={currentRoleOf(p)!} tokens={tokens} /></span>
+                          </span>
+                        )}
                         <span className="mt-4 block"><YearStrip allYears={allYears} years={p.years} focus={r.context.map((m) => m.year)} /></span>
                         <span className="mt-3 flex items-start gap-2 text-sm text-ink/85">
                           <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TYPE_DOT[role.type]}`} aria-hidden />

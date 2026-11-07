@@ -8,7 +8,7 @@
  *   node --env-file=.env.local scripts/import-full-directory.mjs --verify
  *
  *   --file <path>   spreadsheet to read (default: $FULL_DIRECTORY_XLSX, else
- *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v3.xlsx)
+ *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v6.xlsx)
  *   --dry-run       parse and print counts; write nothing
  *   --verify        read counts back from the database and compare with the sheet
  *
@@ -17,8 +17,15 @@
  * WHAT IS IMPORTED
  *   People       ← "All Members" (one row per person)
  *   Memberships  ← each year tab ("2015-2016" … "2026-2027") + "Alumni (years unknown)"
- *   Never read: the Read Me / Resolutions / Conflicts / Added from PDF tabs, and the
- *   Sources, Notes and "Paid dues?" columns of any tab.
+ *   Never read: the Read Me / Resolutions / Conflicts / Added from PDF / Coresignal log
+ *   tabs, and the Sources, Notes and "Paid dues?" columns of any tab. Cell shading
+ *   (provenance markup in the sheet) is never read either — only cell values.
+ *   Year tabs only supply per-year project group / position (and fill gaps).
+ *
+ * v6 COLUMNS (All Members, far right): LinkedIn, Current role, Employment history
+ *   (current & past) — one job per line, newest first, "Title, Company (2020–2024)" —
+ *   and Years at Berkeley ("2020–2024"). Needs migration-full-directory-v6.sql.
+ *   "(Coresignal)" labels in "Class year / Graduation" are stripped; only the year is kept.
  *
  * IDEMPOTENT: people are upserted on `slug`, memberships on (person_id, year), and
  * rows in these two tables that are no longer in the sheet are removed. Re-running
@@ -43,7 +50,7 @@ const opt = (f) => { const i = args.indexOf(f); return i !== -1 ? args[i + 1] : 
 const DRY = flag("--dry-run");
 const VERIFY = flag("--verify");
 const FILE = path.resolve(
-  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v3.xlsx")
+  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v6.xlsx")
     .replace(/^~(?=$|\/)/, os.homedir()),
 );
 
@@ -149,13 +156,14 @@ function parseSheet(xml, shared) {
 const YEAR_RE = /^(\d{4})-(\d{4})$/;
 const ALUMNI = "alumni";
 const ALUMNI_TAB = "Alumni (years unknown)";
-const SKIPPED_TABS = ["Read Me", "Resolutions", "Conflicts", "Added from PDF"];
+const SKIPPED_TABS = ["Read Me", "Resolutions", "Conflicts", "Added from PDF", "Coresignal log"];
 // Columns that are never read, from any tab.
 const NEVER_IMPORT = [/^sources/i, /^notes$/i, /dues/i];
 // Columns this script knows how to use, per kind of tab.
 const PEOPLE_COLUMNS = new Set([
   "Full Name", "Years in RISHI (from Drive data)", "Project Group(s) by year", "Position(s) by year",
   "Email(s)", "Phone(s)", "Class year / Graduation", "Major", "Joined RISHI", "Birthday", "India Trip(s)", "Other info",
+  "LinkedIn", "Current role", "Employment history (current & past)", "Years at Berkeley",
 ]);
 const YEAR_COLUMNS = new Set([
   "Full Name", "Project Group", "Position", "Email(s)", "Phone(s)", "Major", "Joined RISHI", "Birthday",
@@ -275,13 +283,71 @@ const NOT_EXEC = new Set(["director of technology"]);
 function positionType(p) {
   const s = p.toLowerCase().replace(/\(.*?\)/g, "").trim();
   if (NOT_EXEC.has(s)) return "other";
-  if (/\bpresident\b|\bvice president\b|\bvp\b|\bdirector\b|^exec\b|\btreasurer\b|\bsecretary\b/.test(s)) return "exec";
+  if (/\bco-?founder\b|\bpresident\b|\bvice president\b|\bvp\b|\bdirector\b|^exec\b|\btreasurer\b|\bsecretary\b/.test(s)) return "exec";
   if (/\blead\b/.test(s)) return "lead";
   if (!s || /^(general |new )?member$/.test(s) || /\bmember$/.test(s)) return "member";
   return "other";
 }
 const membershipType = (positions) =>
   positions.map(positionType).reduce((best, t) => (TYPE_RANK[t] > TYPE_RANK[best] ? t : best), "member");
+
+// Titles the club has confirmed that the sheet doesn't record (keys: nameKey).
+// Added to the person's earliest membership (their "alumni" one if no years are
+// known), merged with whatever the sheet says — never replacing it.
+const TITLE_OVERRIDES = {
+  "abhishek gupta": ["Co-founder", "President"], // co-founded UC Berkeley Project RISHI
+};
+
+// Employment, Berkeley years -------------------------------------------------
+// A company name that itself contains ", " — keep these glued to the company.
+const COMPANY_SUFFIX = /^(inc\.?|llc|l\.l\.c\.|llp|pllc|ltd\.?|limited|co\.?|corp\.?|corporation|plc|gmbh|s\.a\.|n\.a\.|pc|p\.c\.|md|m\.d\.|phd|dds|dmd|do|jd|esq\.?)$/i;
+const UNIVERSITY = /^(university of|uc\s|the university of)/i;
+/** "Senior PM, Acme, Inc. (2021–present)" → { title, company, start, end, current } */
+function jobOf(line) {
+  const s = line.replace(/\s+/g, " ").trim();
+  // Dates: "(2020–2024)", "(2023–present)", "(2022)". Years only — no months.
+  const d = s.match(/\s*\((\d{4})\s*(?:[–—-]\s*(\d{4}|present|current|now))?\)\s*$/i);
+  const body = d ? s.slice(0, d.index).trim() : s;
+  const start = d ? Number(d[1]) : null;
+  const current = !!d?.[2] && !/^\d{4}$/.test(d[2]);
+  const end = d ? (d[2] === undefined ? start : current ? null : Number(d[2])) : null;
+  if (!d) warn(`an employment line has no dates (kept, undated)`);
+
+  let title = body, company = null;
+  const seg = body.split(", ");
+  if (seg.length > 1) {
+    // Glue "…, Inc." / "…, MD" back onto the name before it.
+    for (let i = seg.length - 1; i > 0; i--)
+      if (COMPANY_SUFFIX.test(seg[i])) seg.splice(i - 1, 2, `${seg[i - 1]}, ${seg[i]}`);
+    // The company is the last part — except "University of California, Berkeley[, …]",
+    // which is one employer however many commas it has. Titles may contain commas
+    // ("Director, Product Management, Motive").
+    const uni = seg.findIndex((x, i) => i > 0 && UNIVERSITY.test(x));
+    const at = uni > 0 ? uni : seg.length - 1;
+    title = at > 0 ? seg.slice(0, at).join(", ") : null;
+    company = seg.slice(at).join(", ");
+  } else {
+    const m = body.match(/^(.*\S)\s+(?:at|@)\s+(\S.*)$/);
+    if (m) { title = m[1]; company = m[2]; }
+  }
+  return { title: nullIf(title), company: nullIf(company), start, end, current };
+}
+const employmentOf = (cell) => lines(cell).map(jobOf);
+
+/** "2020–2024" → { text, start, end }; "–2024" → end only. */
+function berkeleyYearsOf(raw) {
+  const s = (raw ?? "").replace(/\s+/g, "").trim();
+  if (!s) return { text: null, start: null, end: null };
+  const m = s.match(/^(\d{4})?[–—-](\d{4})?$/) ?? s.match(/^(\d{4})()$/);
+  if (!m) { warn(`unrecognised Years at Berkeley value kept as-is`); return { text: s, start: null, end: null }; }
+  const start = m[1] ? Number(m[1]) : null, end = m[2] ? Number(m[2]) : null;
+  const text = start && end ? `${start}–${end}` : start ? `${start}–` : `–${end}`;
+  return { text, start, end };
+}
+const linkedinOf = (raw) => {
+  const s = nullIf(raw);
+  return s ? s.replace(/^(?!https?:\/\/)/, "https://") : null;
+};
 
 // Trips, joined, graduation ---------------------------------------------------
 /** "India trip 25" / "India Trip 2017 (detail)" → { trip: "India Trip 2025", detail } */
@@ -317,7 +383,10 @@ function build(file) {
     const name = (r["Full Name"] ?? "").replace(/\s+/g, " ").trim();
     if (!name) throw new Error(`All Members row ${i + 2} has no name`);
     const standing = {}; let grad = null;
-    for (const l of lines(r["Class year / Graduation"])) {
+    for (const l0 of lines(r["Class year / Graduation"])) {
+      // "(Coresignal)" says where a value came from — strip it, keep the year.
+      const l = l0.replace(/\s*\(\s*coresignal\s*\)/gi, "").trim();
+      if (!l) continue;
       const y = l.match(/^(\d{4}-\d{4}):\s*(.+)$/);
       if (y) { standing[y[1]] = y[2].trim(); continue; }
       const g = l.match(/^grad:.*?(\d{4})\D*$/i);
@@ -341,6 +410,7 @@ function build(file) {
       if (t) { trips.push(t.trip); if (t.detail) other.push({ label: t.trip, value: t.detail }); }
     }
     const joined = joinedOf(r["Joined RISHI"]);
+    const berkeley = berkeleyYearsOf(r["Years at Berkeley"]);
     return {
       key: nameKey(name), name,
       listedYears: (r["Years in RISHI (from Drive data)"] ?? "").split(",").map((s) => s.trim()).filter((s) => YEAR_RE.test(s)),
@@ -348,7 +418,12 @@ function build(file) {
       positionsByYear: byYear(r["Position(s) by year"]),
       emails: emailsOf(r["Email(s)"]), phones: phonesOf(r["Phone(s)"]),
       standing, grad, major: nullIf(r["Major"]), joined: joined.joined, joinedApprox: joined.approx,
-      birthday: nullIf(r["Birthday"]), trips, hindi, linkedin, postGrad, other,
+      birthday: nullIf(r["Birthday"]), trips, hindi, postGrad, other,
+      // The v6 LinkedIn column wins; older sheets had it as an "Other info" line.
+      linkedin: linkedinOf(r["LinkedIn"]) ?? linkedin,
+      currentJob: nullIf(r["Current role"]),
+      employment: employmentOf(r["Employment history (current & past)"]),
+      berkeley,
       memberships: [],
     };
   });
@@ -402,6 +477,22 @@ function build(file) {
         hiatus: null, hindi: nullIf(r["Hindi"]), india_trip: trip?.trip ?? null,
       });
     }
+  }
+
+  // ---- confirmed titles the sheet doesn't record
+  for (const [key, titles] of Object.entries(TITLE_OVERRIDES)) {
+    const hits = byName.get(key) ?? [];
+    if (hits.length !== 1) { warn(`title override for "${key}" matches ${hits.length} people — skipped`); continue; }
+    const p = hits[0];
+    let m = [...p.memberships].sort((a, b) => (a.year_start ?? -1) - (b.year_start ?? -1))[0];
+    if (!m) {
+      m = { year: ALUMNI, year_start: null, project_group_raw: null, project_groups: [], not_yet_placed: false,
+        position_raw: null, positions: [], position_type: "member", class_standing: null, semesters_in_rishi: null,
+        hiatus: null, hindi: null, india_trip: null };
+      p.memberships.push(m);
+    }
+    m.positions = uniq([...titles, ...m.positions.filter((x) => positionType(x) !== "member")]);
+    m.position_type = membershipType(m.positions);
   }
 
   // ---- finish people: years, grad year, slugs
@@ -462,7 +553,10 @@ function personRow(p, now) {
     grad_year: p.grad, grad_year_inferred: p.gradInferred, class_standing: p.standing,
     major: p.major, joined_rishi: p.joined, joined_rishi_approx: p.joinedApprox, birthday: p.birthday,
     india_trips: [...p.trips].sort(), hindi_level: p.hindi, linkedin: p.linkedin, post_grad_plans: p.postGrad,
-    other_info: p.other, years_active: p.years, first_year: p.first, last_year: p.last, updated_at: now,
+    other_info: p.other, years_active: p.years, first_year: p.first, last_year: p.last,
+    current_job: p.currentJob, employment_history: p.employment,
+    berkeley_years: p.berkeley.text, berkeley_start: p.berkeley.start, berkeley_end: p.berkeley.end,
+    updated_at: now,
   };
 }
 
@@ -495,6 +589,7 @@ function printSummary({ people, perTab, ignoredTabs, conflicts }) {
   console.log("\nPerson fields filled:");
   const filled = (f) => people.filter(f).length;
   console.log(`  emails ${filled((p) => p.emails.length)} · phones ${filled((p) => p.phones.length)} · grad year ${filled((p) => p.grad)} (${filled((p) => p.gradInferred)} inferred) · major ${filled((p) => p.major)} · joined ${filled((p) => p.joined)} · birthday ${filled((p) => p.birthday)} · India trip ${filled((p) => p.trips.length)} · Hindi ${filled((p) => p.hindi)} · LinkedIn ${filled((p) => p.linkedin)} · post-grad ${filled((p) => p.postGrad)}`);
+  console.log(`  current role ${filled((p) => p.currentJob)} · employment history ${filled((p) => p.employment.length)} (${people.reduce((n, p) => n + p.employment.length, 0)} jobs) · Years at Berkeley ${filled((p) => p.berkeley.text)}`);
   console.log(`  multiple emails: ${filled((p) => p.emails.length > 1)} · multiple phones: ${filled((p) => p.phones.length > 1)}`);
   const dupSlugs = people.filter((p) => p.slug !== slugify(p.name)).map((p) => p.slug);
   if (dupSlugs.length) console.log(`  disambiguated slugs: ${dupSlugs.join(", ")}`);
@@ -527,6 +622,23 @@ async function main() {
     const slugs = new Set(people.map((p) => p.slug));
     const strays = dbPeople.filter((p) => !slugs.has(p.slug));
     if (strays.length) { bad = true; console.log(`  people in db but not in the sheet: ${strays.length}`); }
+    // Field fill, read back from the database (counts only — never values).
+    const filledDb = await selectAll(client, PEOPLE, "id, linkedin, major, current_job, berkeley_years, employment_history, grad_year");
+    const nDb = (f) => filledDb.filter(f).length, nSheet = (f) => people.filter(f).length;
+    console.log("\n  Field                db  sheet");
+    for (const [label, fd, fs] of [
+      ["people total", () => true, () => true],
+      ["with LinkedIn", (r) => r.linkedin, (p) => p.linkedin],
+      ["with major", (r) => r.major, (p) => p.major],
+      ["with current role", (r) => r.current_job, (p) => p.currentJob],
+      ["with Years at Berkeley", (r) => r.berkeley_years, (p) => p.berkeley.text],
+      ["with employment history", (r) => r.employment_history?.length, (p) => p.employment.length],
+      ["with graduation year", (r) => r.grad_year, (p) => p.grad],
+    ]) {
+      const a = nDb(fd), b = nSheet(fs);
+      if (a !== b) bad = true;
+      console.log(`  ${label.padEnd(24)} ${String(a).padStart(3)}  ${String(b).padStart(3)}  ${a === b ? "✓" : "✗"}`);
+    }
     console.log(bad ? "\n✗ Database does not match the sheet." : "\n✓ Database matches the sheet.");
     process.exit(bad ? 1 : 0);
   }

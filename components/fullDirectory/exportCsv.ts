@@ -5,7 +5,7 @@
 import type { FullMembership } from "@/lib/fullDirectory/types";
 import { POSITION_TYPE_LABELS } from "@/lib/fullDirectory/types";
 import type { Match } from "@/components/fullDirectory/filters";
-import { longYear } from "@/components/fullDirectory/model";
+import { jobDates, longYear } from "@/components/fullDirectory/model";
 
 /** Quote a cell; neutralise spreadsheet formulas (but keep "+1 …" phone numbers readable). */
 function cell(v: string | number | null | undefined): string {
@@ -18,14 +18,16 @@ const byYearList = (ms: FullMembership[], f: (m: FullMembership) => string) =>
   ms.map((m) => { const v = f(m); return v ? `${longYear(m.year)}: ${v}` : ""; }).filter(Boolean).join("; ");
 
 export function buildCsv(rows: Match[], canSeePrivate: boolean, perYear: boolean): string {
-  const personHead = ["Name", "Years active", "Class of", "Major", "Joined RISHI", "Birthday", "India trips", "Hindi", "LinkedIn", "Post-grad plans", "Emails", ...(canSeePrivate ? ["Phones"] : [])];
+  const personHead = ["Name", "Years active", "Class of", "Major", "Joined RISHI", "Birthday", "India trips", "Hindi", "LinkedIn", "Post-grad plans", "Current role", "Employment history", "Years at Berkeley", "Emails", ...(canSeePrivate ? ["Phones"] : [])];
   const personCells = (m: Match) => {
     const p = m.person;
     return [
       p.name, p.years.map(longYear).join("; ") || "Alumni (years unknown)",
       p.gradYear ? `${p.gradYear}${p.gradYearInferred ? " (estimated)" : ""}` : "", p.major,
       p.joined ? `${p.joined}${p.joinedApprox ? " (approx.)" : ""}` : "", p.birthday, p.indiaTrips.join("; "), p.hindi,
-      p.linkedin, p.postGradPlans, p.emails.join("; "), ...(canSeePrivate ? [(p.phones ?? []).join("; ")] : []),
+      p.linkedin, p.postGradPlans, p.currentRole,
+      p.employment.map((j) => [[j.title, j.company].filter(Boolean).join(", "), jobDates(j.start, j.end, j.current)].filter(Boolean).join(" ")).join("; "),
+      p.berkeleyYears, p.emails.join("; "), ...(canSeePrivate ? [(p.phones ?? []).join("; ")] : []),
     ];
   };
   let lines: (string | number | null | undefined)[][];

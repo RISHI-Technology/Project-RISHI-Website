@@ -33,6 +33,16 @@ export type FullMembership = {
   indiaTrip: string | null;
 };
 
+/** One job from "Employment history (current & past)". Years only (no months). */
+export type Job = {
+  title: string | null;
+  company: string | null;
+  start: number | null;
+  /** null while `current` (or when undated). */
+  end: number | null;
+  current: boolean;
+};
+
 export type FullPerson = {
   slug: string;
   name: string;
@@ -50,6 +60,12 @@ export type FullPerson = {
   hindi: string | null;
   linkedin: string | null;
   postGradPlans: string | null;
+  /** "Current role" column, e.g. "Product Manager, Acme". */
+  currentRole: string | null;
+  /** Newest first. */
+  employment: Job[];
+  /** "2020–2024" (or "–2024" when only the end is known). */
+  berkeleyYears: string | null;
   otherInfo: { label: string; value: string }[];
   years: string[];
   firstYear: number | null;

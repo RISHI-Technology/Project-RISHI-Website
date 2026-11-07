@@ -2,7 +2,8 @@
 //  Full Directory — instant, typo-tolerant search (no dependencies).
 // ----------------------------------------------------------------------------
 //  Every query word must match somewhere in the person (name, emails, phones if
-//  the viewer has them, major, trips, class year, Hindi, other info) or in one of
+//  the viewer has them, major, trips, class year, Hindi, other info, current role,
+//  employers and job titles, years at Berkeley) or in one of
 //  their years (year, project group, position, class standing, trip).
 //
 //  Ranking rewards a SINGLE year matching every word, so "rainwater lead" puts
@@ -101,6 +102,10 @@ export function buildIndex(people: FullPerson[]): IndexEntry[] {
       p.major, ...p.indiaTrips, p.gradYear ? `class of ${p.gradYear} ${p.gradYear}` : "",
       p.hindi ? `hindi ${p.hindi}` : "", p.postGradPlans, p.joined, p.birthday,
       ...p.otherInfo.map((o) => `${o.label} ${o.value}`),
+      // Career: current role, every employer and title, and years at Berkeley
+      // ("2020–2024" is indexed as its two years).
+      p.currentRole, ...p.employment.flatMap((j) => [j.title, j.company]),
+      p.berkeleyYears ? `berkeley ${p.berkeleyYears.replace(/[–—-]/g, " ")}` : "",
     ].filter(Boolean).join(" ")),
     years: p.memberships.map((m) => ({
       m,

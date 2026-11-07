@@ -10,7 +10,7 @@
 // ============================================================================
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { FullMembership, FullPerson, PositionType } from "@/lib/fullDirectory/types";
+import type { FullMembership, FullPerson, Job, PositionType } from "@/lib/fullDirectory/types";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -42,6 +42,8 @@ type PersonRow = {
   india_trips: string[] | null; hindi_level: string | null; linkedin: string | null;
   post_grad_plans: string | null; other_info: { label: string; value: string }[] | null;
   years_active: string[] | null; first_year: number | null; last_year: number | null;
+  // v6 (migration-full-directory-v6.sql) — absent until that migration has run.
+  current_job?: string | null; employment_history?: Partial<Job>[] | null; berkeley_years?: string | null;
 };
 type MembershipRow = {
   person_id: string; year: string; year_start: number | null; project_groups: string[] | null;
@@ -50,8 +52,30 @@ type MembershipRow = {
   hindi: string | null; india_trip: string | null;
 };
 
-const PERSON_COLUMNS =
+const BASE_PERSON_COLUMNS =
   "id, slug, full_name, emails, phones, grad_year, grad_year_inferred, major, joined_rishi, joined_rishi_approx, birthday, india_trips, hindi_level, linkedin, post_grad_plans, other_info, years_active, first_year, last_year";
+const PERSON_COLUMNS = `${BASE_PERSON_COLUMNS}, current_job, employment_history, berkeley_years`;
+
+/** People with the v6 columns — or without them if that migration hasn't run yet,
+ *  so deploying the code before the migration doesn't take the directory down. */
+async function selectPeople(): Promise<PersonRow[]> {
+  try {
+    return await selectAll<PersonRow>("directory_people", PERSON_COLUMNS);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    if (!/current_job|employment_history|berkeley_years/.test(msg)) throw e;
+    return selectAll<PersonRow>("directory_people", BASE_PERSON_COLUMNS);
+  }
+}
+
+const int = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+function jobsOf(raw: PersonRow["employment_history"]): Job[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((j) => ({ title: str(j?.title), company: str(j?.company), start: int(j?.start), end: int(j?.end), current: j?.current === true }))
+    .filter((j) => j.title || j.company);
+}
 const MEMBERSHIP_COLUMNS =
   "person_id, year, year_start, project_groups, not_yet_placed, positions, position_type, class_standing, semesters_in_rishi, hiatus, hindi, india_trip";
 
@@ -60,7 +84,7 @@ const isBerkeley = (e: string) => /@berkeley\.edu$/i.test(e.trim());
 /** The whole directory, with private fields stripped unless `canSeePrivate`. */
 export async function listFullDirectory(canSeePrivate: boolean): Promise<FullPerson[]> {
   const [people, memberships] = await Promise.all([
-    selectAll<PersonRow>("directory_people", PERSON_COLUMNS),
+    selectPeople(),
     selectAll<MembershipRow>("directory_memberships", MEMBERSHIP_COLUMNS),
   ]);
 
@@ -99,6 +123,9 @@ export async function listFullDirectory(canSeePrivate: boolean): Promise<FullPer
         hindi: p.hindi_level,
         linkedin: p.linkedin,
         postGradPlans: p.post_grad_plans,
+        currentRole: p.current_job ?? null,
+        employment: jobsOf(p.employment_history),
+        berkeleyYears: p.berkeley_years ?? null,
         otherInfo: p.other_info ?? [],
         years: p.years_active ?? [],
         firstYear: p.first_year,
