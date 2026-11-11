@@ -52,7 +52,10 @@ export type FullPerson = {
   phones?: string[];
   gradYear: number | null;
   gradYearInferred: boolean;
+  /** Exactly as entered — what the profile, table, search and CSV show. */
   major: string | null;
+  /** `major` split into individual majors, for the Major filter only. */
+  majors: string[];
   joined: string | null;
   joinedApprox: boolean;
   birthday: string | null;

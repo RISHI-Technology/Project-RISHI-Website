@@ -11,6 +11,7 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { FullMembership, FullPerson, Job, PositionType } from "@/lib/fullDirectory/types";
+import { majorLists } from "@/lib/fullDirectory/majors";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -107,8 +108,9 @@ export async function listFullDirectory(canSeePrivate: boolean): Promise<FullPer
     byPerson.set(m.person_id, list);
   }
 
+  const majorsOf = majorLists(people.map((p) => p.major));
   return people
-    .map((p) => {
+    .map((p, i) => {
       const person: FullPerson = {
         slug: p.slug,
         name: p.full_name,
@@ -116,6 +118,7 @@ export async function listFullDirectory(canSeePrivate: boolean): Promise<FullPer
         gradYear: p.grad_year,
         gradYearInferred: p.grad_year_inferred,
         major: p.major,
+        majors: majorsOf[i],
         joined: p.joined_rishi,
         joinedApprox: p.joined_rishi_approx,
         birthday: p.birthday,

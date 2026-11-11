@@ -185,7 +185,7 @@ export function applyFilters(people: FullPerson[], s: DirState, canSeePrivate: b
       if (!(anyTrip ? p.indiaTrips.length > 0 : p.indiaTrips.some((t) => s.trips.includes(t)))) continue;
     }
     if (use("grads") && s.grads.length && !(p.gradYear && s.grads.includes(String(p.gradYear)))) continue;
-    if (use("majors") && s.majors.length && !(p.major && s.majors.includes(p.major))) continue;
+    if (use("majors") && s.majors.length && !p.majors.some((m) => s.majors.includes(m))) continue;
     if (use("companies") && s.companies.length && !personCompanies(p).some((c) => s.companies.includes(c))) continue;
     if (use("hindi") && s.hindi.length && !personHindi(p).some((h) => s.hindi.includes(h))) continue;
     if (use("status") && s.status === "current" && !isCurrent(p)) continue;
@@ -230,7 +230,7 @@ export function facetOptions(people: FullPerson[], s: DirState, canSeePrivate: b
   const posC = tally(base("positions"), (m) => m.context.flatMap((x) => x.positions));
   const tripC = tally(base("trips"), (m) => [...m.person.indiaTrips, ...(m.person.indiaTrips.length ? ["any"] : [])]);
   const gradC = tally(base("grads"), (m) => (m.person.gradYear ? [String(m.person.gradYear)] : []));
-  const majorC = tally(base("majors"), (m) => (m.person.major ? [m.person.major] : []));
+  const majorC = tally(base("majors"), (m) => m.person.majors);
   const hindiC = tally(base("hindi"), (m) => personHindi(m.person));
   const companyC = tally(base("companies"), (m) => personCompanies(m.person));
   const statusC = tally(base("status"), (m) => [isCurrent(m.person) ? "current" : "alumni"]);
@@ -259,7 +259,7 @@ export function facetOptions(people: FullPerson[], s: DirState, canSeePrivate: b
     ],
     grads: distinct((p) => (p.gradYear ? [String(p.gradYear)] : [])).sort().reverse()
       .map((g) => ({ value: g, label: `Class of ${g}`, count: count(gradC, g), hint: inferredGrad.has(g) && !statedGrad.has(g) ? "estimated" : inferredGrad.has(g) ? "some estimated" : undefined })),
-    majors: distinct((p) => (p.major ? [p.major] : [])).sort((a, b) => a.localeCompare(b))
+    majors: distinct((p) => p.majors).sort((a, b) => a.localeCompare(b))
       .map((m) => ({ value: m, label: m, count: count(majorC, m) })),
     companies: distinct(personCompanies).sort((a, b) => a.localeCompare(b))
       .map((c) => ({ value: c, label: c, count: count(companyC, c) })),
