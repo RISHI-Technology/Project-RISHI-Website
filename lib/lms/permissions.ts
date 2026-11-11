@@ -7,16 +7,56 @@
 //  truth — the UI is just a convenience.
 // ============================================================================
 
-import { MEMBERS, canSeeMember, type Member } from "@/lib/members";
-import type { ClubEvent, EventScopeKind, ProjectGroup, Task } from "@/lib/lms/types";
+import { INTERN_SUPERVISOR_EMAILS, MEMBERS, canSeeMember, memberInterns, type Member } from "@/lib/members";
+import { INTERN_TYPES, type ClubEvent, type EventScopeKind, type InternType, type ProjectGroup, type Task } from "@/lib/lms/types";
 
 const eq = (a?: string | null, b?: string | null) =>
   !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
 
+// -------------------------------------------------------------------- interns
+//  Each kind of intern has its own supervisors, who may assign them tasks and
+//  create events for them:
+//    Finance    → every Director of Finance
+//    Technology → the Director of Technology
+//    India Trip → the Director of International Affairs / Initiatives
+//    Outreach   → the Director of Outreach
+//    Marketing  → named people (INTERN_SUPERVISOR_EMAILS in members.ts)
+//  This only ADDS reach: it never takes away anything a role already grants.
+
+/** The kinds of intern this member supervises. */
+export function supervisedInternTypes(m: Member): InternType[] {
+  const r = m.roles;
+  const byRole: Record<InternType, boolean> = {
+    Finance: r.financeDirector,
+    Technology: r.techDirector,
+    "India Trip": r.internationalDirector,
+    Outreach: r.outreach,
+    Marketing: false,
+  };
+  const email = m.email.trim().toLowerCase();
+  return INTERN_TYPES.filter(
+    (t) => byRole[t] || (INTERN_SUPERVISOR_EMAILS[t] ?? []).some((e) => e.toLowerCase() === email),
+  );
+}
+
+/** Is `target` an intern of a kind that `supervisor` supervises? */
+export function isSupervisedIntern(supervisor: Member, target: Member): boolean {
+  const mine = supervisedInternTypes(supervisor);
+  if (mine.length === 0) return false;
+  return memberInterns(target).some((t) => mine.includes(t));
+}
+
+/** Supervises at least one current intern. Gates the "Assign a task" /
+ *  "Create event" buttons, so a director with no interns yet (e.g. India Trip)
+ *  doesn't get an empty picker. Turns on by itself once an intern is added. */
+export function supervisesAnyIntern(m: Member): boolean {
+  return supervisedInternTypes(m).length > 0 && MEMBERS.some((x) => isSupervisedIntern(m, x));
+}
+
 // ---------------------------------------------------------------- task assign
 /** Can this member assign tasks to anyone at all? */
 export function canAssignTasks(m: Member): boolean {
-  return m.roles.lead || m.roles.nmtLeader || m.roles.vpp;
+  return m.roles.lead || m.roles.nmtLeader || m.roles.vpp || supervisesAnyIntern(m);
 }
 
 /** Can `assigner` assign a task to `assignee`? */
@@ -24,6 +64,7 @@ export function canAssignTaskTo(assigner: Member, assignee: Member): boolean {
   if (assigner.roles.vpp) return true; // VP/P → anyone in the club
   if (assigner.roles.lead && assignee.group === assigner.group) return true; // Lead → own group (incl. self)
   if (assigner.roles.nmtLeader && assignee.roles.newbie) return true; // NMT leader → newbies
+  if (isSupervisedIntern(assigner, assignee)) return true; // Director → their interns
   return false;
 }
 
@@ -103,7 +144,7 @@ export function canUnmarkTask(actor: Member, task: Task): boolean {
 // --------------------------------------------------------------- event create
 /** Can this member create events at all? */
 export function canCreateEvents(m: Member): boolean {
-  return m.roles.nmtLeader || m.roles.lead || m.roles.internal || m.roles.vpp;
+  return m.roles.nmtLeader || m.roles.lead || m.roles.internal || m.roles.vpp || supervisesAnyIntern(m);
 }
 
 /** Which audience options this member may pick from when creating an event. */
@@ -122,6 +163,9 @@ export function allowedEventScopes(m: Member): EventScopeKind[] {
     s.add("group");
     s.add("club");
   }
+  // Intern supervisors: specific members (their interns; the "All Finance
+  // Interns" style shortcuts in the form are saved as this same scope).
+  if (supervisesAnyIntern(m)) s.add("members");
   return Array.from(s);
 }
 
@@ -142,6 +186,7 @@ export function targetableGroups(m: Member): ProjectGroup[] {
  *   - Internal / VP/P → anyone in the club.
  *   - Lead           → only members of their OWN project group.
  *   - NMT leader     → newbies (NMT events target new members).
+ *   - Intern supervisor → the interns they supervise.
  * Roles stack (e.g. a Lead who is also an NMT leader gets both sets).
  */
 export function targetableMembers(m: Member): Member[] {
@@ -149,6 +194,7 @@ export function targetableMembers(m: Member): Member[] {
     const picked = new Map<string, Member>();
     if (m.roles.lead) MEMBERS.filter((x) => x.group === m.group).forEach((x) => picked.set(x.email, x));
     if (m.roles.nmtLeader) MEMBERS.filter((x) => x.roles.newbie).forEach((x) => picked.set(x.email, x));
+    MEMBERS.filter((x) => isSupervisedIntern(m, x)).forEach((x) => picked.set(x.email, x));
     return Array.from(picked.values());
   })();
   return list.filter((x) => canSeeMember(m.email, x));
@@ -185,14 +231,64 @@ export function peerEmails(creator: Member): string[] {
   return Array.from(set);
 }
 
-/** Assigner emails whose tasks `me` may see/manage (me + co-leads + co-NMT). */
+//  CO-INTERN-SUPERVISORS work the same way, but only over intern work: when
+//  the assignee is an intern of a kind that BOTH the creator and another
+//  person supervise, that other person shares full control. E.g. Thanuj and
+//  Sachit (both Directors of Finance) co-manage each other's tasks for Finance
+//  interns, but Thanuj gets no say over Sachit's tasks for Tech interns.
+
+/** Everyone besides `creator` who co-supervises the kind of intern `target`
+ *  is (lower-case emails). Empty when `target` isn't such an intern. */
+export function coInternSupervisorEmails(creator: Member, target: Member): string[] {
+  const shared = memberInterns(target).filter((t) => supervisedInternTypes(creator).includes(t));
+  if (shared.length === 0) return [];
+  const self = creator.email.toLowerCase();
+  return MEMBERS.filter(
+    (m) => m.email.toLowerCase() !== self && supervisedInternTypes(m).some((t) => shared.includes(t)),
+  ).map((m) => m.email.toLowerCase());
+}
+
+/** People who supervise at least one of the same intern kinds as `me`
+ *  (excluding `me`): whose intern tasks `me` might co-manage. */
+export function coInternSupervisorsOf(me: Member): string[] {
+  const mine = supervisedInternTypes(me);
+  if (mine.length === 0) return [];
+  const self = me.email.toLowerCase();
+  return MEMBERS.filter(
+    (m) => m.email.toLowerCase() !== self && supervisedInternTypes(m).some((t) => mine.includes(t)),
+  ).map((m) => m.email.toLowerCase());
+}
+
+const memberByEmail = (e: string) => MEMBERS.find((m) => eq(m.email, e));
+
+/** Shared control through co-supervising this task's intern assignee. */
+function coManagesInternTask(actor: Member, task: Task): boolean {
+  const creator = memberByEmail(task.assignerEmail);
+  const assignee = memberByEmail(task.assigneeEmail);
+  if (!creator || !assignee) return false;
+  return coInternSupervisorEmails(creator, assignee).includes(actor.email.toLowerCase());
+}
+
+/** Everyone who manages this task: assigner + co-leads / co-NMT + co-intern-supervisors. */
+export function taskManagerEmails(task: Task): string[] {
+  const creator = memberByEmail(task.assignerEmail);
+  if (!creator) return [task.assignerEmail.trim().toLowerCase()];
+  const assignee = memberByEmail(task.assigneeEmail);
+  const set = new Set(peerEmails(creator));
+  if (assignee) coInternSupervisorEmails(creator, assignee).forEach((e) => set.add(e));
+  return Array.from(set);
+}
+
+/** Assigner emails whose tasks `me` may see/manage (me + co-leads + co-NMT +
+ *  co-intern-supervisors). Wider than what `me` may manage for the last group:
+ *  callers narrow those rows with canManageTask. */
 export function visibleAssignerEmails(me: Member): string[] {
-  return peerEmails(me);
+  return Array.from(new Set([...peerEmails(me), ...coInternSupervisorsOf(me)]));
 }
 
 /** Can `actor` edit / delete / archive / approve this task? */
 export function canManageTask(actor: Member, task: Task): boolean {
-  return peerEmails(actor).includes(task.assignerEmail.trim().toLowerCase());
+  return peerEmails(actor).includes(task.assignerEmail.trim().toLowerCase()) || coManagesInternTask(actor, task);
 }
 
 /** Who may comment on a task: the people RELEVANT to it — its managers (the
@@ -204,7 +300,17 @@ export function canCommentOnTask(actor: Member, task: Task): boolean {
 
 /** Can `actor` edit / delete / archive this event? */
 export function canManageEvent(actor: Member, event: ClubEvent): boolean {
-  return peerEmails(actor).includes(event.creatorEmail.trim().toLowerCase());
+  if (peerEmails(actor).includes(event.creatorEmail.trim().toLowerCase())) return true;
+  // Co-intern-supervisor: an intern event (specific members, every one of
+  // them an intern `actor` co-supervises with the creator).
+  if (event.scopeKind !== "members" || event.scopeEmails.length === 0) return false;
+  const creator = memberByEmail(event.creatorEmail);
+  if (!creator) return false;
+  const me = actor.email.toLowerCase();
+  return event.scopeEmails.every((e) => {
+    const target = memberByEmail(e);
+    return !!target && coInternSupervisorEmails(creator, target).includes(me);
+  });
 }
 
 // ----------------------------------------------------------- role display
@@ -214,6 +320,7 @@ export function roleLabels(r: import("@/lib/lms/types").RoleFlags): string[] {
   if (r.vpp) out.push("VP / President");
   if (r.exec) out.push("Exec");
   if (r.outreach) out.push("Director of Outreach");
+  if (r.techDirector) out.push("Director of Technology");
   if (r.lead) out.push("Project Lead");
   if (r.internal) out.push("Internal");
   if (r.nmtLeader) out.push("New Member Training Leader");

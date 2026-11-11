@@ -10,6 +10,7 @@ import { useSeenMarks } from "@/components/useSeenMarks";
 import ActivePill from "@/components/ActivePill";
 import { Block, Line, SkeletonRegion, useShowAfter } from "@/components/Skeleton";
 import { isPendingDelete, toast, undoable } from "@/components/Toast";
+import { INTERN_ALL_LABELS, type InternType } from "@/lib/lms/types";
 
 // ----- types mirrored from the API JSON -----
 type Group = "E" | "R" | "W" | "H";
@@ -23,7 +24,7 @@ type Roles = {
   nmtLeader: boolean; newbie: boolean; lead: boolean;
   internal: boolean; vpp: boolean; exec: boolean;
 };
-type Lite = { email: string; name: string; group: Group; avatar?: string | null; lead?: boolean; nmt?: boolean; exec?: boolean; vpp?: boolean };
+type Lite = { email: string; name: string; group: Group; avatar?: string | null; lead?: boolean; nmt?: boolean; exec?: boolean; vpp?: boolean; interns?: InternType[] };
 
 /** The two role cohorts offered in "Assign to" / "Who is it for?".
  *
@@ -41,6 +42,26 @@ const COHORT = {
 } as const;
 type CohortKey = keyof typeof COHORT;
 const cohortMembers = (members: Lite[], key: CohortKey) => members.filter(COHORT[key].match);
+
+/** "All Finance Interns" style options. Same contract as COHORT: a shortcut
+ *  that ticks people the picker already offers, re-checked server-side and
+ *  saved as ordinary individual assignees / a "Specific members" event. */
+type InternKey = `intern:${InternType}`;
+const internKey = (t: InternType) => `intern:${t}` as InternKey;
+const isInternKey = (k: string): k is InternKey => k.startsWith("intern:");
+const internOf = (k: InternKey) => k.slice("intern:".length) as InternType;
+/** Every shortcut that ticks a preset list of people. */
+type PickKey = CohortKey | InternKey;
+const isPickKey = (k: string): k is PickKey => k === "leads" || k === "exec" || isInternKey(k);
+const pickMembers = (members: Lite[], key: PickKey) =>
+  isInternKey(key) ? members.filter((m) => (m.interns ?? []).includes(internOf(key))) : cohortMembers(members, key);
+/** "leads", "exec members", "Finance Interns". */
+const pickNoun = (key: PickKey) =>
+  isInternKey(key) ? INTERN_ALL_LABELS[internOf(key)].replace(/^All /, "") : key === "leads" ? "leads" : "exec members";
+/** The intern shortcuts to offer: kinds this person supervises that have at
+ *  least one intern among `members`. */
+const internKeysFor = (types: InternType[] | undefined, members: Lite[]): InternKey[] =>
+  (types ?? []).map(internKey).filter((k) => pickMembers(members, k).length > 0);
 export type Meta = {
   me: { email: string; name: string; group: Group; roles: Roles };
   can: { assignTasks: boolean; createEvents: boolean };
@@ -51,6 +72,8 @@ export type Meta = {
   targetableGroups: Group[];
   eventMemberTargets: Lite[];
   allMembers: Lite[];
+  /** Kinds of intern this person supervises (drives "All Finance Interns"). */
+  internTypes?: InternType[];
 };
 type EmailTemplate = { subject: string; bodyHtml: string };
 type HistoryAction = "created" | "submitted" | "approved" | "rejected" | "unmarked" | "edited" | "nudged";
@@ -81,6 +104,8 @@ const SCOPE_LABEL: Record<Meta["eventScopes"][number] | CohortKey, string> = {
   leads: "Leads",
   exec: "Exec",
 };
+const scopeLabel = (s: keyof typeof SCOPE_LABEL | InternKey) =>
+  isInternKey(s) ? INTERN_ALL_LABELS[internOf(s)] : SCOPE_LABEL[s];
 
 const HISTORY_LABEL: Record<HistoryAction, string> = {
   created: "Created",
@@ -2109,19 +2134,19 @@ function MemberPicker({ members, selected, onToggle, single, onSetAll }: {
  *  members, narrowed to that cohort and ticked by default. Nothing here is
  *  stored as a cohort — the result is just the people who stay ticked. */
 function CohortPicker({ cohort, members, selected, onToggle, onSetAll }: {
-  cohort: CohortKey; members: Lite[]; selected: string[];
+  cohort: PickKey; members: Lite[]; selected: string[];
   onToggle: (email: string) => void; onSetAll: (emails: string[]) => void;
 }) {
-  const list = cohortMembers(members, cohort);
+  const list = pickMembers(members, cohort);
   if (list.length === 0) {
     return <p className="rounded-xl border border-pine/15 bg-pine/[0.03] px-3 py-2 text-sm text-ink/70">
-      Nobody is marked as {COHORT[cohort].label} right now.
+      {isInternKey(cohort) ? `There are no ${pickNoun(cohort)} right now.` : `Nobody is marked as ${COHORT[cohort].label} right now.`}
     </p>;
   }
   return (
     <div>
       <p className="mb-1.5 text-xs text-ink/70">
-        All {list.length} {cohort === "leads" ? "leads" : "exec members"} start ticked — untick anyone
+        All {list.length} {pickNoun(cohort)} start ticked — untick anyone
         who shouldn&apos;t get this.
       </p>
       <MemberPicker members={list} selected={selected} onToggle={onToggle} onSetAll={onSetAll} />
@@ -2149,15 +2174,17 @@ export function TaskForm({ meta, editing, editGroupAssignees, meetingId, onClose
   const cohortKeys = (meta.assignScopes.includes("club")
     ? (Object.keys(COHORT) as CohortKey[]).filter((k) => cohortMembers(meta.assignableMembers, k).length > 0)
     : []);
-  const scopes: Array<Meta["assignScopes"][number] | CohortKey> =
-    [...(meta.assignScopes.length ? meta.assignScopes : (["members"] as const)), ...cohortKeys];
-  const [scope, setScope] = useState<Meta["assignScopes"][number] | CohortKey>(isEdit ? "members" : scopes[0]);
+  // "All Finance Interns" etc. for whoever supervises that kind of intern.
+  const internKeys = internKeysFor(meta.internTypes, meta.assignableMembers);
+  const scopes: Array<Meta["assignScopes"][number] | PickKey> =
+    [...(meta.assignScopes.length ? meta.assignScopes : (["members"] as const)), ...cohortKeys, ...internKeys];
+  const [scope, setScope] = useState<Meta["assignScopes"][number] | PickKey>(isEdit ? "members" : scopes[0]);
 
-  // Picking Leads or Exec ticks everyone in it — the whole point is not having
-  // to select eight people by hand. Any of them can then be unticked.
+  // Picking Leads, Exec or an intern group ticks everyone in it — the whole
+  // point is not having to select eight people by hand. Any can be unticked.
   const chooseScope = (next: typeof scope) => {
     setScope(next);
-    if (next === "leads" || next === "exec") setAssignees(cohortMembers(meta.assignableMembers, next).map((m) => m.email));
+    if (isPickKey(next)) setAssignees(pickMembers(meta.assignableMembers, next).map((m) => m.email));
   };
   const [groups, setGroups] = useState<Group[]>(!isEdit && meta.assignableGroups.length === 1 ? meta.assignableGroups : []);
   const [busy, setBusy] = useState(false);
@@ -2244,11 +2271,11 @@ export function TaskForm({ meta, editing, editGroupAssignees, meetingId, onClose
             <div className="mt-1 space-y-3">
               {scopes.length > 1 && (
                 <select className={inputCls} style={{ marginTop: 0 }} value={scope} onChange={(e) => chooseScope(e.target.value as typeof scope)}>
-                  {scopes.map((s) => <option key={s} value={s}>{SCOPE_LABEL[s]}</option>)}
+                  {scopes.map((s) => <option key={s} value={s}>{scopeLabel(s)}</option>)}
                 </select>
               )}
               {scope === "members" && <MemberPicker members={meta.assignableMembers} selected={assignees} onToggle={toggleAssignee} />}
-              {(scope === "leads" || scope === "exec") && (
+              {isPickKey(scope) && (
                 <CohortPicker cohort={scope} members={meta.assignableMembers} selected={assignees}
                   onToggle={toggleAssignee} onSetAll={setAssignees} />
               )}
@@ -2328,12 +2355,13 @@ function EventForm({ meta, editing, onClose, onCreated }: { meta: Meta; editing?
   const eventCohorts = (meta.eventScopes.includes("club")
     ? (Object.keys(COHORT) as CohortKey[]).filter((k) => cohortMembers(meta.eventMemberTargets, k).length > 0)
     : []);
-  const eventScopeOptions: Array<Meta["eventScopes"][number] | CohortKey> = [...meta.eventScopes, ...eventCohorts];
-  const [scopeKind, setScopeKind] = useState<Meta["eventScopes"][number] | CohortKey>(editing?.scopeKind ?? meta.eventScopes[0]);
+  const eventScopeOptions: Array<Meta["eventScopes"][number] | PickKey> =
+    [...meta.eventScopes, ...eventCohorts, ...internKeysFor(meta.internTypes, meta.eventMemberTargets)];
+  const [scopeKind, setScopeKind] = useState<Meta["eventScopes"][number] | PickKey>(editing?.scopeKind ?? meta.eventScopes[0]);
   const [scopeEmails, setScopeEmails] = useState<string[]>(editing?.scopeEmails ?? []);
   const chooseEventScope = (next: typeof scopeKind) => {
     setScopeKind(next);
-    if (next === "leads" || next === "exec") setScopeEmails(cohortMembers(meta.eventMemberTargets, next).map((m) => m.email));
+    if (isPickKey(next)) setScopeEmails(pickMembers(meta.eventMemberTargets, next).map((m) => m.email));
   };
   const [scopeGroups, setScopeGroups] = useState<Group[]>(editing?.scopeGroups ?? (meta.targetableGroups.length === 1 ? meta.targetableGroups : []));
   const [busy, setBusy] = useState(false);
@@ -2354,7 +2382,7 @@ function EventForm({ meta, editing, onClose, onCreated }: { meta: Meta; editing?
         endIso = hasEnd && endAt ? new Date(endAt).toISOString() : null;
       }
       // A cohort pick is saved as the plain "members" audience it really is.
-      const isCohort = scopeKind === "leads" || scopeKind === "exec";
+      const isCohort = isPickKey(scopeKind);
       if (isCohort && scopeEmails.length === 0) throw new Error("Pick at least one person.");
       const payload = {
         title, description, startAt: startIso, endAt: endIso, allDay,
@@ -2408,13 +2436,13 @@ function EventForm({ meta, editing, onClose, onCreated }: { meta: Meta; editing?
         <div>
           <label className={labelCls}>Who is it for?</label>
           <select className={inputCls} value={scopeKind} onChange={(e) => chooseEventScope(e.target.value as typeof scopeKind)}>
-            {eventScopeOptions.map((s) => <option key={s} value={s}>{SCOPE_LABEL[s]}</option>)}
+            {eventScopeOptions.map((s) => <option key={s} value={s}>{scopeLabel(s)}</option>)}
           </select>
         </div>
 
-        {(scopeKind === "leads" || scopeKind === "exec") && (
+        {isPickKey(scopeKind) && (
           <div>
-            <label className={labelCls}>Which {SCOPE_LABEL[scopeKind].toLowerCase()}?</label>
+            <label className={labelCls}>Which {isInternKey(scopeKind) ? pickNoun(scopeKind) : SCOPE_LABEL[scopeKind].toLowerCase()}?</label>
             <div className="mt-1">
               <CohortPicker cohort={scopeKind} members={meta.eventMemberTargets} selected={scopeEmails}
                 onToggle={(email) => setScopeEmails((x) => x.includes(email) ? x.filter((y) => y !== email) : [...x, email])}

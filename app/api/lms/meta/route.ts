@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/lms/currentUser";
-import { MEMBERS, visibleMembers } from "@/lib/members";
+import { MEMBERS, memberInterns, visibleMembers } from "@/lib/members";
 import { getAvatars } from "@/lib/lms/store";
 import {
   allowedAssignScopes,
@@ -9,6 +9,7 @@ import {
   assignableMembers,
   canAssignTasks,
   canCreateEvents,
+  supervisedInternTypes,
   targetableGroups,
   targetableMembers,
 } from "@/lib/lms/permissions";
@@ -37,6 +38,8 @@ export async function GET() {
     // counted as Exec rather than silently dropped off an exec-wide task.
     exec: m.roles.exec,
     vpp: m.roles.vpp,
+    // Intern positions, for the "All Finance Interns" style picker options.
+    interns: memberInterns(m),
   });
   const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 
@@ -58,6 +61,8 @@ export async function GET() {
     eventScopes: allowedEventScopes(me),
     targetableGroups: targetableGroups(me),
     eventMemberTargets: targetableMembers(me).map(lite).sort(byName),
+    // Kinds of intern this person supervises → "All Finance Interns" etc.
+    internTypes: supervisedInternTypes(me),
     allMembers: visibleMembers(me.email).map(lite).sort(byName),
   });
 }

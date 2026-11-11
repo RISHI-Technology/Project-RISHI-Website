@@ -15,7 +15,7 @@ import {
   NOTIFY_SENDER,
   NOTIFY_FROM_NAME,
 } from "@/lib/lms/gmail";
-import { peerEmails } from "@/lib/lms/permissions";
+import { taskManagerEmails } from "@/lib/lms/permissions";
 import type { ClubEvent, Task } from "@/lib/lms/types";
 import { PROJECT_GROUP_LABELS } from "@/lib/lms/types";
 
@@ -109,9 +109,8 @@ export async function notifyTaskSubmitted(task: Task, note?: string | null): Pro
     note,
   );
   // Notify the task's managers: its assigner plus that assigner's co-leads /
-  // co-NMT-leaders — the people responsible for approving it.
-  const assigner = findMember(task.assignerEmail);
-  const managers = assigner ? peerEmails(assigner) : [task.assignerEmail.trim().toLowerCase()];
+  // co-NMT-leaders / co-intern-supervisors — the people who can approve it.
+  const managers = taskManagerEmails(task);
   const doerEmail = task.assigneeEmail.trim().toLowerCase();
   for (const email of managers) {
     if (email === doerEmail) continue; // never notify the doer of their own submission

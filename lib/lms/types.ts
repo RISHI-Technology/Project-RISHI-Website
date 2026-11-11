@@ -27,10 +27,38 @@ export type RoleFlags = {
   // Specific Exec titles (under the "exec" umbrella):
   financeDirector: boolean; // Director of Finance
   internationalDirector: boolean; // Director of International Affairs
+  /** Director of Technology. Not an exec title on its own; its only power is
+   *  over Technology interns (see supervisedInternTypes in permissions.ts). */
+  techDirector: boolean;
   // Specific VP/P titles (under the "vpp" umbrella):
   president: boolean;
   vpProjects: boolean; // VP of Projects
   vpInternal: boolean; // VP Internal
+};
+
+// ---- Interns ----
+/** Intern positions. An extra attribute on top of a member's roles: anyone can
+ *  hold one (or several) alongside any other role. */
+export type InternType = "Finance" | "Technology" | "India Trip" | "Marketing" | "Outreach";
+
+export const INTERN_TYPES: InternType[] = ["Finance", "Technology", "India Trip", "Marketing", "Outreach"];
+
+/** Singular title shown in the directory, e.g. "Finance Intern". */
+export const INTERN_LABELS: Record<InternType, string> = {
+  Finance: "Finance Intern",
+  Technology: "Technology Intern",
+  "India Trip": "India Trip Intern",
+  Marketing: "Marketing Intern",
+  Outreach: "Outreach Intern",
+};
+
+/** The "everyone of this kind" option in the task / event pickers. */
+export const INTERN_ALL_LABELS: Record<InternType, string> = {
+  Finance: "All Finance Interns",
+  Technology: "All Tech Interns",
+  "India Trip": "All India Trip Interns",
+  Marketing: "All Marketing Interns",
+  Outreach: "All Outreach Interns",
 };
 
 export type MemberProfile = {

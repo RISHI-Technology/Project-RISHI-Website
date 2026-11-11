@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentMember } from "@/lib/lms/currentUser";
 import { ensureRoster } from "@/lib/lms/roster";
-import { MEMBERS, ROLE_KEYS, type Member } from "@/lib/members";
+import { MEMBERS, ROLE_KEYS, memberInterns, type Member } from "@/lib/members";
 import type { RoleFlags } from "@/lib/lms/types";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,9 @@ function memberLine(m: Member): string {
     .map((k) => `${k}: true`)
     .join(", ");
   const hidden = m.hidden ? ", hidden: true" : "";
-  return `  { email: ${q(m.email)}, firstName: ${q(m.firstName)}, lastName: ${q(m.lastName)}, phone: ${q(m.phone ?? "")}, group: ${m.group ? q(m.group) : "null"}, roles: roles({ ${flags} })${hidden} },`;
+  const internList = memberInterns(m);
+  const interns = internList.length ? `, interns: [${internList.map(q).join(", ")}]` : "";
+  return `  { email: ${q(m.email)}, firstName: ${q(m.firstName)}, lastName: ${q(m.lastName)}, phone: ${q(m.phone ?? "")}, group: ${m.group ? q(m.group) : "null"}, roles: roles({ ${flags} })${interns}${hidden} },`;
 }
 
 /**

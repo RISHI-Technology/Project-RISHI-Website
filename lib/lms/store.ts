@@ -9,7 +9,7 @@ import crypto from "crypto";
 import { resolveStoredAvatar, storeAvatar } from "@/lib/lms/avatars";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Member } from "@/lib/members";
-import { visibleAssignerEmails } from "@/lib/lms/permissions";
+import { canManageEvent, canManageTask, visibleAssignerEmails } from "@/lib/lms/permissions";
 import type {
   ClubEvent,
   NewEventInput,
@@ -90,7 +90,7 @@ const eventFromRow = (r: any): ClubEvent => ({
 // Visibility: is this event relevant to the given member?
 function eventVisibleTo(e: ClubEvent, m: Member): boolean {
   if (eq(e.creatorEmail, m.email)) return true;
-  if (visibleAssignerEmails(m).includes(lc(e.creatorEmail))) return true; // co-leads / co-NMT
+  if (canManageEvent(m, e)) return true; // co-leads / co-NMT / co-intern-supervisors
   switch (e.scopeKind) {
     case "club":
       return true;
@@ -207,11 +207,13 @@ export async function listTasksForMember(member: Member, scope: "active" | "all"
     if (scope === "active") q = q.eq("archived", false).neq("status", "complete");
     const { data, error } = await q.order("due_at", { ascending: true });
     if (error) throw new Error(error.message);
-    return (data ?? []).map(taskFromRow);
+    // visibleAssignerEmails is a superset (co-intern-supervisors); keep only
+    // rows I am the doer of or can actually manage.
+    return (data ?? []).map(taskFromRow).filter((t) => eq(t.assigneeEmail, me) || canManageTask(member, t));
   }
   const peerSet = new Set(peers);
   return mem.tasks
-    .filter((t) => eq(t.assigneeEmail, me) || peerSet.has(lc(t.assignerEmail)))
+    .filter((t) => eq(t.assigneeEmail, me) || (peerSet.has(lc(t.assignerEmail)) && canManageTask(member, t)))
     .filter((t) => (scope === "active" ? active(t) : true))
     .sort((a, b) => a.dueAt.localeCompare(b.dueAt));
 }
@@ -225,11 +227,14 @@ export async function countPastTaskGroups(member: Member): Promise<number> {
     const inList = peers.map((e) => `"${e}"`).join(",");
     const { data, error } = await sb()
       .from("lms_tasks")
-      .select("group_id,id,archived,status")
+      .select("group_id,id,archived,status,assigner_email,assignee_email")
       .or(`assignee_email.eq.${me},assigner_email.in.(${inList})`);
     if (error) throw new Error(error.message);
     const byGroup = new Map<string, boolean>(); // group → every row finished?
     for (const r of data ?? []) {
+      // Same narrowing as listTasksForMember (co-intern-supervisors are a superset).
+      const row = { assignerEmail: r.assigner_email as string, assigneeEmail: r.assignee_email as string } as Task;
+      if (!eq(row.assigneeEmail, me) && !canManageTask(member, row)) continue;
       const key = (r.group_id as string) || (r.id as string);
       const done = !!r.archived || r.status === "complete";
       byGroup.set(key, (byGroup.get(key) ?? true) && done);
@@ -239,7 +244,7 @@ export async function countPastTaskGroups(member: Member): Promise<number> {
   const peerSet = new Set(peers);
   const byGroup = new Map<string, boolean>();
   for (const t of mem.tasks) {
-    if (!(eq(t.assigneeEmail, me) || peerSet.has(lc(t.assignerEmail)))) continue;
+    if (!(eq(t.assigneeEmail, me) || (peerSet.has(lc(t.assignerEmail)) && canManageTask(member, t)))) continue;
     const key = t.groupId || t.id;
     const done = t.archived || t.status === "complete";
     byGroup.set(key, (byGroup.get(key) ?? true) && done);

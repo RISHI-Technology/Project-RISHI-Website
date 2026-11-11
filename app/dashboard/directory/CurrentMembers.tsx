@@ -10,6 +10,8 @@ import { Block, Line, SkeletonRegion, useShowAfter } from "@/components/Skeleton
 type Entry = {
   loginEmail: string; name: string; role: string; group: string; email: string; phone: string;
   year: string; positionCategory: string; positionRank: number;
+  /** Extra positions, e.g. "Finance Intern". "" = none. */
+  other: string;
 };
 
 const YEAR_RANK: Record<string, number> = { Freshman: 1, Sophomore: 2, Junior: 3, Senior: 4, Graduate: 5 };
@@ -91,7 +93,7 @@ export default function DirectoryPage({ switcher }: { switcher?: ReactNode } = {
     const s = q.trim().toLowerCase();
     const byName = (a: Entry, b: Entry) => a.name.localeCompare(b.name);
     const list = entries.filter((e) => {
-      if (s && ![e.name, e.role, e.group, e.email, e.phone, e.year].some((f) => f.toLowerCase().includes(s))) return false;
+      if (s && ![e.name, e.role, e.group, e.email, e.phone, e.year, e.other ?? ""].some((f) => f.toLowerCase().includes(s))) return false;
       if (fGroup && e.group !== fGroup) return false;
       if (fPosition && e.positionCategory !== fPosition) return false;
       if (fYear === "__NONE__") { if (e.year) return false; }
@@ -176,7 +178,7 @@ export default function DirectoryPage({ switcher }: { switcher?: ReactNode } = {
               <table className="w-full min-w-[860px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-pine/12 bg-pine/[0.03] text-xs uppercase tracking-wide text-ink/70">
-                    {["Name", "Role", "Project Group", "Year", "Email", "Phone"].map((h) => (
+                    {["Name", "Role", "Project Group", "Year", "Email", "Phone", "Other"].map((h) => (
                       <th key={h} className="px-4 py-3 font-semibold">{h}</th>
                     ))}
                   </tr>
@@ -184,7 +186,7 @@ export default function DirectoryPage({ switcher }: { switcher?: ReactNode } = {
                 <tbody>
                   {Array.from({ length: 8 }, (_, r) => (
                     <tr key={r} className="border-b border-pine/8">
-                      {["65%", "50%", "60%", "30%", "80%", "60%"].map((w, c) => (
+                      {["65%", "50%", "60%", "30%", "80%", "60%", "40%"].map((w, c) => (
                         <td key={c} className="px-4 py-3"><Line w={w} /></td>
                       ))}
                     </tr>
@@ -242,6 +244,7 @@ export default function DirectoryPage({ switcher }: { switcher?: ReactNode } = {
                     <th className="px-4 py-3 font-semibold">Year</th>
                     <th className="px-4 py-3 font-semibold">Email</th>
                     <th className="px-4 py-3 font-semibold">Phone</th>
+                    <th className="px-4 py-3 font-semibold">Other</th>
                     {canEditAll && <th className="px-4 py-3 font-semibold"><span className="sr-only">Edit</span></th>}
                   </tr>
                 </thead>
@@ -262,6 +265,7 @@ export default function DirectoryPage({ switcher }: { switcher?: ReactNode } = {
                         <td className="px-4 py-3 text-ink/70">
                           {e.phone ? <a href={`tel:${e.phone}`} className="hover:underline">{e.phone}</a> : <span className="text-ink/65">—</span>}
                         </td>
+                        <td className="px-4 py-3 text-ink/70">{e.other || <span className="text-ink/65">&mdash;</span>}</td>
                         {canEditAll && (
                           <td className="px-4 py-3 text-right">
                             <button onClick={() => startEdit(e)} data-edit-contact={e.loginEmail}
@@ -272,7 +276,7 @@ export default function DirectoryPage({ switcher }: { switcher?: ReactNode } = {
                     );
                   })}
                   {filtered.length === 0 && (
-                    <tr><td colSpan={canEditAll ? 7 : 6} className="px-4 py-8 text-center text-ink/65">No members match your filters.</td></tr>
+                    <tr><td colSpan={canEditAll ? 8 : 7} className="px-4 py-8 text-center text-ink/65">No members match your filters.</td></tr>
                   )}
                 </tbody>
               </table>

@@ -14,12 +14,18 @@
  *  ROLES (Y/N in the spreadsheet):  nmtLeader, newbie, lead, internal,
  *                        vpp (VP/President), exec, outreach (Director of Outreach)
  *
+ *  INTERNS (optional):  interns: ["Finance" | "Technology" | "India Trip" |
+ *                        "Marketing" | "Outreach", ...]. An extra attribute on
+ *                        top of roles, so an intern can hold any other role too.
+ *                        Who supervises each kind: see supervisedInternTypes in
+ *                        lib/lms/permissions.ts.
+ *
  *  TO ADD A MEMBER: copy a line below, fill in their email, name, group, and
  *  roles. Capitalization of the email doesn't matter.
  * ============================================================================
  */
 
-import type { ProjectGroup, RoleFlags } from "@/lib/lms/types";
+import type { InternType, ProjectGroup, RoleFlags } from "@/lib/lms/types";
 import { PROJECT_GROUP_LABELS } from "@/lib/lms/types";
 import { devNull } from "os";
 
@@ -27,6 +33,7 @@ import { devNull } from "os";
 export const ROLE_KEYS = [
   "nmtLeader", "newbie", "lead", "internal", "vpp", "exec",
   "outreach", "webmaster", "financeDirector", "internationalDirector", "president", "vpProjects", "vpInternal",
+  "techDirector",
 ] as const;
 
 export type Member = {
@@ -40,6 +47,10 @@ export type Member = {
   phone?: string;
   /** Test accounts: only the owner + the account itself can see/select these. */
   hidden?: boolean;
+  /** Intern positions (Finance, Technology, ...). An extra attribute that sits
+   *  alongside `roles`: an intern can also be a newbie, a lead, anything. Read
+   *  it through memberInterns(), which also covers the sheet-backed roster. */
+  interns?: InternType[];
 };
 
 // Small helper so the list below stays short and readable.
@@ -55,6 +66,7 @@ export function roles(flags: Partial<RoleFlags>): RoleFlags {
     webmaster: false,
     financeDirector: false,
     internationalDirector: false,
+    techDirector: false,
     president: false,
     vpProjects: false,
     vpInternal: false,
@@ -68,8 +80,8 @@ export function roles(flags: Partial<RoleFlags>): RoleFlags {
  * dashboard always works even if Sheets/Supabase are down.
  */
 export const BASE_MEMBERS: Member[] = [
-  { email: "sachitk@berkeley.edu", firstName: "Sachit", lastName: "Kumar", phone: "9494069649", group: "E", roles: roles({ exec: true, financeDirector: true}) },
-  { email: "palakprabhakar1@berkeley.edu", firstName: "Palak", lastName: "Prabhakar", phone: "5106937982", group: "W", roles: roles({ lead: true }) },
+  { email: "sachitk@berkeley.edu", firstName: "Sachit", lastName: "Kumar", phone: "9494069649", group: "E", roles: roles({ exec: true, financeDirector: true, techDirector: true }) },
+  { email: "palakprabhakar1@berkeley.edu", firstName: "Palak", lastName: "Prabhakar", phone: "5106937982", group: "W", roles: roles({ lead: true }), interns: ["Technology"] },
   { email: "thanuj@berkeley.edu", firstName: "Thanuj", lastName: "Komatireddy", phone: "8186407964", group: "H", roles: roles({ exec: true, financeDirector: true }) },
   { email: "riaprathinidhi1@berkeley.edu", firstName: "Ria", lastName: "Prathinidhi", phone: "2246071782", group: "R", roles: roles({ lead: true }) },
   { email: "aarushimupparti@berkeley.edu", firstName: "Aarushi", lastName: "Mupparti", phone: "9257913510", group: "H", roles: roles({ lead: true }) },
@@ -84,7 +96,7 @@ export const BASE_MEMBERS: Member[] = [
   { email: "maiabergesv@berkeley.edu", firstName: "Maia", lastName: "Berges", phone: "2025158791", group: "R", roles: roles({ lead: true }) },
   { email: "sachitkumar2025@gmail.com", firstName: "SachitLead", lastName: "Kumar", phone: "", group: "W", roles: roles({ lead: true }), hidden: true },
   { email: "sachitkumar2020@gmail.com", firstName: "SachitInternal", lastName: "Kumar", phone: "", group: "W", roles: roles({ internal: true }), hidden: true },
-  { email: "kumarsachit2007@gmail.com", firstName: "SachitNMT", lastName: "Kumar", phone: "", group: "E", roles: roles({ nmtLeader: true, newbie: true, lead: true, internal: true, vpp: true, exec: true, outreach: true, webmaster: true, financeDirector: true, internationalDirector: true, president: true, vpProjects: true, vpInternal: true }), hidden: true },
+  { email: "kumarsachit2007@gmail.com", firstName: "SachitNMT", lastName: "Kumar", phone: "", group: "E", roles: roles({ nmtLeader: true, newbie: true, lead: true, internal: true, vpp: true, exec: true, outreach: true, webmaster: true, financeDirector: true, internationalDirector: true, techDirector: true, president: true, vpProjects: true, vpInternal: true }), hidden: true },
   { email: "anonymousposter1029@gmail.com", firstName: "SachitNewbie", lastName: "Kumar", phone: "", group: null, roles: roles({ newbie: true }), hidden: true },
   { email: "ryancr@berkeley.edu", firstName: "Ryan", lastName: "Raphael", phone: "6696661405", group: "R", roles: roles({ vpp: true, exec: true, vpInternal: true }) },
   { email: "narayannirali@berkeley.edu", firstName: "Nirali", lastName: "Narayan", phone: "7205488016", group: "R", roles: roles({ nmtLeader: true }) },
@@ -123,20 +135,20 @@ export const BASE_MEMBERS: Member[] = [
   // ── New members, Fall 2026 (added Sep 22). Newbie only; no project group yet,
   //    so project leads can't assign them tasks — NMT leaders and VP/P can.
   { email: "aasma_dhawan@berkeley.edu", firstName: "Aasma", lastName: "Dhawan", phone: "", group: "E", roles: roles({ newbie: true }) },
-  { email: "anish.joshi@berkeley.edu", firstName: "Anish", lastName: "Joshi", phone: "", group: "H", roles: roles({ newbie: true }) },
+  { email: "anish.joshi@berkeley.edu", firstName: "Anish", lastName: "Joshi", phone: "", group: "H", roles: roles({ newbie: true }), interns: ["Technology"] },
   { email: "arryj@berkeley.edu", firstName: "Arry", lastName: "Jeejeebhoy", phone: "", group: "H", roles: roles({ newbie: true }) },
   { email: "arya_bhardia@berkeley.edu", firstName: "Arya", lastName: "Bhardia", phone: "", group: "R", roles: roles({ newbie: true }) },
-  { email: "eanil2008@berkeley.edu", firstName: "Elijah", lastName: "Anil", phone: "", group: "E", roles: roles({ newbie: true }) },
+  { email: "eanil2008@berkeley.edu", firstName: "Elijah", lastName: "Anil", phone: "", group: "E", roles: roles({ newbie: true }), interns: ["Finance"] },
   { email: "keyavaidya@berkeley.edu", firstName: "Keya", lastName: "Vaidya", phone: "5108071711", group: "W", roles: roles({ newbie: true }) },
-  { email: "krishiv.bhatia@berkeley.edu", firstName: "Krishiv", lastName: "Bhatia", phone: "", group: "H", roles: roles({ newbie: true }) },
+  { email: "krishiv.bhatia@berkeley.edu", firstName: "Krishiv", lastName: "Bhatia", phone: "", group: "H", roles: roles({ newbie: true }), interns: ["Finance"] },
   { email: "laasya_mallapragada@berkeley.edu", firstName: "Laasya", lastName: "Mallapragada", phone: "", group: "R", roles: roles({ newbie: true }) },
   { email: "maisha_sharma@berkeley.edu", firstName: "Maisha", lastName: "Sharma", phone: "", group: "W", roles: roles({ newbie: true }) },
   { email: "neevsheth@berkeley.edu", firstName: "Neev", lastName: "Sheth", phone: "", group: "E", roles: roles({ newbie: true }) },
-  { email: "prabhavgoel@berkeley.edu", firstName: "Prabhav", lastName: "Goel", phone: "", group: "E", roles: roles({ newbie: true }) },
+  { email: "prabhavgoel@berkeley.edu", firstName: "Prabhav", lastName: "Goel", phone: "", group: "E", roles: roles({ newbie: true }), interns: ["Technology"] },
   { email: "pranayarishi@berkeley.edu", firstName: "Pranaya", lastName: "Rishi", phone: "", group: "E", roles: roles({ newbie: true }) },
-  { email: "rheagosain@berkeley.edu", firstName: "Rhea", lastName: "Gosain", phone: "", group: "H", roles: roles({ newbie: true }) },
+  { email: "rheagosain@berkeley.edu", firstName: "Rhea", lastName: "Gosain", phone: "", group: "H", roles: roles({ newbie: true }), interns: ["Finance"] },
   { email: "varda_qudratullah@berkeley.edu", firstName: "Varda", lastName: "Qudratullah", phone: "", group: "W", roles: roles({ newbie: true }) },
-  { email: "yash_guruprakash@berkeley.edu", firstName: "Yash", lastName: "Advik Guruprakash", phone: "", group: "R", roles: roles({ newbie: true }) },
+  { email: "yash_guruprakash@berkeley.edu", firstName: "Yash", lastName: "Advik Guruprakash", phone: "", group: "R", roles: roles({ newbie: true }), interns: ["Technology"] },
   { email: "yak0912@berkeley.edu", firstName: "Yashashvi", lastName: "Kamboj", phone: "", group: "R", roles: roles({ newbie: true }) },
 ];
 
@@ -176,6 +188,25 @@ export function findMember(email?: string | null): Member | undefined {
   return MEMBERS.find((m) => m.email.toLowerCase() === e);
 }
 
+/**
+ * A member's intern positions. The sheet / DB roster doesn't carry this field,
+ * so when the live row lacks it we fall back to the code roster (BASE_MEMBERS)
+ * by email. Same pattern as MEMBER_YEARS: members.ts stays the source of truth.
+ */
+export function memberInterns(m: Pick<Member, "email" | "interns">): InternType[] {
+  if (m.interns && m.interns.length) return m.interns;
+  const e = m.email.trim().toLowerCase();
+  return BASE_MEMBERS.find((b) => b.email.toLowerCase() === e)?.interns ?? [];
+}
+
+/**
+ * People who supervise a kind of intern by NAME rather than by role (there's
+ * no "Director of Marketing" role). Email-keyed, lower-case.
+ */
+export const INTERN_SUPERVISOR_EMAILS: Partial<Record<InternType, string[]>> = {
+  Marketing: ["palakprabhakar1@berkeley.edu"],
+};
+
 /** The full "First Last" name used to match a member to their lineage leaf. */
 export function memberFullName(m: Member): string {
   return `${m.firstName} ${m.lastName}`;
@@ -214,7 +245,8 @@ export const MEMBER_TITLES: Record<string, string> = {
   "kaavya_pravin@berkeley.edu": "Health Senior Lead",
   "surabhikhanna@berkeley.edu": "Education Senior Lead",
   "jiya.dharne@berkeley.edu": "Water & Sanitation Senior Lead",
-  // Not an exec position; no extra permissions.
+  // Not an exec position. The matching `techDirector` role flag is what lets
+  // him manage Technology interns; this entry only controls the label.
   "sachitk@berkeley.edu": "Director of Technology",
 };
 

@@ -8,8 +8,8 @@
 // ============================================================================
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { MEMBERS, memberDisplayRole, memberFullName, memberRoleLabel, memberTitle, memberYear } from "@/lib/members";
-import { PROJECT_GROUP_LABELS } from "@/lib/lms/types";
+import { MEMBERS, memberDisplayRole, memberFullName, memberInterns, memberRoleLabel, memberTitle, memberYear } from "@/lib/members";
+import { INTERN_LABELS, PROJECT_GROUP_LABELS } from "@/lib/lms/types";
 import { formatPhone } from "@/lib/lms/phone";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -38,6 +38,7 @@ export type DirectoryEntry = {
   year: string; // year at Berkeley ("" = not specified)
   positionCategory: string; // bucket for filtering (role label, or "General Member")
   positionRank: number; // custom directory order (lower = higher up)
+  other: string; // extra positions such as "Finance Intern" ("" = none)
 };
 
 // The order positions appear in the directory (NOT a real hierarchy — just the
@@ -154,6 +155,7 @@ export async function listDirectory(): Promise<DirectoryEntry[]> {
         year: memberYear(m.email),
         positionCategory: categoryFor(base, title),
         positionRank: rankFor(base, title),
+        other: memberInterns(m).map((t) => INTERN_LABELS[t]).join(" · "),
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
