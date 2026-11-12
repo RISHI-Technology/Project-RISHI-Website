@@ -16,7 +16,7 @@ import DashboardBanner from "@/components/DashboardBanner";
 import { Block, Line, SkeletonRegion, useShowAfter } from "@/components/Skeleton";
 import { ALUMNI_YEAR, type FullDirectoryResponse, type FullPerson } from "@/lib/fullDirectory/types";
 import {
-  ALL_COLS, DEFAULT_COLS, EMPTY_FILTERS, SORT_COL, activeCount, applyFilters, chipsFor, facetOptions, parseState, toQuery,
+  ALL_COLS, DEFAULT_COLS, EMPTY_FILTERS, SORT_COL, activeCount, applyFilters, canonicalPersonSlug, chipsFor, facetOptions, parseState, toQuery,
   type ColKey, type DirState, type GroupBy, type Layout, type SortKey,
 } from "@/components/fullDirectory/filters";
 import { buildIndex, queryTokens, scoreEntry } from "@/components/fullDirectory/search";
@@ -73,6 +73,13 @@ export default function FullDirectory({ switcher }: { switcher?: ReactNode }) {
     const next = { ...parseState(new URLSearchParams(window.location.search)), ...patch };
     window.history.replaceState(null, "", `${window.location.pathname}?${toQuery(next)}`);
   }, []);
+
+  // An old profile link (person renamed since): parseState already opens the right
+  // person; also rewrite the address bar to the current link, in place.
+  const rawPerson = sp.get("person");
+  useEffect(() => {
+    if (rawPerson && canonicalPersonSlug(rawPerson) !== rawPerson) update({});
+  }, [rawPerson, update]);
 
   // ---------------------------------------------------------------- data
   const [people, setPeople] = useState<FullPerson[]>([]);

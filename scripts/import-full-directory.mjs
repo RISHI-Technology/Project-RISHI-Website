@@ -8,7 +8,7 @@
  *   node --env-file=.env.local scripts/import-full-directory.mjs --verify
  *
  *   --file <path>   spreadsheet to read (default: $FULL_DIRECTORY_XLSX, else
- *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v11.xlsx)
+ *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v12.xlsx)
  *   --dry-run       parse, then diff against the database (read-only); write nothing
  *   --verify        read counts back from the database and compare with the sheet
  *
@@ -56,6 +56,11 @@
  * EMPLOYMENT DATES: "(2020–2024)", "(2023–present)" (current), "(2020–?)" (v11: a past
  *   job no longer on LinkedIn, end year unknown — stored with end_unknown: true, never current).
  *
+ * RENAMES (PERSON_RENAMES, v12: "Bani" → "Bani Bedi", "Rushabh" → "Rushabh Shah",
+ *   "Suraj" → "Suraj Patel"): the old name is mapped to the new one in every tab, and the
+ *   person is matched to the record stored under the old name; that record is renamed and
+ *   re-slugged in place (same id), so no one is added or removed and memberships stay.
+ *
  * NOTHING IS REMOVED: if the sheet no longer has a person or a membership that the
  *   database holds, the run stops before writing anything (pass --allow-removals to
  *   prune them). The dry run reports every removal it would make — normally none.
@@ -86,7 +91,7 @@ const ALLOW_BERKELEY_CHANGES = flag("--allow-berkeley-changes");
 const ALLOW_REMOVALS = flag("--allow-removals");
 const CLEAR_REF = opt("--clear-ref") && path.resolve(opt("--clear-ref").replace(/^~(?=$|\/)/, os.homedir()));
 const FILE = path.resolve(
-  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v11.xlsx")
+  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v12.xlsx")
     .replace(/^~(?=$|\/)/, os.homedir()),
 );
 
@@ -222,6 +227,21 @@ function pick(row, known, tab) {
 }
 
 const nameKey = (s) => s.normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
+
+// People whose name changed between sheets — old name (key: nameKey) → new name.
+// The sheet's name is mapped old → new wherever it appears (All Members and every
+// year tab), so an older sheet still matches too. The person is then matched to the
+// record stored under the OLD name's slug (and that record's stored name must be the
+// old name); a real run re-slugs and renames that record in place — same id, so
+// every membership stays attached. Nothing is ever matched by name alone otherwise.
+const PERSON_RENAMES = {
+  "bani": "Bani Bedi",       // v12: surname added
+  "rushabh": "Rushabh Shah", // v12
+  "suraj": "Suraj Patel",    // v12
+};
+const canonicalName = (name) => PERSON_RENAMES[nameKey(name)] ?? name;
+/** The old names that now map to `name`. */
+const formerNamesOf = (name) => Object.entries(PERSON_RENAMES).filter(([, n]) => nameKey(n) === nameKey(name)).map(([old]) => old);
 const slugify = (s) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const uniq = (xs) => [...new Set(xs.filter(Boolean))];
@@ -384,9 +404,13 @@ function berkeleyYearsOf(raw) {
   const text = start && end ? `${start}–${end}` : start ? `${start}–` : `–${end}`;
   return { text, start, end };
 }
+// A combined subject the club lists as two separate subjects (applied to majors and minors).
+const SUBJECT_SPLITS = {
+  "Civil and Environmental Engineering": ["Civil Engineering", "Environmental Engineering"], // v12
+};
 /** "Majors (list)" / "Minors (list)": already cleaned in the sheet — split on "; " only. */
 const subjectsOf = (cell) => {
-  const items = uniq((cell ?? "").split("; ").map((s) => s.trim()));
+  const items = uniq((cell ?? "").split("; ").map((s) => s.trim()).flatMap((s) => SUBJECT_SPLITS[s] ?? [s]));
   if (items.some((s) => /[;\n]/.test(s))) warn(`a Majors/Minors (list) item still contains ";" or a line break (kept as-is)`);
   return items;
 };
@@ -426,7 +450,7 @@ function build(file) {
   // ---- people
   const people = wb.get("All Members")().map((row0, i) => {
     const r = pick(row0, PEOPLE_COLUMNS, "All Members");
-    const name = (r["Full Name"] ?? "").replace(/\s+/g, " ").trim();
+    const name = canonicalName((r["Full Name"] ?? "").replace(/\s+/g, " ").trim());
     if (!name) throw new Error(`All Members row ${i + 2} has no name`);
     const standing = {}; let grad = null;
     for (const l0 of lines(r["Class year / Graduation"])) {
@@ -486,7 +510,7 @@ function build(file) {
     perTab[year] = rows.length;
     for (const row0 of rows) {
       const r = pick(row0, YEAR_COLUMNS, tab);
-      const name = (r["Full Name"] ?? "").replace(/\s+/g, " ").trim();
+      const name = canonicalName((r["Full Name"] ?? "").replace(/\s+/g, " ").trim());
       const emails = emailsOf(r["Email(s)"]);
       let cands = byName.get(nameKey(name)) ?? [];
       if (cands.length > 1) {
@@ -567,6 +591,11 @@ function build(file) {
     p.slug = slugCount.get(base) > 1 ? `${base}-${p.first ?? ALUMNI}` : base;
     if (!p.slug || seen.has(p.slug)) throw new Error(`Cannot make a unique slug for "${p.name}" (${p.slug})`);
     seen.add(p.slug);
+    // A renamed person must be one row — never the old and new name side by side.
+    const former = formerNamesOf(p.name);
+    if (former.length && slugCount.get(base) > 1)
+      throw new Error(`"${p.name}" (renamed from ${former.join(", ")}) appears ${slugCount.get(base)} times in All Members — fix the sheet`);
+    p.formerSlugs = former.map(slugify);
   }
   return { people, perTab, ignoredTabs, conflicts };
 }
@@ -831,10 +860,22 @@ async function main() {
   if (CLEAR_REF) console.log(`\nCurrent-role clearing reference: ${CLEAR_REF} (${refBySlug.size} people)`);
   const prevPeople = await selectAll(client, PEOPLE, "*");
   const prevBySlug = new Map(prevPeople.map((r) => [r.slug, r]));
+  // The stored record for a sheet person: by slug, or (PERSON_RENAMES) by the old name's slug.
+  const matchPrev = (p) => {
+    const own = prevBySlug.get(p.slug);
+    const former = p.formerSlugs.map((s) => prevBySlug.get(s)).filter(Boolean);
+    if (own && former.length)
+      throw new Error(`"${p.name}" is stored twice (${[own, ...former].map((r) => r.slug).join(", ")}) — merge them by hand first. Nothing written.`);
+    if (former.length > 1) throw new Error(`"${p.name}" matches ${former.length} stored records under old names. Nothing written.`);
+    const r = own ?? former[0];
+    if (r && !own && !formerNamesOf(p.name).includes(nameKey(r.full_name)))
+      throw new Error(`Record ${r.slug} is stored as "${r.full_name}", not the old name of "${p.name}". Nothing written.`);
+    return r;
+  };
   const plan = people.map((p) => {
     const next = personRow(p, now);
     if (!hasLists) { delete next.majors; delete next.minors; } // dry run before the migration
-    const prev = prevBySlug.get(p.slug);
+    const prev = matchPrev(p);
     const g = holdGradYear(mergeEmails(keepExisting(next, prev, PERSON_FIELDS), prev), prev);
     const b = holdBerkeley(g.row, prev);
     // Clear a role the new sheet dropped (blank here, stored value = the reference sheet's).
@@ -844,12 +885,13 @@ async function main() {
       b.row.current_job = null;
       roleCleared = prev.current_job;
     }
-    return { p, prev, next, merged: b.row, gradHeld: g.held, berkeleyHeld: b.held, roleCleared };
+    return { p, prev, next, merged: b.row, gradHeld: g.held, berkeleyHeld: b.held, roleCleared, renamedFrom: prev && prev.slug !== p.slug ? prev : null };
   });
   printHeldGradYears(plan);
   printHeldBerkeley(plan);
-  const slugs = new Set(people.map((p) => p.slug));
-  const stalePeople = prevPeople.filter((r) => !slugs.has(r.slug));
+  const matchedIds = new Set(plan.map((x) => x.prev?.id).filter(Boolean));
+  const stalePeople = prevPeople.filter((r) => !matchedIds.has(r.id));
+  const prevIdBySlug = new Map(plan.filter((x) => x.prev).map((x) => [x.p.slug, x.prev.id]));
 
   const prevMs = await selectAll(client, MEMBERSHIPS, "*");
   const prevMsByKey = new Map(prevMs.map((m) => [`${m.person_id}|${m.year}`, m]));
@@ -860,18 +902,24 @@ async function main() {
   }));
 
   if (DRY) {
-    await printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan: msPlan((s) => prevBySlug.get(s)?.id), prevMs });
+    await printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan: msPlan((s) => prevIdBySlug.get(s)), prevMs });
     console.log("\nDry run — nothing was written.");
     return;
   }
 
   // ---- never remove (unless asked): stop before writing anything
-  const plannedMs = new Set(msPlan((s) => prevBySlug.get(s)?.id).filter((x) => x.next.person_id).map((x) => `${x.next.person_id}|${x.next.year}`));
+  const plannedMs = new Set(msPlan((s) => prevIdBySlug.get(s)).filter((x) => x.next.person_id).map((x) => `${x.next.person_id}|${x.next.year}`));
   const removingMs = prevMs.filter((m) => !plannedMs.has(`${m.person_id}|${m.year}`));
   if (!ALLOW_REMOVALS && (stalePeople.length || removingMs.length))
     throw new Error(`The sheet no longer has ${stalePeople.length} people and ${removingMs.length} memberships that the database holds. Nothing written (see --dry-run; --allow-removals to prune them).`);
 
   // ---- write
+  // Renames first (PERSON_RENAMES): the stored record takes the new slug and name in
+  // place, so the upsert below updates it instead of adding a new person.
+  for (const x of plan.filter((x) => x.renamedFrom)) {
+    const { error } = await table(client, PEOPLE).update({ slug: x.p.slug, full_name: x.p.name }).eq("id", x.prev.id);
+    if (error) throw new Error(`${PEOPLE} rename ${x.prev.slug} → ${x.p.slug}: ${error.message}`);
+  }
   const idBySlug = new Map();
   await inBatches(plan.map((x) => x.merged), 100, async (batch) => {
     const { data, error } = await table(client, PEOPLE).upsert(batch, { onConflict: "slug" }).select("id, slug");
@@ -879,6 +927,8 @@ async function main() {
     for (const r of data) idBySlug.set(r.slug, r.id);
   });
   if (idBySlug.size !== people.length) throw new Error(`Upserted ${idBySlug.size} people, expected ${people.length}`);
+  for (const x of plan.filter((x) => x.prev))
+    if (idBySlug.get(x.p.slug) !== x.prev.id) throw new Error(`${x.p.name}: upsert hit record ${idBySlug.get(x.p.slug)}, expected ${x.prev.id}`);
 
   const msRows = msPlan((s) => idBySlug.get(s)).map((x) => x.merged);
   await inBatches(msRows, 200, async (batch) => {
@@ -917,6 +967,42 @@ async function printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan, pr
   const byName = (a, b) => a.p.name.localeCompare(b.p.name);
   const existing = plan.filter((x) => x.prev);
   const label = (x) => `${x.p.name}${plan.filter((y) => y.p.name === x.p.name).length > 1 ? ` [${x.p.slug}]` : ""}`;
+
+  // (n) Renames (PERSON_RENAMES): matched to the record stored under the old name.
+  const renames = plan.filter((x) => x.renamedFrom).sort(byName);
+  console.log(`\n(n) Renamed in place (same record, memberships kept): ${renames.length}`);
+  for (const x of renames)
+    console.log(`  "${x.prev.full_name}" [${x.prev.slug}] → "${x.p.name}" [${x.p.slug}] · ${prevMs.filter((m) => m.person_id === x.prev.id).length} stored memberships stay attached, sheet has ${x.p.memberships.length}`);
+
+  // (f) Every person whose stored data a real run changes, field by field. Emails,
+  //     phones and LinkedIn are described, never printed.
+  const describe = (fl, a, b) => {
+    const c = fl.cols[0];
+    if (c === "emails" || c === "phones") { const n = (b[c] ?? []).filter((e) => !(a[c] ?? []).includes(e)).length; return `${fl.label} +${n} (${(a[c] ?? []).length} → ${(b[c] ?? []).length})`; }
+    if (c === "linkedin") return `LinkedIn ${a.linkedin ? "changed" : "added"}`;
+    if (c === "employment_history") return `employment history ${(a[c] ?? []).length} → ${(b[c] ?? []).length} entries`;
+    if (c === "grad_year") return `graduation year ${a.grad_year ?? "(none)"}${a.grad_year_inferred ? " (est.)" : ""} → ${b.grad_year ?? "(none)"}${b.grad_year_inferred ? " (est.)" : ""}`;
+    if (c === "majors" || c === "minors") return `${c} ${fmt(a[c] ?? [])} → ${fmt(b[c] ?? [])}`;
+    if (c === "current_job") return `current role ${a.current_job ? `"${a.current_job}"` : "(none)"} → ${b.current_job ? `"${b.current_job}"` : "(none)"}`;
+    if (c === "berkeley_years") return `Years at Berkeley ${a.berkeley_years ?? "(none)"} → ${b.berkeley_years ?? "(none)"}`;
+    if (c === "major") return `major (raw text) ${a.major ? "changed" : "added"}`;
+    return `${fl.label} changed`;
+  };
+  const msChangesOf = (x) => msPlan.filter((m) => m.next.person_id === x.prev.id && m.prev)
+    .flatMap((m) => MEMBERSHIP_FIELDS.filter((fl) => !sameField(m.prev, m.merged, fl)).map((fl) => `${m.next.year} ${fl.label} changed`));
+  const changedPeople = existing.map((x) => ({
+    x,
+    fields: [
+      ...(x.renamedFrom ? [`name "${x.prev.full_name}" → "${x.p.name}"`] : []),
+      ...PERSON_FIELDS.filter((fl) => !sameField(x.prev, x.merged, fl)).map((fl) => describe(fl, x.prev, x.merged)),
+      ...msChangesOf(x),
+    ],
+  })).filter((r) => r.fields.length).sort((a, b) => byName(a.x, b.x));
+  console.log(`\n(f) People whose stored data would change: ${changedPeople.length} of ${existing.length} (everyone else: no change)`);
+  for (const { x, fields } of changedPeople) {
+    console.log(`  ${label(x)}`);
+    for (const s of fields) console.log(`      ${s}`);
+  }
 
   // (b) Per column: how many stored values a real run fills / changes / keeps.
   const pairs = existing.map((x) => ({ name: x.p.name, prev: x.prev, next: x.next, merged: x.merged }));

@@ -115,9 +115,19 @@ export function parseState(sp: URLSearchParams): DirState {
     layout: layout === "table" || layout === "cards" ? layout : null,
     groupBy: by === "year" || by === "group" || by === "position" ? by : "",
     cols,
-    person: sp.get("person"),
+    person: canonicalPersonSlug(sp.get("person")),
   };
 }
+
+/** Profile links from before a person was renamed (old slug → current slug), so
+ *  saved links keep working. Mirrors PERSON_RENAMES in scripts/import-full-directory.mjs. */
+export const PERSON_SLUG_REDIRECTS: Record<string, string> = {
+  bani: "bani-bedi",
+  rushabh: "rushabh-shah",
+  suraj: "suraj-patel",
+};
+export const canonicalPersonSlug = (slug: string | null): string | null =>
+  slug && Object.hasOwn(PERSON_SLUG_REDIRECTS, slug) ? PERSON_SLUG_REDIRECTS[slug] : slug;
 
 /** State → query string (defaults omitted, so shared links stay short). */
 export function toQuery(s: DirState): string {
