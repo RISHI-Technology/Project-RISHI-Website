@@ -8,7 +8,7 @@
  *   node --env-file=.env.local scripts/import-full-directory.mjs --verify
  *
  *   --file <path>   spreadsheet to read (default: $FULL_DIRECTORY_XLSX, else
- *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v7.xlsx)
+ *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v8.xlsx)
  *   --dry-run       parse, then diff against the database (read-only); write nothing
  *   --verify        read counts back from the database and compare with the sheet
  *
@@ -34,6 +34,9 @@
  * BLANK KEEPS EXISTING: a cell the sheet leaves blank never clears what the database
  *   already holds — the stored value is kept. Columns that belong together (grad year +
  *   "inferred", Berkeley text + start/end, …) are kept or replaced together.
+ *
+ * EMAILS ARE MERGED: stored emails are never removed; addresses the sheet adds are
+ *   appended after them.
  *
  * GRADUATION YEARS ARE HELD: a stored graduation year is never replaced by a
  *   DIFFERENT year from the sheet (the club reviewed v7's changed years and rejected
@@ -65,7 +68,7 @@ const DRY = flag("--dry-run");
 const VERIFY = flag("--verify");
 const ALLOW_GRAD_CHANGES = flag("--allow-grad-year-changes");
 const FILE = path.resolve(
-  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v7.xlsx")
+  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v8.xlsx")
     .replace(/^~(?=$|\/)/, os.homedir()),
 );
 
@@ -672,6 +675,12 @@ function keepExisting(next, prev, fields) {
   return out;
 }
 
+/** Emails are merged, never replaced: stored addresses first, then any new ones from the sheet. */
+function mergeEmails(row, prev) {
+  if (!prev) return row;
+  return { ...row, emails: uniq([...(prev.emails ?? []), ...(row.emails ?? [])]) };
+}
+
 /** A stored graduation year is never replaced by a different one (see the header). */
 function holdGradYear(row, prev) {
   if (ALLOW_GRAD_CHANGES || !prev || prev.grad_year == null || row.grad_year == null || row.grad_year === prev.grad_year) return { row, held: null };
@@ -787,7 +796,7 @@ async function main() {
     const next = personRow(p, now);
     if (!hasLists) { delete next.majors; delete next.minors; } // dry run before the migration
     const prev = prevBySlug.get(p.slug);
-    const { row, held } = holdGradYear(keepExisting(next, prev, PERSON_FIELDS), prev);
+    const { row, held } = holdGradYear(mergeEmails(keepExisting(next, prev, PERSON_FIELDS), prev), prev);
     return { p, prev, next, merged: row, gradHeld: held };
   });
   printHeldGradYears(plan);
@@ -862,7 +871,7 @@ async function printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan, pr
   for (const x of majorChanges.sort((a, b) => a.p.name.localeCompare(b.p.name)))
     console.log(`  ${x.p.name}: ${fmt(shown.get(x.p.slug))}  →  ${fmt(after(x, "majors"))}${x.p.minors.length ? `   [minors: ${fmt(x.p.minors)}]` : ""}`);
   const lostMajors = majorChanges.filter((x) => !after(x, "majors").length);
-  console.log(`  (of these, ${lostMajors.length} would go to no majors: blank "Majors (list)" in v7 but a non-empty stored "Major")`);
+  console.log(`  (of these, ${lostMajors.length} would go to no majors: blank "Majors (list)" in the sheet but a non-empty stored "Major")`);
 
   const rawChanges = existing.filter((x) => x.prev.major && x.merged.major !== x.prev.major);
   console.log(`\n(a′) Stored free-text "Major" changing to different text: ${rawChanges.length}`);
@@ -877,6 +886,18 @@ async function printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan, pr
     merged: { ...x.merged, majors: after(x, "majors"), minors: after(x, "minors") },
   }));
   printTally(`(b) Per field, over the ${existing.length} people already in the database:`, tallyDiff(pairs, PERSON_FIELDS));
+
+  const roleChanges = existing.filter((x) => x.prev.current_job && x.merged.current_job !== x.prev.current_job);
+  console.log(`\n(c) Current role changing from a non-empty value to a different one: ${roleChanges.length}`);
+  for (const x of roleChanges.sort((a, b) => a.p.name.localeCompare(b.p.name)))
+    console.log(`  ${x.p.name}: "${x.prev.current_job}"  →  "${x.merged.current_job}"`);
+
+  // Emails are merged (see mergeEmails): list what would be added, and stored ones the sheet no longer has (kept).
+  const emailAdds = existing.map((x) => ({ x, add: x.merged.emails.filter((e) => !(x.prev.emails ?? []).includes(e)) })).filter((r) => r.add.length);
+  const notInSheet = existing.reduce((n, x) => n + (x.prev.emails ?? []).filter((e) => !x.p.emails.includes(e)).length, 0);
+  console.log(`\n(d) Emails that would be added: ${emailAdds.reduce((n, r) => n + r.add.length, 0)} across ${emailAdds.length} people (${notInSheet} stored emails not in the sheet are kept)`);
+  for (const { x, add } of emailAdds.sort((a, b) => a.x.p.name.localeCompare(b.x.p.name)))
+    console.log(`  ${x.p.name}: + ${add.join(", ")}`);
 
   // --show <column>: list the people whose value for that field changes (old → new).
   const show = opt("--show");
