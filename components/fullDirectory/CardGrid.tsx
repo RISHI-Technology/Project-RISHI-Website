@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Section } from "@/components/fullDirectory/results";
 import { currentRoleOf, groupsOf, isCurrent, otherRoles, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
-import { ArrowRightIcon, BriefcaseIcon, ChevronIcon, GlobeIcon, GroupChip, Highlight, Initials, MoreRoles, YearStrip } from "@/components/fullDirectory/ui";
+import { ArrowRightIcon, BriefcaseIcon, ChevronIcon, GlobeIcon, GroupChip, Highlight, Initials, MoreRoles, SubjectChips, YearStrip } from "@/components/fullDirectory/ui";
 
 const TYPE_DOT = { exec: "bg-marigold", lead: "bg-pine", other: "bg-sage", member: "bg-ink/20" } as const;
 
@@ -76,6 +76,11 @@ export default function CardGrid({ sections, onOpen, tokens, allYears, grouped }
                           <span className="mt-3 flex flex-wrap gap-1">
                             {groups.slice(0, 3).map((g) => <GroupChip key={g} group={g} tokens={tokens} small />)}
                             {groups.length > 3 && <span className="rounded-full bg-ink/[0.06] px-2 py-0.5 text-[11px] text-ink/60" title={`Also: ${groups.slice(3).join(", ")}`}>+{groups.length - 3}</span>}
+                          </span>
+                        )}
+                        {(p.majors.length > 0 || p.minors.length > 0) && (
+                          <span className="mt-3 block" aria-label="Majors and minors">
+                            <SubjectChips majors={p.majors} minors={p.minors} tokens={tokens} small max={4} />
                           </span>
                         )}
                         {(p.gradYear || p.indiaTrips.length > 0) && (

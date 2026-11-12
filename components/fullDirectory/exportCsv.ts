@@ -18,12 +18,12 @@ const byYearList = (ms: FullMembership[], f: (m: FullMembership) => string) =>
   ms.map((m) => { const v = f(m); return v ? `${longYear(m.year)}: ${v}` : ""; }).filter(Boolean).join("; ");
 
 export function buildCsv(rows: Match[], canSeePrivate: boolean, perYear: boolean): string {
-  const personHead = ["Name", "Years active", "Class of", "Major", "Joined RISHI", "Birthday", "India trips", "Hindi", "LinkedIn", "Post-grad plans", "Current role", "Employment history", "Years at Berkeley", "Emails", ...(canSeePrivate ? ["Phones"] : [])];
+  const personHead = ["Name", "Years active", "Class of", "Majors", "Minors", "Joined RISHI", "Birthday", "India trips", "Hindi", "LinkedIn", "Post-grad plans", "Current role", "Employment history", "Years at Berkeley", "Emails", ...(canSeePrivate ? ["Phones"] : [])];
   const personCells = (m: Match) => {
     const p = m.person;
     return [
       p.name, p.years.map(longYear).join("; ") || "Alumni (years unknown)",
-      p.gradYear ? `${p.gradYear}${p.gradYearInferred ? " (estimated)" : ""}` : "", p.major,
+      p.gradYear ? `${p.gradYear}${p.gradYearInferred ? " (estimated)" : ""}` : "", p.majors.join("; "), p.minors.join("; "),
       p.joined ? `${p.joined}${p.joinedApprox ? " (approx.)" : ""}` : "", p.birthday, p.indiaTrips.join("; "), p.hindi,
       p.linkedin, p.postGradPlans, p.currentRole,
       p.employment.map((j) => [[j.title, j.company].filter(Boolean).join(", "), jobDates(j.start, j.end, j.current)].filter(Boolean).join(" ")).join("; "),

@@ -4,7 +4,7 @@ import { useState, type KeyboardEvent } from "react";
 import type { ColKey, SortKey } from "@/components/fullDirectory/filters";
 import type { Row, Section } from "@/components/fullDirectory/results";
 import { currentRoleOf, groupsOf, isCurrent, otherRoles, roleOf, shortYear, yearSpan } from "@/components/fullDirectory/model";
-import { ArrowRightIcon, ChevronIcon, GroupChip, Highlight, Initials, LinkedInIcon, MoreRoles, PlusIcon, SortIcon, YearStrip } from "@/components/fullDirectory/ui";
+import { ArrowRightIcon, ChevronIcon, GroupChip, Highlight, Initials, LinkedInIcon, MoreRoles, PlusIcon, SortIcon, SubjectChips, YearStrip } from "@/components/fullDirectory/ui";
 
 const TYPE_DOT = { exec: "bg-marigold", lead: "bg-pine", other: "bg-sage", member: "bg-ink/20" } as const;
 
@@ -15,7 +15,7 @@ const HEADERS: Record<ColKey, { label: string; sort?: SortKey; width: number | n
   group: { label: "Project group", sort: "group", width: 186 },
   position: { label: "Position", sort: "position", width: null },
   grad: { label: "Class of", sort: "grad", width: 92 },
-  major: { label: "Major", sort: "major", width: 170 },
+  major: { label: "Major", sort: "major", width: 200 },
   trip: { label: "India trip", width: 108 },
   hindi: { label: "Hindi", width: 108 },
   contact: { label: "Contact", width: 226 },
@@ -233,7 +233,13 @@ function PersonRow({ row, rowKey, cols, tokens, allYears, tabbable, onOpen }: {
               </td>
             );
           case "major":
-            return <td key={c} className={`${td} text-ink/75`}>{p.major ? <span className="line-clamp-2" title={p.major}><Highlight text={p.major} tokens={tokens} /></span> : <span className="text-ink/35">—</span>}</td>;
+            return (
+              <td key={c} className={`${td} text-ink/75`}>
+                {p.majors.length || p.minors.length
+                  ? <SubjectChips majors={p.majors} minors={p.minors} tokens={tokens} small max={2} />
+                  : <span className="text-ink/35">—</span>}
+              </td>
+            );
           case "trip":
             return <td key={c} className={`${td} text-ink/75`}>{p.indiaTrips.length ? p.indiaTrips.map((t) => t.replace("India Trip ", "")).join(", ") : <span className="text-ink/35">—</span>}</td>;
           case "hindi":

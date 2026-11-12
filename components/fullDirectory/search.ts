@@ -2,7 +2,7 @@
 //  Full Directory — instant, typo-tolerant search (no dependencies).
 // ----------------------------------------------------------------------------
 //  Every query word must match somewhere in the person (name, emails, phones if
-//  the viewer has them, major, trips, class year, Hindi, other info, current role,
+//  the viewer has them, majors, minors, trips, class year, Hindi, other info, current role,
 //  employers and job titles, years at Berkeley) or in one of
 //  their years (year, project group, position, class standing, trip).
 //
@@ -99,7 +99,10 @@ export function buildIndex(people: FullPerson[]): IndexEntry[] {
     name: words(p.name),
     other: words([
       ...p.emails, ...(p.phones ?? []), ...(p.phones ?? []).map((x) => x.replace(/\D/g, "")),
-      p.major, ...p.indiaTrips, p.gradYear ? `class of ${p.gradYear} ${p.gradYear}` : "",
+      // Majors and minors (the lists shown), plus the free-text Major so
+      // abbreviations people type ("MCB", "EECS") still find them.
+      ...p.majors, ...p.minors, p.minors.length ? "minor" : "", p.major,
+      ...p.indiaTrips, p.gradYear ? `class of ${p.gradYear} ${p.gradYear}` : "",
       p.hindi ? `hindi ${p.hindi}` : "", p.postGradPlans, p.joined, p.birthday,
       ...p.otherInfo.map((o) => `${o.label} ${o.value}`),
       // Career: current role, every employer and title, and years at Berkeley

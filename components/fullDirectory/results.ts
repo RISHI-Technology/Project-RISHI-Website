@@ -31,7 +31,7 @@ export function sortRows(rows: Row[], key: SortKey, dirStr: "asc" | "desc"): Row
         return (rb - ra) * dir || roleOf(a.context).label.localeCompare(roleOf(b.context).label) || byName(a, b);
       }
       case "grad": return cmp(a.person.gradYear, b.person.gradYear, dir) || byName(a, b);
-      case "major": return cmp(a.person.major, b.person.major, dir) || byName(a, b);
+      case "major": return cmp(a.person.majors[0] ?? a.person.minors[0] ?? null, b.person.majors[0] ?? b.person.minors[0] ?? null, dir) || byName(a, b);
       default: return byName(a, b) * dir;
     }
   });

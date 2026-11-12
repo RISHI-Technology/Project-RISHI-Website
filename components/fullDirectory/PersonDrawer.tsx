@@ -9,7 +9,7 @@ import {
 } from "@/components/fullDirectory/model";
 import {
   ArrowLeftIcon, ArrowRightIcon, BriefcaseIcon, CloseIcon, CopyIcon, ExternalIcon, GroupChip, Initials, LinkIcon,
-  LinkedInIcon, YearStrip,
+  LinkedInIcon, SubjectChips, YearStrip,
 } from "@/components/fullDirectory/ui";
 
 const NODE = {
@@ -77,7 +77,11 @@ export default function PersonDrawer({ person, canSeePrivate, allYears, position
   const nowRole = currentRoleOf(p);
   if (p.gradYear) facts.push(["Class of", <>{p.gradYear}{p.gradYearInferred && <span className="ml-1 text-ink/50">(estimated)</span>}</>]);
   if (p.berkeleyYears) facts.push(["Years at Berkeley", p.berkeleyYears]);
-  if (p.major) facts.push(["Major", p.major]);
+  if (p.majors.length || p.minors.length)
+    facts.push([
+      p.majors.length && p.minors.length ? "Majors & minors" : p.majors.length ? (p.majors.length > 1 ? "Majors" : "Major") : p.minors.length > 1 ? "Minors" : "Minor",
+      <SubjectChips key="subjects" majors={p.majors} minors={p.minors} />,
+    ]);
   if (p.joined) facts.push(["Joined RISHI", <>{p.joined}{p.joinedApprox && <span className="ml-1 text-ink/50">(approx.)</span>}</>]);
   if (p.birthday) facts.push(["Birthday", p.birthday]);
   if (p.indiaTrips.length) facts.push(["India trips", p.indiaTrips.join(", ")]);

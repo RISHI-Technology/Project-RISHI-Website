@@ -91,8 +91,19 @@ function useSections(s: DirState, set: Set_, o: Options, canSeePrivate: boolean)
       ),
     },
     {
-      key: "major", label: "Major", badge: s.majors.length,
-      body: <OptionList label="majors" searchable placeholder="Search majors…" options={o.majors} selected={s.majors} onToggle={(v) => set({ majors: toggleIn(s.majors, v) })} />,
+      key: "major", label: "Major", width: "w-80", badge: s.majors.length,
+      body: (
+        <div>
+          <OptionList label="majors and minors" searchable placeholder="Search majors & minors…" options={o.majors} selected={s.majors}
+            onToggle={(v) => set({ majors: toggleIn(s.majors, v) })} />
+          <div className="mt-2 flex items-center justify-between gap-3 border-t border-pine/10 px-2 pt-2.5">
+            <p className="text-[11px] leading-snug text-ink/50">
+              {s.majorMode === "all" ? "Has every checked subject" : "Has any checked subject"} — as a major or a minor.
+            </p>
+            <MatchAllToggle on={s.majorMode === "all"} onChange={(on) => set({ majorMode: on ? "all" : "any" })} />
+          </div>
+        </div>
+      ),
     },
     {
       key: "company", label: "Company", badge: s.companies.length,
@@ -133,6 +144,24 @@ function useSections(s: DirState, set: Set_, o: Options, canSeePrivate: boolean)
       body: <OptionList label="hiatus" options={[{ value: "1", label: "On hiatus that year", count: 0 }]} selected={s.hiatus ? ["1"] : []} onToggle={() => set({ hiatus: !s.hiatus })} />,
     });
   return sections;
+}
+
+/** Switches the Major filter between "any checked subject" and "all of them". */
+function MatchAllToggle({ on, onChange }: { on: boolean; onChange: (on: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={() => onChange(!on)}
+      className="inline-flex shrink-0 items-center gap-2 rounded-full py-1 text-xs font-semibold text-ink/75 outline-none hover:text-pine-deep focus-visible:ring-2 focus-visible:ring-pine/40"
+    >
+      <span aria-hidden className={`relative h-4 w-7 rounded-full transition-colors motion-reduce:transition-none ${on ? "bg-pine" : "bg-ink/20"}`}>
+        <span className={`absolute left-0 top-0.5 h-3 w-3 rounded-full bg-paper shadow-sm transition-transform motion-reduce:transition-none ${on ? "translate-x-3.5" : "translate-x-0.5"}`} />
+      </span>
+      Match all
+    </button>
+  );
 }
 
 function RangeSelect({ label, value, years, onChange }: { label: string; value: number | null; years: number[]; onChange: (v: number | null) => void }) {

@@ -8,8 +8,8 @@
  *   node --env-file=.env.local scripts/import-full-directory.mjs --verify
  *
  *   --file <path>   spreadsheet to read (default: $FULL_DIRECTORY_XLSX, else
- *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v6.xlsx)
- *   --dry-run       parse and print counts; write nothing
+ *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v7.xlsx)
+ *   --dry-run       parse, then diff against the database (read-only); write nothing
  *   --verify        read counts back from the database and compare with the sheet
  *
  * The spreadsheet is read where it lives and is never copied into the repo.
@@ -26,6 +26,20 @@
  *   (current & past) — one job per line, newest first, "Title, Company (2020–2024)" —
  *   and Years at Berkeley ("2020–2024"). Needs migration-full-directory-v6.sql.
  *   "(Coresignal)" labels in "Class year / Graduation" are stripped; only the year is kept.
+ *
+ * v7 COLUMNS: "Majors (list)" and "Minors (list)", already cleaned, split on "; " and
+ *   nothing else. Needs migration-full-directory-v7.sql. The free-text "Major" column
+ *   is still stored as-is in `major`.
+ *
+ * BLANK KEEPS EXISTING: a cell the sheet leaves blank never clears what the database
+ *   already holds — the stored value is kept. Columns that belong together (grad year +
+ *   "inferred", Berkeley text + start/end, …) are kept or replaced together.
+ *
+ * GRADUATION YEARS ARE HELD: a stored graduation year is never replaced by a
+ *   DIFFERENT year from the sheet (the club reviewed v7's changed years and rejected
+ *   them). Those rows are listed on every run. A sheet year still fills a blank one,
+ *   and the same year stated outright clears the "estimated" flag. To accept the
+ *   sheet's differing years, pass --allow-grad-year-changes.
  *
  * IDEMPOTENT: people are upserted on `slug`, memberships on (person_id, year), and
  * rows in these two tables that are no longer in the sheet are removed. Re-running
@@ -49,8 +63,9 @@ const flag = (f) => args.includes(f);
 const opt = (f) => { const i = args.indexOf(f); return i !== -1 ? args[i + 1] : undefined; };
 const DRY = flag("--dry-run");
 const VERIFY = flag("--verify");
+const ALLOW_GRAD_CHANGES = flag("--allow-grad-year-changes");
 const FILE = path.resolve(
-  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v6.xlsx")
+  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v7.xlsx")
     .replace(/^~(?=$|\/)/, os.homedir()),
 );
 
@@ -164,6 +179,7 @@ const PEOPLE_COLUMNS = new Set([
   "Full Name", "Years in RISHI (from Drive data)", "Project Group(s) by year", "Position(s) by year",
   "Email(s)", "Phone(s)", "Class year / Graduation", "Major", "Joined RISHI", "Birthday", "India Trip(s)", "Other info",
   "LinkedIn", "Current role", "Employment history (current & past)", "Years at Berkeley",
+  "Majors (list)", "Minors (list)",
 ]);
 const YEAR_COLUMNS = new Set([
   "Full Name", "Project Group", "Position", "Email(s)", "Phone(s)", "Major", "Joined RISHI", "Birthday",
@@ -344,6 +360,12 @@ function berkeleyYearsOf(raw) {
   const text = start && end ? `${start}–${end}` : start ? `${start}–` : `–${end}`;
   return { text, start, end };
 }
+/** "Majors (list)" / "Minors (list)": already cleaned in the sheet — split on "; " only. */
+const subjectsOf = (cell) => {
+  const items = uniq((cell ?? "").split("; ").map((s) => s.trim()));
+  if (items.some((s) => /[;\n]/.test(s))) warn(`a Majors/Minors (list) item still contains ";" or a line break (kept as-is)`);
+  return items;
+};
 const linkedinOf = (raw) => {
   const s = nullIf(raw);
   return s ? s.replace(/^(?!https?:\/\/)/, "https://") : null;
@@ -418,6 +440,7 @@ function build(file) {
       positionsByYear: byYear(r["Position(s) by year"]),
       emails: emailsOf(r["Email(s)"]), phones: phonesOf(r["Phone(s)"]),
       standing, grad, major: nullIf(r["Major"]), joined: joined.joined, joinedApprox: joined.approx,
+      majors: subjectsOf(r["Majors (list)"]), minors: subjectsOf(r["Minors (list)"]),
       birthday: nullIf(r["Birthday"]), trips, hindi, postGrad, other,
       // The v6 LinkedIn column wins; older sheets had it as an "Other info" line.
       linkedin: linkedinOf(r["LinkedIn"]) ?? linkedin,
@@ -551,7 +574,7 @@ function personRow(p, now) {
   return {
     slug: p.slug, full_name: p.name, emails: p.emails, phones: p.phones,
     grad_year: p.grad, grad_year_inferred: p.gradInferred, class_standing: p.standing,
-    major: p.major, joined_rishi: p.joined, joined_rishi_approx: p.joinedApprox, birthday: p.birthday,
+    major: p.major, majors: p.majors, minors: p.minors, joined_rishi: p.joined, joined_rishi_approx: p.joinedApprox, birthday: p.birthday,
     india_trips: [...p.trips].sort(), hindi_level: p.hindi, linkedin: p.linkedin, post_grad_plans: p.postGrad,
     other_info: p.other, years_active: p.years, first_year: p.first, last_year: p.last,
     current_job: p.currentJob, employment_history: p.employment,
@@ -589,6 +612,7 @@ function printSummary({ people, perTab, ignoredTabs, conflicts }) {
   console.log("\nPerson fields filled:");
   const filled = (f) => people.filter(f).length;
   console.log(`  emails ${filled((p) => p.emails.length)} · phones ${filled((p) => p.phones.length)} · grad year ${filled((p) => p.grad)} (${filled((p) => p.gradInferred)} inferred) · major ${filled((p) => p.major)} · joined ${filled((p) => p.joined)} · birthday ${filled((p) => p.birthday)} · India trip ${filled((p) => p.trips.length)} · Hindi ${filled((p) => p.hindi)} · LinkedIn ${filled((p) => p.linkedin)} · post-grad ${filled((p) => p.postGrad)}`);
+  console.log(`  majors (list) ${filled((p) => p.majors.length)} (${new Set(people.flatMap((p) => p.majors)).size} distinct) · minors (list) ${filled((p) => p.minors.length)} (${new Set(people.flatMap((p) => p.minors)).size} distinct)`);
   console.log(`  current role ${filled((p) => p.currentJob)} · employment history ${filled((p) => p.employment.length)} (${people.reduce((n, p) => n + p.employment.length, 0)} jobs) · Years at Berkeley ${filled((p) => p.berkeley.text)}`);
   console.log(`  multiple emails: ${filled((p) => p.emails.length > 1)} · multiple phones: ${filled((p) => p.phones.length > 1)}`);
   const dupSlugs = people.filter((p) => p.slug !== slugify(p.name)).map((p) => p.slug);
@@ -598,6 +622,101 @@ function printSummary({ people, perTab, ignoredTabs, conflicts }) {
   return Object.entries(perTab).every(([y, n]) => countYear(people, y) === n);
 }
 
+// ======================================================= blank keeps existing
+// A blank cell in the sheet never clears a stored value. Columns that only make
+// sense together are kept or replaced as a group; `by` lists the columns whose
+// blankness means "the sheet had nothing here" (default: the first column).
+const isBlank = (v) =>
+  v === null || v === undefined || v === "" || v === false ||
+  (Array.isArray(v) ? v.length === 0 : typeof v === "object" && Object.keys(v).length === 0);
+
+const PERSON_FIELDS = [
+  { label: "emails", cols: ["emails"] },
+  { label: "phones", cols: ["phones"] },
+  { label: "graduation year", cols: ["grad_year", "grad_year_inferred"] },
+  { label: "class standing", cols: ["class_standing"] },
+  { label: "major (raw text)", cols: ["major"] },
+  { label: "majors (list)", cols: ["majors"] },
+  { label: "minors (list)", cols: ["minors"] },
+  { label: "joined RISHI", cols: ["joined_rishi", "joined_rishi_approx"] },
+  { label: "birthday", cols: ["birthday"] },
+  { label: "India trips", cols: ["india_trips"] },
+  { label: "Hindi", cols: ["hindi_level"] },
+  { label: "LinkedIn", cols: ["linkedin"] },
+  { label: "post-grad plans", cols: ["post_grad_plans"] },
+  { label: "other info", cols: ["other_info"] },
+  { label: "years in RISHI", cols: ["years_active", "first_year", "last_year"] },
+  { label: "current role", cols: ["current_job"] },
+  { label: "employment history", cols: ["employment_history"] },
+  { label: "Years at Berkeley", cols: ["berkeley_years", "berkeley_start", "berkeley_end"] },
+];
+const MEMBERSHIP_FIELDS = [
+  { label: "project group", cols: ["project_groups", "project_group_raw", "not_yet_placed"], by: ["project_groups", "project_group_raw", "not_yet_placed"] },
+  { label: "position", cols: ["positions", "position_raw", "position_type"], by: ["positions", "position_raw"] },
+  { label: "class standing", cols: ["class_standing"] },
+  { label: "semesters in RISHI", cols: ["semesters_in_rishi"] },
+  { label: "hiatus", cols: ["hiatus"] },
+  { label: "Hindi", cols: ["hindi"] },
+  { label: "India trip", cols: ["india_trip"] },
+];
+const blankIn = (row, f) => (f.by ?? [f.cols[0]]).every((c) => isBlank(row?.[c]));
+
+/** The row to write: `next`, except that any field the sheet left blank keeps `prev`'s value. */
+function keepExisting(next, prev, fields) {
+  if (!prev) return next;
+  const out = { ...next };
+  for (const f of fields) {
+    if (!f.cols.every((c) => c in prev && c in next)) continue; // column not in the database yet
+    if (blankIn(next, f) && !blankIn(prev, f)) for (const c of f.cols) out[c] = prev[c];
+  }
+  return out;
+}
+
+/** A stored graduation year is never replaced by a different one (see the header). */
+function holdGradYear(row, prev) {
+  if (ALLOW_GRAD_CHANGES || !prev || prev.grad_year == null || row.grad_year == null || row.grad_year === prev.grad_year) return { row, held: null };
+  return { row: { ...row, grad_year: prev.grad_year, grad_year_inferred: prev.grad_year_inferred }, held: { stored: prev.grad_year, sheet: row.grad_year } };
+}
+function printHeldGradYears(plan) {
+  const held = plan.filter((x) => x.gradHeld);
+  if (!held.length) return;
+  console.log(`\nGraduation years held at the stored value — the sheet says otherwise (${held.length}; --allow-grad-year-changes to accept):`);
+  for (const x of held.sort((a, b) => a.p.name.localeCompare(b.p.name)))
+    console.log(`  ${x.p.name}: kept ${x.gradHeld.stored}${x.prev.grad_year_inferred ? " (estimated)" : ""}, sheet has ${x.gradHeld.sheet}`);
+}
+
+// Comparison: order is irrelevant for set-like arrays; object keys are sorted.
+const SET_COLS = new Set(["emails", "phones", "india_trips", "years_active"]);
+const stable = (v) => JSON.stringify(v, (_, x) =>
+  x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x);
+const canon = (v, col) => (isBlank(v) ? "" : SET_COLS.has(col) && Array.isArray(v) ? stable([...v].sort()) : stable(v));
+const sameField = (a, b, f) => f.cols.every((c) => canon(a?.[c], c) === canon(b?.[c], c));
+
+/** Per field: newly filled / changed / kept (sheet blank) / unchanged, over rows that already exist. */
+function tallyDiff(pairs, fields) {
+  const t = fields.map((f) => ({ f, filled: 0, changed: 0, kept: 0, same: 0 }));
+  for (const { prev, next, merged } of pairs) for (const k of t) {
+    const pb = blankIn(prev, k.f), mb = blankIn(merged, k.f);
+    if (pb && mb) continue;
+    if (pb) k.filled++;
+    else if (blankIn(next, k.f)) k.kept++;
+    else if (sameField(prev, merged, k.f)) k.same++;
+    else k.changed++;
+  }
+  return t;
+}
+function printTally(title, t) {
+  console.log(`\n${title}`);
+  console.log(`  ${"field".padEnd(22)} ${"newly filled".padStart(12)} ${"changed".padStart(8)} ${"kept (sheet blank)".padStart(19)} ${"unchanged".padStart(10)}`);
+  for (const k of t) console.log(`  ${k.f.label.padEnd(22)} ${String(k.filled).padStart(12)} ${String(k.changed).padStart(8)} ${String(k.kept).padStart(19)} ${String(k.same).padStart(10)}`);
+}
+
+async function hasColumns(client, name, cols) {
+  const { error } = await table(client, name).select(cols).limit(1);
+  return !error;
+}
+
+// ====================================================================== main
 async function main() {
   const parsed = build(FILE);
   const ok = printSummary(parsed);
@@ -622,54 +741,83 @@ async function main() {
     const slugs = new Set(people.map((p) => p.slug));
     const strays = dbPeople.filter((p) => !slugs.has(p.slug));
     if (strays.length) { bad = true; console.log(`  people in db but not in the sheet: ${strays.length}`); }
-    // Field fill, read back from the database (counts only — never values).
-    const filledDb = await selectAll(client, PEOPLE, "id, linkedin, major, current_job, berkeley_years, employment_history, grad_year");
+    // Field fill, read back from the database (counts only — never values). A blank
+    // cell keeps the stored value, so the database may hold more than the sheet.
+    const filledDb = await selectAll(client, PEOPLE, "id, linkedin, major, majors, minors, current_job, berkeley_years, employment_history, grad_year");
     const nDb = (f) => filledDb.filter(f).length, nSheet = (f) => people.filter(f).length;
-    console.log("\n  Field                db  sheet");
+    console.log("\n  Field                     db  sheet");
     for (const [label, fd, fs] of [
       ["people total", () => true, () => true],
+      ["with at least one major", (r) => r.majors?.length, (p) => p.majors.length],
+      ["with a minor", (r) => r.minors?.length, (p) => p.minors.length],
       ["with LinkedIn", (r) => r.linkedin, (p) => p.linkedin],
-      ["with major", (r) => r.major, (p) => p.major],
+      ["with major (raw text)", (r) => r.major, (p) => p.major],
       ["with current role", (r) => r.current_job, (p) => p.currentJob],
-      ["with Years at Berkeley", (r) => r.berkeley_years, (p) => p.berkeley.text],
       ["with employment history", (r) => r.employment_history?.length, (p) => p.employment.length],
+      ["with Years at Berkeley", (r) => r.berkeley_years, (p) => p.berkeley.text],
       ["with graduation year", (r) => r.grad_year, (p) => p.grad],
     ]) {
       const a = nDb(fd), b = nSheet(fs);
-      if (a !== b) bad = true;
-      console.log(`  ${label.padEnd(24)} ${String(a).padStart(3)}  ${String(b).padStart(3)}  ${a === b ? "✓" : "✗"}`);
+      if (a < b) bad = true;
+      console.log(`  ${label.padEnd(25)} ${String(a).padStart(3)}  ${String(b).padStart(3)}  ${a === b ? "✓" : a > b ? "(kept from db)" : "✗"}`);
     }
+    const distinct = (rows) => new Set(rows.flat()).size;
+    const dm = distinct(filledDb.map((r) => r.majors ?? [])), sm = distinct(people.map((p) => p.majors));
+    if (dm < sm) bad = true;
+    console.log(`  ${"distinct majors".padEnd(25)} ${String(dm).padStart(3)}  ${String(sm).padStart(3)}  ${dm === sm ? "✓" : dm > sm ? "(kept from db)" : "✗"}`);
+    console.log(`  ${"distinct minors".padEnd(25)} ${String(distinct(filledDb.map((r) => r.minors ?? []))).padStart(3)}  ${String(distinct(people.map((p) => p.minors))).padStart(3)}`);
     console.log(bad ? "\n✗ Database does not match the sheet." : "\n✓ Database matches the sheet.");
     process.exit(bad ? 1 : 0);
   }
 
+  let client;
+  try { client = await db(); } catch (e) {
+    if (!DRY) throw e;
+    console.log(`\n(Database not checked: ${e instanceof Error ? e.message : e})\n\nDry run — nothing was written.`);
+    return;
+  }
+  const hasLists = await hasColumns(client, PEOPLE, "majors, minors");
+  if (!DRY && !hasLists) throw new Error("directory_people has no majors/minors columns — run migration-full-directory-v7.sql first. Nothing written.");
+
+  // ---- plan: what each row becomes (the sheet's value, or the stored one where the sheet is blank)
+  const now = new Date().toISOString(); // an instant (UTC, with "Z") — never a naive timestamp
+  const prevPeople = await selectAll(client, PEOPLE, "*");
+  const prevBySlug = new Map(prevPeople.map((r) => [r.slug, r]));
+  const plan = people.map((p) => {
+    const next = personRow(p, now);
+    if (!hasLists) { delete next.majors; delete next.minors; } // dry run before the migration
+    const prev = prevBySlug.get(p.slug);
+    const { row, held } = holdGradYear(keepExisting(next, prev, PERSON_FIELDS), prev);
+    return { p, prev, next, merged: row, gradHeld: held };
+  });
+  printHeldGradYears(plan);
+  const slugs = new Set(people.map((p) => p.slug));
+  const stalePeople = prevPeople.filter((r) => !slugs.has(r.slug));
+
+  const prevMs = await selectAll(client, MEMBERSHIPS, "*");
+  const prevMsByKey = new Map(prevMs.map((m) => [`${m.person_id}|${m.year}`, m]));
+  const msPlan = (idOf) => plan.flatMap(({ p }) => p.memberships.map((m) => {
+    const next = { ...m, person_id: idOf(p.slug), updated_at: now };
+    const prev = next.person_id ? prevMsByKey.get(`${next.person_id}|${m.year}`) : undefined;
+    return { prev, next, merged: keepExisting(next, prev, MEMBERSHIP_FIELDS) };
+  }));
+
   if (DRY) {
-    try {
-      const client = await db();
-      const existing = await selectAll(client, PEOPLE, "id, slug, full_name");
-      const have = new Set(existing.map((e) => e.slug));
-      const slugs = new Set(people.map((p) => p.slug));
-      const gone = existing.filter((p) => !slugs.has(p.slug));
-      console.log(`\nDatabase now: ${existing.length} people. A real run would add ${people.filter((p) => !have.has(p.slug)).length}, update ${people.filter((p) => have.has(p.slug)).length}, remove ${gone.length}${gone.length ? `: ${gone.map((g) => g.full_name).join(", ")}` : ""}.`);
-    } catch (e) {
-      console.log(`\n(Database not checked: ${e instanceof Error ? e.message : e})`);
-    }
+    await printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan: msPlan((s) => prevBySlug.get(s)?.id), prevMs });
     console.log("\nDry run — nothing was written.");
     return;
   }
 
   // ---- write
-  const client = await db();
-  const now = new Date().toISOString(); // an instant (UTC, with "Z") — never a naive timestamp
   const idBySlug = new Map();
-  await inBatches(people.map((p) => personRow(p, now)), 100, async (batch) => {
+  await inBatches(plan.map((x) => x.merged), 100, async (batch) => {
     const { data, error } = await table(client, PEOPLE).upsert(batch, { onConflict: "slug" }).select("id, slug");
     if (error) throw new Error(`${PEOPLE} upsert: ${error.message}`);
     for (const r of data) idBySlug.set(r.slug, r.id);
   });
   if (idBySlug.size !== people.length) throw new Error(`Upserted ${idBySlug.size} people, expected ${people.length}`);
 
-  const msRows = people.flatMap((p) => p.memberships.map((m) => ({ ...m, person_id: idBySlug.get(p.slug), updated_at: now })));
+  const msRows = msPlan((s) => idBySlug.get(s)).map((x) => x.merged);
   await inBatches(msRows, 200, async (batch) => {
     const { error } = await table(client, MEMBERSHIPS).upsert(batch, { onConflict: "person_id,year" });
     if (error) throw new Error(`${MEMBERSHIPS} upsert: ${error.message}`);
@@ -682,8 +830,6 @@ async function main() {
     const { error } = await table(client, MEMBERSHIPS).delete().in("id", ids);
     if (error) throw new Error(`${MEMBERSHIPS} prune: ${error.message}`);
   });
-  const slugs = new Set(people.map((p) => p.slug));
-  const stalePeople = (await selectAll(client, PEOPLE, "id, slug")).filter((p) => !slugs.has(p.slug));
   await inBatches(stalePeople.map((p) => p.id), 200, async (ids) => {
     const { error } = await table(client, PEOPLE).delete().in("id", ids);
     if (error) throw new Error(`${PEOPLE} prune: ${error.message}`);
@@ -691,6 +837,68 @@ async function main() {
 
   console.log(`\nWrote ${people.length} people and ${msRows.length} memberships; removed ${stalePeople.length} people and ${staleMs.length} memberships no longer in the sheet.`);
   console.log("Now confirm with:  node --env-file=.env.local scripts/import-full-directory.mjs --verify");
+}
+
+/** The dry-run report: what a real run would change, against the live database. */
+async function printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan, prevMs }) {
+  const added = plan.filter((x) => !x.prev);
+  console.log(`\nDatabase now: ${prevPeople.length} people, ${prevMs.length} memberships.`);
+  console.log(`A real run would update ${plan.length - added.length} people, add ${added.length}${added.length ? ` (${added.map((x) => x.p.name).join(", ")})` : ""}, remove ${stalePeople.length}${stalePeople.length ? ` (${stalePeople.map((r) => r.full_name).join(", ")})` : ""}.`);
+
+  // "Old" majors = what the site shows today: the stored list once the v7 migration
+  // has run, otherwise the free-text Major split the way the Major filter splits it.
+  const { majorLists } = await import(new URL("../lib/fullDirectory/majors.ts", import.meta.url));
+  const derived = majorLists(prevPeople.map((r) => r.major));
+  const shown = new Map(prevPeople.map((r, i) => [r.slug, hasLists && r.majors?.length ? r.majors : derived[i]]));
+  // What a real run stores: the sheet's list, or (sheet blank) the stored list — never the text split.
+  const after = (x, col) => (x.p[col].length ? x.p[col] : hasLists ? x.prev?.[col] ?? [] : []);
+  const sameSet = (a, b) => a.length === b.length && a.every((v) => b.includes(v));
+  const fmt = (xs) => (xs.length ? xs.join("; ") : "(none)");
+
+  const existing = plan.filter((x) => x.prev);
+  const majorChanges = existing.filter((x) => (shown.get(x.p.slug) ?? []).length && !sameSet(shown.get(x.p.slug), after(x, "majors")));
+  console.log(`\n(a) Majors that change from a non-empty value to a different one: ${majorChanges.length}`);
+  console.log(`    old = the majors the Major filter shows today${hasLists ? "" : " (split from the stored \"Major\" text)"}; new = "Majors (list)"`);
+  for (const x of majorChanges.sort((a, b) => a.p.name.localeCompare(b.p.name)))
+    console.log(`  ${x.p.name}: ${fmt(shown.get(x.p.slug))}  →  ${fmt(after(x, "majors"))}${x.p.minors.length ? `   [minors: ${fmt(x.p.minors)}]` : ""}`);
+  const lostMajors = majorChanges.filter((x) => !after(x, "majors").length);
+  console.log(`  (of these, ${lostMajors.length} would go to no majors: blank "Majors (list)" in v7 but a non-empty stored "Major")`);
+
+  const rawChanges = existing.filter((x) => x.prev.major && x.merged.major !== x.prev.major);
+  console.log(`\n(a′) Stored free-text "Major" changing to different text: ${rawChanges.length}`);
+  for (const x of rawChanges.sort((a, b) => a.p.name.localeCompare(b.p.name)))
+    console.log(`  ${x.p.name}: "${x.prev.major}"  →  "${x.merged.major}"`);
+
+  // Majors/minors are compared with what is shown today (see above).
+  const pairs = existing.map((x) => ({
+    name: x.p.name,
+    prev: { ...x.prev, majors: shown.get(x.p.slug), minors: hasLists ? x.prev.minors : [] },
+    next: { ...x.next, majors: x.p.majors, minors: x.p.minors },
+    merged: { ...x.merged, majors: after(x, "majors"), minors: after(x, "minors") },
+  }));
+  printTally(`(b) Per field, over the ${existing.length} people already in the database:`, tallyDiff(pairs, PERSON_FIELDS));
+
+  // --show <column>: list the people whose value for that field changes (old → new).
+  const show = opt("--show");
+  const f = show && PERSON_FIELDS.find((x) => x.cols.includes(show));
+  if (show && !f) console.log(`\n--show: unknown column "${show}" (one of: ${PERSON_FIELDS.flatMap((x) => x.cols).join(", ")})`);
+  if (f) {
+    const val = (row) => f.cols.map((c) => `${c}=${canon(row?.[c], c) || "∅"}`).join(" ");
+    const hits = pairs.filter((x) => !blankIn(x.prev, f) && !blankIn(x.next, f) && !sameField(x.prev, x.merged, f));
+    console.log(`\n--show ${show}: ${hits.length} changed`);
+    for (const x of hits.sort((a, b) => a.name.localeCompare(b.name))) console.log(`  ${x.name}: ${val(x.prev)}  →  ${val(x.merged)}`);
+  }
+
+  const existingMs = msPlan.filter((x) => x.prev);
+  const keepMs = new Set(msPlan.filter((x) => x.next.person_id).map((x) => `${x.next.person_id}|${x.next.year}`));
+  const staleMs = prevMs.filter((m) => !keepMs.has(`${m.person_id}|${m.year}`) && !stalePeople.some((s) => s.id === m.person_id));
+  console.log(`\nMemberships: update ${existingMs.length}, add ${msPlan.length - existingMs.length}, remove ${staleMs.length}${staleMs.length ? ` (${staleMs.map((m) => `${prevPeople.find((r) => r.id === m.person_id)?.full_name} ${m.year}`).join(", ")})` : ""}.`);
+  printTally(`Per membership field, over the ${existingMs.length} memberships already in the database:`, tallyDiff(existingMs, MEMBERSHIP_FIELDS));
+
+  const finalMajors = plan.map((x) => after(x, "majors")), finalMinors = plan.map((x) => after(x, "minors"));
+  console.log(`\nAfter the run: ${finalMajors.filter((m) => m.length).length} with at least one major · ${finalMinors.filter((m) => m.length).length} with a minor · ${new Set(finalMajors.flat()).size} distinct majors · ${new Set(finalMinors.flat()).size} distinct minors`);
+  const majorSet = new Set(finalMajors.flat());
+  console.log(`  subjects that are someone's major AND someone's minor: ${[...new Set(finalMinors.flat())].filter((m) => majorSet.has(m)).join(", ") || "(none)"}`);
 }
 
 main().catch((e) => { console.error(`\n✗ ${e instanceof Error ? e.message : e}`); process.exit(1); });

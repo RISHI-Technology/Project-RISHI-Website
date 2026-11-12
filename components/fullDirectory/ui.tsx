@@ -41,6 +41,37 @@ export function Highlight({ text, tokens }: { text: string; tokens: string[] }) 
 }
 
 // ---------------------------------------------------------------- group chip
+/** Majors as solid chips, then minors as outlined chips marked "(minor)", so a
+ *  major match and a minor match read differently. `max` folds the rest into "+n". */
+export function SubjectChips({ majors, minors, tokens = [], small = false, max }: {
+  majors: string[]; minors: string[]; tokens?: string[]; small?: boolean; max?: number;
+}) {
+  const items = [...majors.map((s) => ({ s, minor: false })), ...minors.map((s) => ({ s, minor: true }))];
+  if (!items.length) return null;
+  const shown = max ? items.slice(0, max) : items;
+  const rest = items.slice(shown.length);
+  const name = (x: { s: string; minor: boolean }) => (x.minor ? `${x.s} (minor)` : x.s);
+  return (
+    <span className="flex flex-wrap gap-1">
+      {shown.map((x) => (
+        <span
+          key={`${x.minor ? "minor" : "major"}:${x.s}`}
+          title={name(x)}
+          className={`inline-flex max-w-full items-center gap-1 rounded-full border font-medium ${small ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-0.5 text-xs"} ${
+            x.minor ? "border-dashed border-pine/35 text-ink/75" : "border-transparent bg-pine/[0.09] text-pine-deep"
+          }`}
+        >
+          <span className="truncate"><Highlight text={x.s} tokens={tokens} /></span>
+          {x.minor && <span className="shrink-0 text-ink/55">(minor)</span>}
+        </span>
+      ))}
+      {rest.length > 0 && (
+        <span className="rounded-full bg-ink/[0.06] px-2 py-0.5 text-[11px] text-ink/60" title={`Also: ${rest.map(name).join(", ")}`}>+{rest.length}</span>
+      )}
+    </span>
+  );
+}
+
 export function GroupChip({ group, tokens = [], small = false }: { group: string; tokens?: string[]; small?: boolean }) {
   return (
     <span

@@ -52,10 +52,13 @@ export type FullPerson = {
   phones?: string[];
   gradYear: number | null;
   gradYearInferred: boolean;
-  /** Exactly as entered — what the profile, table, search and CSV show. */
+  /** The free-text "Major" column exactly as entered. Kept for search only — the
+   *  views show `majors` / `minors`. */
   major: string | null;
-  /** `major` split into individual majors, for the Major filter only. */
+  /** "Majors (list)" — what cards, profile, table, CSV and the Major filter use. */
   majors: string[];
+  /** "Minors (list)" — shown as "(minor)" chips; the Major filter matches them too. */
+  minors: string[];
   joined: string | null;
   joinedApprox: boolean;
   birthday: string | null;

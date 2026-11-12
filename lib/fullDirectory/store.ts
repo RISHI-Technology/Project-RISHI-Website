@@ -45,6 +45,8 @@ type PersonRow = {
   years_active: string[] | null; first_year: number | null; last_year: number | null;
   // v6 (migration-full-directory-v6.sql) — absent until that migration has run.
   current_job?: string | null; employment_history?: Partial<Job>[] | null; berkeley_years?: string | null;
+  // v7 (migration-full-directory-v7.sql) — absent until that migration has run.
+  majors?: string[] | null; minors?: string[] | null;
 };
 type MembershipRow = {
   person_id: string; year: string; year_start: number | null; project_groups: string[] | null;
@@ -55,17 +57,23 @@ type MembershipRow = {
 
 const BASE_PERSON_COLUMNS =
   "id, slug, full_name, emails, phones, grad_year, grad_year_inferred, major, joined_rishi, joined_rishi_approx, birthday, india_trips, hindi_level, linkedin, post_grad_plans, other_info, years_active, first_year, last_year";
-const PERSON_COLUMNS = `${BASE_PERSON_COLUMNS}, current_job, employment_history, berkeley_years`;
+const V6_COLUMNS = `${BASE_PERSON_COLUMNS}, current_job, employment_history, berkeley_years`;
+const PERSON_COLUMNS = `${V6_COLUMNS}, majors, minors`;
 
-/** People with the v6 columns — or without them if that migration hasn't run yet,
- *  so deploying the code before the migration doesn't take the directory down. */
-async function selectPeople(): Promise<PersonRow[]> {
+/** People with the v7/v6 columns — or without them if those migrations haven't run
+ *  yet, so deploying the code before a migration doesn't take the directory down. */
+async function selectPeople(): Promise<{ rows: PersonRow[]; hasLists: boolean }> {
+  const missing = (e: unknown, re: RegExp) => re.test(e instanceof Error ? e.message : "");
   try {
-    return await selectAll<PersonRow>("directory_people", PERSON_COLUMNS);
+    return { rows: await selectAll<PersonRow>("directory_people", PERSON_COLUMNS), hasLists: true };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "";
-    if (!/current_job|employment_history|berkeley_years/.test(msg)) throw e;
-    return selectAll<PersonRow>("directory_people", BASE_PERSON_COLUMNS);
+    if (!missing(e, /majors|minors|current_job|employment_history|berkeley_years/)) throw e;
+  }
+  try {
+    return { rows: await selectAll<PersonRow>("directory_people", V6_COLUMNS), hasLists: false };
+  } catch (e) {
+    if (!missing(e, /current_job|employment_history|berkeley_years/)) throw e;
+    return { rows: await selectAll<PersonRow>("directory_people", BASE_PERSON_COLUMNS), hasLists: false };
   }
 }
 
@@ -84,7 +92,7 @@ const isBerkeley = (e: string) => /@berkeley\.edu$/i.test(e.trim());
 
 /** The whole directory, with private fields stripped unless `canSeePrivate`. */
 export async function listFullDirectory(canSeePrivate: boolean): Promise<FullPerson[]> {
-  const [people, memberships] = await Promise.all([
+  const [{ rows: people, hasLists }, memberships] = await Promise.all([
     selectPeople(),
     selectAll<MembershipRow>("directory_memberships", MEMBERSHIP_COLUMNS),
   ]);
@@ -108,7 +116,9 @@ export async function listFullDirectory(canSeePrivate: boolean): Promise<FullPer
     byPerson.set(m.person_id, list);
   }
 
-  const majorsOf = majorLists(people.map((p) => p.major));
+  // The stored lists are authoritative once the v7 migration has run (an empty list
+  // means "no major" — e.g. "Undecided"). Before it, split the free text as before.
+  const majorsOf = hasLists ? people.map((p) => p.majors ?? []) : majorLists(people.map((p) => p.major));
   return people
     .map((p, i) => {
       const person: FullPerson = {
@@ -119,6 +129,7 @@ export async function listFullDirectory(canSeePrivate: boolean): Promise<FullPer
         gradYearInferred: p.grad_year_inferred,
         major: p.major,
         majors: majorsOf[i],
+        minors: p.minors ?? [],
         joined: p.joined_rishi,
         joinedApprox: p.joined_rishi_approx,
         birthday: p.birthday,

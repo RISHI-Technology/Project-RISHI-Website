@@ -1,10 +1,11 @@
 // ============================================================================
 //  Full Directory — split a person's free-text "Major" into individual majors.
 // ----------------------------------------------------------------------------
-//  The stored `major` string is never changed: it is still what the profile,
-//  table, search and CSV show. This only derives `FullPerson.majors`, the list
-//  the Major FILTER uses, so someone with "Bioengineering + CS" is listed under
-//  both "Bioengineering" and "CS" rather than under a combined checkbox.
+//  FALLBACK ONLY. Since the v7 sheet, `majors` / `minors` are stored lists
+//  ("Majors (list)" / "Minors (list)", migration-full-directory-v7.sql) and this
+//  file is used only (1) by the store before that migration has run, and (2) by
+//  the import script's dry run, to show what the filter displayed before.
+//  The stored `major` string is never changed.
 //
 //  Separators: |  ;  ,  +  &  and   (never inside parentheses).
 //  Minors are not handled yet: a piece like "Data Science minor" is, for now,
