@@ -53,7 +53,7 @@ export type DirState = {
   companies: string[];
   hindi: string[];
   status: "" | "current" | "alumni";
-  contact: ("email" | "phone")[];
+  contact: ContactKind[];
   hiatus: boolean;
   sort: SortKey | null; // null = default (relevance while searching, else name)
   dir: "asc" | "desc";
@@ -62,6 +62,16 @@ export type DirState = {
   cols: ColKey[] | null; // null = default columns
   person: string | null;
 };
+
+/** "Contact info" checkboxes. Email and phone are exec/webmaster only; LinkedIn is
+ *  visible to every member (as it already is on each person), so anyone can filter on it. */
+export type ContactKind = "email" | "phone" | "linkedin";
+const CONTACT_KINDS: ContactKind[] = ["email", "phone", "linkedin"];
+const PRIVATE_CONTACT: ContactKind[] = ["email", "phone"];
+/** The contact checkboxes this viewer may use (any others in a shared link are ignored). */
+export const usableContact = (s: Pick<DirState, "contact">, canSeePrivate: boolean): ContactKind[] =>
+  canSeePrivate ? s.contact : s.contact.filter((c) => !PRIVATE_CONTACT.includes(c));
+const CONTACT_CHIP: Record<ContactKind, string> = { email: "Has email", phone: "Has phone", linkedin: "Has LinkedIn" };
 
 export const EMPTY_FILTERS: Pick<DirState,
   "years" | "yearMode" | "from" | "to" | "groups" | "ptypes" | "positions" | "trips" | "grads" | "majors" | "majorMode" | "companies" | "hindi" | "status" | "contact" | "hiatus"> = {
@@ -98,7 +108,7 @@ export function parseState(sp: URLSearchParams): DirState {
     companies: list("co"),
     hindi: list("hindi"),
     status: status === "current" || status === "alumni" ? status : "",
-    contact: list("contact").filter((c): c is "email" | "phone" => c === "email" || c === "phone"),
+    contact: list("contact").filter((c): c is ContactKind => (CONTACT_KINDS as string[]).includes(c)),
     hiatus: sp.get("hiatus") === "1",
     sort: sort && SORTS.includes(sort) ? sort : null,
     dir: sp.get("dir") === "desc" ? "desc" : "asc",
@@ -171,7 +181,7 @@ export function hasFilters(s: DirState, canSeePrivate: boolean): boolean {
 export function activeCount(s: DirState, canSeePrivate: boolean): number {
   return (s.yearMode === "range" ? (s.from !== null || s.to !== null ? 1 : 0) : s.years.length)
     + s.groups.length + s.ptypes.length + s.positions.length + s.trips.length + s.grads.length
-    + s.majors.length + s.companies.length + s.hindi.length + (s.status ? 1 : 0) + (canSeePrivate ? s.contact.length : 0) + (s.hiatus ? 1 : 0);
+    + s.majors.length + s.companies.length + s.hindi.length + (s.status ? 1 : 0) + usableContact(s, canSeePrivate).length + (s.hiatus ? 1 : 0);
 }
 
 export function applyFilters(people: FullPerson[], s: DirState, canSeePrivate: boolean, skip?: Facet): Match[] {
@@ -203,9 +213,11 @@ export function applyFilters(people: FullPerson[], s: DirState, canSeePrivate: b
     if (use("hindi") && s.hindi.length && !personHindi(p).some((h) => s.hindi.includes(h))) continue;
     if (use("status") && s.status === "current" && !isCurrent(p)) continue;
     if (use("status") && s.status === "alumni" && isCurrent(p)) continue;
-    if (use("contact") && canSeePrivate) {
-      if (s.contact.includes("email") && !p.emails.length) continue;
-      if (s.contact.includes("phone") && !p.phones?.length) continue;
+    if (use("contact")) {
+      const contact = usableContact(s, canSeePrivate);
+      if (contact.includes("email") && !p.emails.length) continue;
+      if (contact.includes("phone") && !p.phones?.length) continue;
+      if (contact.includes("linkedin") && !p.linkedin) continue;
     }
 
     // ---- year-level (all conditions on the same year)
@@ -256,6 +268,7 @@ export function facetOptions(people: FullPerson[], s: DirState, canSeePrivate: b
   const statusC = tally(base("status"), (m) => [isCurrent(m.person) ? "current" : "alumni"]);
   const contactC = tally(base("contact"), (m) => [
     ...(m.person.emails.length ? ["email"] : []), ...(m.person.phones?.length ? ["phone"] : []),
+    ...(m.person.linkedin ? ["linkedin"] : []),
   ]);
   const count = (c: Map<string, number>, v: string) => c.get(v) ?? 0;
 
@@ -293,10 +306,13 @@ export function facetOptions(people: FullPerson[], s: DirState, canSeePrivate: b
       { value: "current", label: `Current (${shortYear(CURRENT_YEAR)})`, count: count(statusC, "current") },
       { value: "alumni", label: "Alumni", count: count(statusC, "alumni") },
     ],
-    contact: canSeePrivate ? [
-      { value: "email", label: "Has an email", count: count(contactC, "email") },
-      { value: "phone", label: "Has a phone number", count: count(contactC, "phone") },
-    ] : [],
+    contact: [
+      ...(canSeePrivate ? [
+        { value: "email", label: "Has an email", count: count(contactC, "email") },
+        { value: "phone", label: "Has a phone number", count: count(contactC, "phone") },
+      ] : []),
+      { value: "linkedin", label: "Has LinkedIn", count: count(contactC, "linkedin") },
+    ],
     hasHiatus: people.some((p) => p.memberships.some((m) => !!m.hiatus)),
   };
 }
@@ -325,8 +341,8 @@ export function chipsFor(s: DirState, canSeePrivate: boolean): Chip[] {
   for (const c of s.companies) chips.push({ key: `co:${c}`, label: c, remove: without("companies", c) });
   for (const h of s.hindi) chips.push({ key: `h:${h}`, label: `Hindi: ${h}`, remove: without("hindi", h) });
   if (s.status) chips.push({ key: "status", label: s.status === "current" ? "Current members" : "Alumni", remove: { status: "" } });
-  if (canSeePrivate) for (const c of s.contact)
-    chips.push({ key: `c:${c}`, label: c === "email" ? "Has email" : "Has phone", remove: { contact: s.contact.filter((x) => x !== c) } });
+  for (const c of usableContact(s, canSeePrivate))
+    chips.push({ key: `c:${c}`, label: CONTACT_CHIP[c], remove: { contact: s.contact.filter((x) => x !== c) } });
   if (s.hiatus) chips.push({ key: "hiatus", label: "On hiatus", remove: { hiatus: false } });
   return chips;
 }

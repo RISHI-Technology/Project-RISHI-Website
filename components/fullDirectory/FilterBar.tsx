@@ -3,7 +3,8 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState, type ReactNode } from "react";
 import type { PositionType } from "@/lib/fullDirectory/types";
-import type { DirState, facetOptions } from "@/components/fullDirectory/filters";
+import type { ContactKind, DirState, facetOptions } from "@/components/fullDirectory/filters";
+import { usableContact } from "@/components/fullDirectory/filters";
 import { shortYear } from "@/components/fullDirectory/model";
 import { CloseIcon, FilterIcon, OptionList, Popover, Segmented } from "@/components/fullDirectory/ui";
 
@@ -127,14 +128,14 @@ function useSections(s: DirState, set: Set_, o: Options, canSeePrivate: boolean)
       ),
     },
   ];
-  if (canSeePrivate && o.contact.length)
+  if (o.contact.length)
     sections.push({
-      key: "contact", label: "Contact info", badge: s.contact.length,
+      key: "contact", label: "Contact info", badge: usableContact(s, canSeePrivate).length,
       body: (
         <div>
-          <OptionList label="contact info" options={o.contact} selected={s.contact}
-            onToggle={(v) => set({ contact: toggleIn(s.contact, v as "email" | "phone") })} />
-          <p className="mt-2 px-2 text-[11px] text-ink/50">Exec only — members don’t see phone numbers.</p>
+          <OptionList label="contact info" options={o.contact} selected={usableContact(s, canSeePrivate)}
+            onToggle={(v) => set({ contact: toggleIn(s.contact, v as ContactKind) })} />
+          {canSeePrivate && <p className="mt-2 px-2 text-[11px] text-ink/50">Email and phone are exec only — members don’t see phone numbers.</p>}
         </div>
       ),
     });
