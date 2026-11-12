@@ -28,7 +28,7 @@ export const ALL_COLS: { key: ColKey; label: string }[] = [
   { key: "hindi", label: "Hindi" },
   { key: "contact", label: "Contact" },
 ];
-export const DEFAULT_COLS: ColKey[] = ["years", "group", "position", "grad", "contact"];
+export const DEFAULT_COLS: ColKey[] = ["years", "group", "position", "grad", "major", "contact"];
 
 /** The column each sort reads from: sorting by it shows that column even if hidden. */
 export const SORT_COL: Partial<Record<SortKey, ColKey>> = {
