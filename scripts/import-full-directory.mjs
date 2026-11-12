@@ -8,7 +8,7 @@
  *   node --env-file=.env.local scripts/import-full-directory.mjs --verify
  *
  *   --file <path>   spreadsheet to read (default: $FULL_DIRECTORY_XLSX, else
- *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v8.xlsx)
+ *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v10.xlsx)
  *   --dry-run       parse, then diff against the database (read-only); write nothing
  *   --verify        read counts back from the database and compare with the sheet
  *
@@ -44,9 +44,15 @@
  *   and the same year stated outright clears the "estimated" flag. To accept the
  *   sheet's differing years, pass --allow-grad-year-changes.
  *
- * IDEMPOTENT: people are upserted on `slug`, memberships on (person_id, year), and
- * rows in these two tables that are no longer in the sheet are removed. Re-running
- * updates in place; it never duplicates.
+ * YEARS AT BERKELEY ARE HELD the same way: a stored value (text + start/end) is only
+ *   ever filled in when blank, never replaced. --allow-berkeley-changes to accept.
+ *
+ * NOTHING IS REMOVED: if the sheet no longer has a person or a membership that the
+ *   database holds, the run stops before writing anything (pass --allow-removals to
+ *   prune them). The dry run reports every removal it would make — normally none.
+ *
+ * IDEMPOTENT: people are upserted on `slug`, memberships on (person_id, year).
+ * Re-running updates in place; it never duplicates.
  *
  * SAFETY: this script only ever touches directory_people / directory_memberships.
  * It does not read or write lms_roster, lms_profiles or anything the Google Sheets
@@ -67,8 +73,10 @@ const opt = (f) => { const i = args.indexOf(f); return i !== -1 ? args[i + 1] : 
 const DRY = flag("--dry-run");
 const VERIFY = flag("--verify");
 const ALLOW_GRAD_CHANGES = flag("--allow-grad-year-changes");
+const ALLOW_BERKELEY_CHANGES = flag("--allow-berkeley-changes");
+const ALLOW_REMOVALS = flag("--allow-removals");
 const FILE = path.resolve(
-  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v8.xlsx")
+  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v10.xlsx")
     .replace(/^~(?=$|\/)/, os.homedir()),
 );
 
@@ -694,6 +702,21 @@ function printHeldGradYears(plan) {
     console.log(`  ${x.p.name}: kept ${x.gradHeld.stored}${x.prev.grad_year_inferred ? " (estimated)" : ""}, sheet has ${x.gradHeld.sheet}`);
 }
 
+/** A stored Years at Berkeley is never replaced, only filled when blank (see the header). */
+const BERKELEY_COLS = ["berkeley_years", "berkeley_start", "berkeley_end"];
+function holdBerkeley(row, prev) {
+  if (ALLOW_BERKELEY_CHANGES || !prev || !BERKELEY_COLS.every((c) => c in prev) || isBlank(prev.berkeley_years) || row.berkeley_years === prev.berkeley_years)
+    return { row, held: null };
+  return { row: { ...row, ...Object.fromEntries(BERKELEY_COLS.map((c) => [c, prev[c]])) }, held: { stored: prev.berkeley_years, sheet: row.berkeley_years } };
+}
+function printHeldBerkeley(plan) {
+  const held = plan.filter((x) => x.berkeleyHeld);
+  if (!held.length) return;
+  console.log(`\nYears at Berkeley held at the stored value — the sheet says otherwise (${held.length}; --allow-berkeley-changes to accept):`);
+  for (const x of held.sort((a, b) => a.p.name.localeCompare(b.p.name)))
+    console.log(`  ${x.p.name}: kept ${x.berkeleyHeld.stored}, sheet has ${x.berkeleyHeld.sheet}`);
+}
+
 // Comparison: order is irrelevant for set-like arrays; object keys are sorted.
 const SET_COLS = new Set(["emails", "phones", "india_trips", "years_active"]);
 const stable = (v) => JSON.stringify(v, (_, x) =>
@@ -796,10 +819,12 @@ async function main() {
     const next = personRow(p, now);
     if (!hasLists) { delete next.majors; delete next.minors; } // dry run before the migration
     const prev = prevBySlug.get(p.slug);
-    const { row, held } = holdGradYear(mergeEmails(keepExisting(next, prev, PERSON_FIELDS), prev), prev);
-    return { p, prev, next, merged: row, gradHeld: held };
+    const g = holdGradYear(mergeEmails(keepExisting(next, prev, PERSON_FIELDS), prev), prev);
+    const b = holdBerkeley(g.row, prev);
+    return { p, prev, next, merged: b.row, gradHeld: g.held, berkeleyHeld: b.held };
   });
   printHeldGradYears(plan);
+  printHeldBerkeley(plan);
   const slugs = new Set(people.map((p) => p.slug));
   const stalePeople = prevPeople.filter((r) => !slugs.has(r.slug));
 
@@ -816,6 +841,12 @@ async function main() {
     console.log("\nDry run — nothing was written.");
     return;
   }
+
+  // ---- never remove (unless asked): stop before writing anything
+  const plannedMs = new Set(msPlan((s) => prevBySlug.get(s)?.id).filter((x) => x.next.person_id).map((x) => `${x.next.person_id}|${x.next.year}`));
+  const removingMs = prevMs.filter((m) => !plannedMs.has(`${m.person_id}|${m.year}`));
+  if (!ALLOW_REMOVALS && (stalePeople.length || removingMs.length))
+    throw new Error(`The sheet no longer has ${stalePeople.length} people and ${removingMs.length} memberships that the database holds. Nothing written (see --dry-run; --allow-removals to prune them).`);
 
   // ---- write
   const idBySlug = new Map();
@@ -854,50 +885,53 @@ async function printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan, pr
   console.log(`\nDatabase now: ${prevPeople.length} people, ${prevMs.length} memberships.`);
   console.log(`A real run would update ${plan.length - added.length} people, add ${added.length}${added.length ? ` (${added.map((x) => x.p.name).join(", ")})` : ""}, remove ${stalePeople.length}${stalePeople.length ? ` (${stalePeople.map((r) => r.full_name).join(", ")})` : ""}.`);
 
-  // "Old" majors = what the site shows today: the stored list once the v7 migration
-  // has run, otherwise the free-text Major split the way the Major filter splits it.
-  const { majorLists } = await import(new URL("../lib/fullDirectory/majors.ts", import.meta.url));
-  const derived = majorLists(prevPeople.map((r) => r.major));
-  const shown = new Map(prevPeople.map((r, i) => [r.slug, hasLists && r.majors?.length ? r.majors : derived[i]]));
-  // What a real run stores: the sheet's list, or (sheet blank) the stored list — never the text split.
-  const after = (x, col) => (x.p[col].length ? x.p[col] : hasLists ? x.prev?.[col] ?? [] : []);
+  // What a real run stores: the sheet's list, or (sheet blank) the stored list.
+  const after = (x, col) => (hasLists ? x.merged[col] ?? [] : x.p[col]);
+  const stored = (x, col) => x.prev?.[col] ?? [];
   const sameSet = (a, b) => a.length === b.length && a.every((v) => b.includes(v));
+  const sameList = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
   const fmt = (xs) => (xs.length ? xs.join("; ") : "(none)");
-
+  const byName = (a, b) => a.p.name.localeCompare(b.p.name);
   const existing = plan.filter((x) => x.prev);
-  const majorChanges = existing.filter((x) => (shown.get(x.p.slug) ?? []).length && !sameSet(shown.get(x.p.slug), after(x, "majors")));
-  console.log(`\n(a) Majors that change from a non-empty value to a different one: ${majorChanges.length}`);
-  console.log(`    old = the majors the Major filter shows today${hasLists ? "" : " (split from the stored \"Major\" text)"}; new = "Majors (list)"`);
-  for (const x of majorChanges.sort((a, b) => a.p.name.localeCompare(b.p.name)))
-    console.log(`  ${x.p.name}: ${fmt(shown.get(x.p.slug))}  →  ${fmt(after(x, "majors"))}${x.p.minors.length ? `   [minors: ${fmt(x.p.minors)}]` : ""}`);
-  const lostMajors = majorChanges.filter((x) => !after(x, "majors").length);
-  console.log(`  (of these, ${lostMajors.length} would go to no majors: blank "Majors (list)" in the sheet but a non-empty stored "Major")`);
+  const label = (x) => `${x.p.name}${plan.filter((y) => y.p.name === x.p.name).length > 1 ? ` [${x.p.slug}]` : ""}`;
 
-  const rawChanges = existing.filter((x) => x.prev.major && x.merged.major !== x.prev.major);
-  console.log(`\n(a′) Stored free-text "Major" changing to different text: ${rawChanges.length}`);
-  for (const x of rawChanges.sort((a, b) => a.p.name.localeCompare(b.p.name)))
-    console.log(`  ${x.p.name}: "${x.prev.major}"  →  "${x.merged.major}"`);
+  // (b) Per column: how many stored values a real run fills / changes / keeps.
+  const pairs = existing.map((x) => ({ name: x.p.name, prev: x.prev, next: x.next, merged: x.merged }));
+  printTally(`(b) Changed fields per column, over the ${existing.length} people already in the database:`, tallyDiff(pairs, PERSON_FIELDS));
 
-  // Majors/minors are compared with what is shown today (see above).
-  const pairs = existing.map((x) => ({
-    name: x.p.name,
-    prev: { ...x.prev, majors: shown.get(x.p.slug), minors: hasLists ? x.prev.minors : [] },
-    next: { ...x.next, majors: x.p.majors, minors: x.p.minors },
-    merged: { ...x.merged, majors: after(x, "majors"), minors: after(x, "minors") },
+  // (s) Majors/minors per person: the stored lists → what a real run stores.
+  const subj = existing.map((x) => ({
+    x,
+    majors: !sameSet(stored(x, "majors"), after(x, "majors")),
+    minors: !sameSet(stored(x, "minors"), after(x, "minors")),
+    orderOnly: ["majors", "minors"].every((c) => sameSet(stored(x, c), after(x, c))) &&
+      ["majors", "minors"].some((c) => !sameList(stored(x, c), after(x, c))),
   }));
-  printTally(`(b) Per field, over the ${existing.length} people already in the database:`, tallyDiff(pairs, PERSON_FIELDS));
+  const subjChanged = subj.filter((r) => r.majors || r.minors).sort((a, b) => byName(a.x, b.x));
+  console.log(`\n(s) People whose majors or minors would change: ${subjChanged.length}`);
+  console.log(`    (majors ${subj.filter((r) => r.majors).length} · minors ${subj.filter((r) => r.minors).length} · both ${subj.filter((r) => r.majors && r.minors).length}; order-only changes, not listed: ${subj.filter((r) => r.orderOnly).length})`);
+  for (const { x, majors, minors } of subjChanged) {
+    console.log(`  ${label(x)}`);
+    if (majors) console.log(`      majors: ${fmt(stored(x, "majors"))}  →  ${fmt(after(x, "majors"))}`);
+    if (minors) console.log(`      minors: ${fmt(stored(x, "minors"))}  →  ${fmt(after(x, "minors"))}`);
+  }
+  const before = (col) => new Set(existing.flatMap((x) => stored(x, col)));
+  const afterSet = (col) => new Set(plan.flatMap((x) => after(x, col)));
+  for (const col of ["majors", "minors"]) {
+    const gone = [...before(col)].filter((s) => !afterSet(col).has(s)).sort();
+    const added = [...afterSet(col)].filter((s) => !before(col).has(s)).sort();
+    console.log(`  ${col} names no longer used: ${gone.join(" | ") || "(none)"}`);
+    console.log(`  ${col} names new:           ${added.join(" | ") || "(none)"}`);
+  }
 
-  const roleChanges = existing.filter((x) => x.prev.current_job && x.merged.current_job !== x.prev.current_job);
-  console.log(`\n(c) Current role changing from a non-empty value to a different one: ${roleChanges.length}`);
-  for (const x of roleChanges.sort((a, b) => a.p.name.localeCompare(b.p.name)))
-    console.log(`  ${x.p.name}: "${x.prev.current_job}"  →  "${x.merged.current_job}"`);
+  // (c) Every current-role change, including roles filled in for the first time.
+  const roleChanges = existing.filter((x) => (x.merged.current_job ?? null) !== (x.prev.current_job ?? null)).sort(byName);
+  console.log(`\n(c) Current role changes: ${roleChanges.length} (${roleChanges.filter((x) => !x.prev.current_job).length} newly filled, ${roleChanges.filter((x) => x.prev.current_job).length} replaced)`);
+  for (const x of roleChanges) console.log(`  ${label(x)}: ${x.prev.current_job ? `"${x.prev.current_job}"` : "(none)"}  →  "${x.merged.current_job}"`);
 
-  // Emails are merged (see mergeEmails): list what would be added, and stored ones the sheet no longer has (kept).
-  const emailAdds = existing.map((x) => ({ x, add: x.merged.emails.filter((e) => !(x.prev.emails ?? []).includes(e)) })).filter((r) => r.add.length);
-  const notInSheet = existing.reduce((n, x) => n + (x.prev.emails ?? []).filter((e) => !x.p.emails.includes(e)).length, 0);
-  console.log(`\n(d) Emails that would be added: ${emailAdds.reduce((n, r) => n + r.add.length, 0)} across ${emailAdds.length} people (${notInSheet} stored emails not in the sheet are kept)`);
-  for (const { x, add } of emailAdds.sort((a, b) => a.x.p.name.localeCompare(b.x.p.name)))
-    console.log(`  ${x.p.name}: + ${add.join(", ")}`);
+  // (d) Emails are merged (see mergeEmails) — counts only, never addresses.
+  const emailAdds = existing.map((x) => ({ x, n: x.merged.emails.filter((e) => !(x.prev.emails ?? []).includes(e)).length })).filter((r) => r.n);
+  console.log(`\n(d) Emails that would be added: ${emailAdds.reduce((n, r) => n + r.n, 0)} across ${emailAdds.length} people${emailAdds.length ? ` (${emailAdds.sort((a, b) => byName(a.x, b.x)).map((r) => `${label(r.x)} +${r.n}`).join(", ")})` : ""}`);
 
   // --show <column>: list the people whose value for that field changes (old → new).
   const show = opt("--show");
@@ -919,7 +953,23 @@ async function printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan, pr
   const finalMajors = plan.map((x) => after(x, "majors")), finalMinors = plan.map((x) => after(x, "minors"));
   console.log(`\nAfter the run: ${finalMajors.filter((m) => m.length).length} with at least one major · ${finalMinors.filter((m) => m.length).length} with a minor · ${new Set(finalMajors.flat()).size} distinct majors · ${new Set(finalMinors.flat()).size} distinct minors`);
   const majorSet = new Set(finalMajors.flat());
+  console.log(`  ${finalMajors.filter((m) => m.length >= 2).length} with 2+ majors · ${new Set([...finalMajors.flat(), ...finalMinors.flat()]).size} distinct subjects in the Major filter (majors ∪ minors)`);
   console.log(`  subjects that are someone's major AND someone's minor: ${[...new Set(finalMinors.flat())].filter((m) => majorSet.has(m)).join(", ") || "(none)"}`);
+
+  // (r) Removals: rows, values blanked, and list items a replacement would drop.
+  const blanked = (pairsOf, fields) => fields.map((fl) => ({ fl, n: pairsOf.filter((x) => !blankIn(x.prev, fl) && blankIn(x.merged, fl)).length })).filter((r) => r.n);
+  const LIST_COLS = ["emails", "phones", "majors", "minors", "india_trips", "years_active", "other_info", "employment_history"];
+  const dropped = LIST_COLS.map((c) => {
+    const hit = existing.filter((x) => Array.isArray(x.prev[c]) && Array.isArray(x.merged[c]) &&
+      x.prev[c].some((v) => !x.merged[c].some((w) => stable(w) === stable(v))));
+    return { c, hit };
+  }).filter((r) => r.hit.length);
+  const blankP = blanked(pairs, PERSON_FIELDS), blankM = blanked(existingMs, MEMBERSHIP_FIELDS);
+  console.log(`\n(r) Removals`);
+  console.log(`  people removed: ${stalePeople.length} · memberships removed: ${staleMs.length}${ALLOW_REMOVALS ? "" : " (a real run refuses to remove any)"}`);
+  console.log(`  stored values that would be blanked: ${blankP.length || blankM.length ? [...blankP, ...blankM].map((r) => `${r.fl.label} ${r.n}`).join(", ") : "0"}`);
+  console.log(`  stored list items not in the new value (the sheet's non-blank value replaces the list):${dropped.length ? "" : " 0"}`);
+  for (const { c, hit } of dropped) console.log(`    ${c}: ${hit.length} people${["majors", "minors"].includes(c) ? " (see (s))" : ""}${c === "current_job" ? "" : ""}`);
 }
 
 main().catch((e) => { console.error(`\n✗ ${e instanceof Error ? e.message : e}`); process.exit(1); });
