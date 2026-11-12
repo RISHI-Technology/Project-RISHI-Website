@@ -29,13 +29,13 @@ export default function CardGrid({ sections, onOpen, tokens, allYears, grouped }
               </h3>
             )}
             {!closed && (
-              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {s.rows.map((r) => {
                   const p = r.person;
                   const role = roleOf(r.best && tokens.length ? [r.best] : r.context);
                   const groups = groupsOf(r.context);
                   return (
-                    <li key={`${s.key}|${p.slug}`}>
+                    <li key={`${s.key}|${p.slug}`} className="min-w-0">
                       <button
                         type="button"
                         onClick={() => onOpen(p.slug)}
