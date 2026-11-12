@@ -94,7 +94,7 @@ export function tintFor(slug: string): number {
 
 // ------------------------------------------------------------------ career
 /** Consecutive jobs at one employer, shown together (newest first). */
-export type JobGroup = { company: string | null; jobs: Job[]; start: number | null; end: number | null; current: boolean };
+export type JobGroup = { company: string | null; jobs: Job[]; start: number | null; end: number | null; current: boolean; endUnknown: boolean };
 
 const sameEmployer = (a: string | null, b: string | null) =>
   !!a && !!b && a.toLowerCase().replace(/[^a-z0-9]/g, "") === b.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -104,29 +104,35 @@ export function groupJobs(jobs: Job[]): JobGroup[] {
   for (const j of jobs) {
     const last = out[out.length - 1];
     if (last && sameEmployer(last.company, j.company)) last.jobs.push(j);
-    else out.push({ company: j.company, jobs: [j], start: null, end: null, current: false });
+    else out.push({ company: j.company, jobs: [j], start: null, end: null, current: false, endUnknown: false });
   }
+  const max = (ys: (number | null)[]) => { const v = ys.filter((y): y is number => y !== null); return v.length ? Math.max(...v) : null; };
   for (const g of out) {
     const starts = g.jobs.map((j) => j.start).filter((y): y is number => y !== null);
-    const ends = g.jobs.map((j) => j.end ?? j.start).filter((y): y is number => y !== null);
+    const knownEnd = max(g.jobs.filter((j) => !j.endUnknown).map((j) => j.end ?? j.start));
+    const unknownStart = max(g.jobs.filter((j) => j.endUnknown).map((j) => j.start));
     g.start = starts.length ? Math.min(...starts) : null;
     g.current = g.jobs.some((j) => j.current);
-    g.end = g.current ? null : ends.length ? Math.max(...ends) : null;
+    // The span ends with an unknown year when its latest role is a "–?" one.
+    g.endUnknown = !g.current && unknownStart !== null && (knownEnd === null || unknownStart >= knownEnd);
+    g.end = g.current || g.endUnknown ? null : knownEnd;
   }
   return out;
 }
 
-/** "2021 – 2023", "2023 – Present", "2022". */
-export function jobDates(start: number | null, end: number | null, current: boolean): string {
+/** "2021 – 2023", "2023 – Present", "2020 – ?" (ended, year unknown), "2022". */
+export function jobDates(start: number | null, end: number | null, current: boolean, endUnknown = false): string {
   if (start === null) return current ? "Present" : end !== null ? String(end) : "";
   if (current) return `${start} – Present`;
+  if (endUnknown) return `${start} – ?`;
   if (end === null || end === start) return String(start);
   return `${start} – ${end}`;
 }
 
-/** "3 yrs" — years only, since the sheet has no months; "" when under a year or undated. */
-export function jobLength(start: number | null, end: number | null, current: boolean, now = new Date().getFullYear()): string {
-  if (start === null) return "";
+/** "3 yrs" — years only, since the sheet has no months; "" when under a year, undated
+ *  or the end year is unknown. */
+export function jobLength(start: number | null, end: number | null, current: boolean, endUnknown = false, now = new Date().getFullYear()): string {
+  if (start === null || endUnknown) return "";
   const n = (current ? now : end ?? start) - start;
   return n >= 1 ? `${n} ${n === 1 ? "yr" : "yrs"}` : "";
 }

@@ -26,7 +26,7 @@ export function buildCsv(rows: Match[], canSeePrivate: boolean, perYear: boolean
       p.gradYear ? `${p.gradYear}${p.gradYearInferred ? " (estimated)" : ""}` : "", p.majors.join("; "), p.minors.join("; "),
       p.joined ? `${p.joined}${p.joinedApprox ? " (approx.)" : ""}` : "", p.birthday, p.indiaTrips.join("; "), p.hindi,
       p.linkedin, p.postGradPlans, p.currentRole,
-      p.employment.map((j) => [[j.title, j.company].filter(Boolean).join(", "), jobDates(j.start, j.end, j.current)].filter(Boolean).join(" ")).join("; "),
+      p.employment.map((j) => [[j.title, j.company].filter(Boolean).join(", "), jobDates(j.start, j.end, j.current, j.endUnknown)].filter(Boolean).join(" ")).join("; "),
       p.berkeleyYears, p.emails.join("; "), ...(canSeePrivate ? [(p.phones ?? []).join("; ")] : []),
     ];
   };

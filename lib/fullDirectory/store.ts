@@ -44,7 +44,7 @@ type PersonRow = {
   post_grad_plans: string | null; other_info: { label: string; value: string }[] | null;
   years_active: string[] | null; first_year: number | null; last_year: number | null;
   // v6 (migration-full-directory-v6.sql) — absent until that migration has run.
-  current_job?: string | null; employment_history?: Partial<Job>[] | null; berkeley_years?: string | null;
+  current_job?: string | null; employment_history?: (Partial<Job> & { end_unknown?: boolean })[] | null; berkeley_years?: string | null;
   // v7 (migration-full-directory-v7.sql) — absent until that migration has run.
   majors?: string[] | null; minors?: string[] | null;
 };
@@ -82,7 +82,10 @@ const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null
 function jobsOf(raw: PersonRow["employment_history"]): Job[] {
   if (!Array.isArray(raw)) return [];
   return raw
-    .map((j) => ({ title: str(j?.title), company: str(j?.company), start: int(j?.start), end: int(j?.end), current: j?.current === true }))
+    .map((j) => {
+      const endUnknown = j?.end_unknown === true;
+      return { title: str(j?.title), company: str(j?.company), start: int(j?.start), end: int(j?.end), current: !endUnknown && j?.current === true, endUnknown };
+    })
     .filter((j) => j.title || j.company);
 }
 const MEMBERSHIP_COLUMNS =

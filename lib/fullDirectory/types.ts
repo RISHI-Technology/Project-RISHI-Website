@@ -38,9 +38,12 @@ export type Job = {
   title: string | null;
   company: string | null;
   start: number | null;
-  /** null while `current` (or when undated). */
+  /** null while `current`, when the end is unknown, or when undated. */
   end: number | null;
+  /** Only entries the sheet dates "(… –present)". */
   current: boolean;
+  /** "(2020–?)": a past job whose end year is unknown — never shown as current. */
+  endUnknown: boolean;
 };
 
 export type FullPerson = {

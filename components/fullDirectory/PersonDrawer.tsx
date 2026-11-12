@@ -269,9 +269,9 @@ function NowPill() {
   return <span className="ml-2 inline-block rounded-full bg-marigold-soft/60 px-2 py-px align-[1px] text-[10px] font-semibold uppercase tracking-wide text-marigold-ink">Now</span>;
 }
 
-function Dates({ start, end, current }: { start: number | null; end: number | null; current: boolean }) {
-  const d = jobDates(start, end, current);
-  const len = jobLength(start, end, current);
+function Dates({ start, end, current, endUnknown }: { start: number | null; end: number | null; current: boolean; endUnknown: boolean }) {
+  const d = jobDates(start, end, current, endUnknown);
+  const len = jobLength(start, end, current, endUnknown);
   if (!d) return null;
   return <p className="mt-0.5 text-xs tabular-nums text-ink/55">{d}{len && <span className="text-ink/40"> · {len}</span>}</p>;
 }
@@ -290,19 +290,19 @@ function EmployerItem({ group: g }: { group: JobGroup }) {
           <>
             <p className="text-sm font-semibold leading-snug text-ink">{j.title ?? j.company}{j.current && <NowPill />}</p>
             {j.title && j.company && <p className="text-sm leading-snug text-ink/75">{j.company}</p>}
-            <Dates start={j.start} end={j.end} current={j.current} />
+            <Dates start={j.start} end={j.end} current={j.current} endUnknown={j.endUnknown} />
           </>
         ) : (
           <>
             <p className="text-sm font-semibold leading-snug text-ink">{g.company}{g.current && <NowPill />}</p>
-            <Dates start={g.start} end={g.end} current={g.current} />
+            <Dates start={g.start} end={g.end} current={g.current} endUnknown={g.endUnknown} />
             {/* Roles at this employer, newest first, on a thin rail. */}
             <ol className="mt-2.5 space-y-2.5 border-l border-pine/15 pl-3.5">
               {g.jobs.map((x, i) => (
                 <li key={i} className="relative">
                   <span aria-hidden className={`absolute -left-[18.5px] top-[7px] h-2 w-2 rounded-full ring-2 ring-paper ${x.current ? "bg-marigold" : "bg-pine/35"}`} />
                   <p className="text-sm leading-snug text-ink/90">{x.title ?? "Role"}</p>
-                  <p className="text-xs tabular-nums text-ink/50">{jobDates(x.start, x.end, x.current)}</p>
+                  <p className="text-xs tabular-nums text-ink/50">{jobDates(x.start, x.end, x.current, x.endUnknown)}</p>
                 </li>
               ))}
             </ol>

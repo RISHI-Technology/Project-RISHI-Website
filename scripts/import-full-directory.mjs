@@ -8,7 +8,7 @@
  *   node --env-file=.env.local scripts/import-full-directory.mjs --verify
  *
  *   --file <path>   spreadsheet to read (default: $FULL_DIRECTORY_XLSX, else
- *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v10.xlsx)
+ *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v11.xlsx)
  *   --dry-run       parse, then diff against the database (read-only); write nothing
  *   --verify        read counts back from the database and compare with the sheet
  *
@@ -47,6 +47,15 @@
  * YEARS AT BERKELEY ARE HELD the same way: a stored value (text + start/end) is only
  *   ever filled in when blank, never replaced. --allow-berkeley-changes to accept.
  *
+ * CLEARING A CURRENT ROLE (--clear-ref <previous sheet>): blank keeps the stored value,
+ *   except that when this sheet's "Current role" is blank AND the stored value equals the
+ *   reference sheet's value for that person (same slug), the role is cleared — i.e. the
+ *   new sheet deliberately removed a role the old sheet had. Without --clear-ref nothing
+ *   is ever cleared. (v11: --clear-ref ~/Downloads/rishi-context/RISHI_Member_Directory_v10.xlsx)
+ *
+ * EMPLOYMENT DATES: "(2020–2024)", "(2023–present)" (current), "(2020–?)" (v11: a past
+ *   job no longer on LinkedIn, end year unknown — stored with end_unknown: true, never current).
+ *
  * NOTHING IS REMOVED: if the sheet no longer has a person or a membership that the
  *   database holds, the run stops before writing anything (pass --allow-removals to
  *   prune them). The dry run reports every removal it would make — normally none.
@@ -75,8 +84,9 @@ const VERIFY = flag("--verify");
 const ALLOW_GRAD_CHANGES = flag("--allow-grad-year-changes");
 const ALLOW_BERKELEY_CHANGES = flag("--allow-berkeley-changes");
 const ALLOW_REMOVALS = flag("--allow-removals");
+const CLEAR_REF = opt("--clear-ref") && path.resolve(opt("--clear-ref").replace(/^~(?=$|\/)/, os.homedir()));
 const FILE = path.resolve(
-  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v10.xlsx")
+  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v11.xlsx")
     .replace(/^~(?=$|\/)/, os.homedir()),
 );
 
@@ -329,15 +339,17 @@ const TITLE_OVERRIDES = {
 // A company name that itself contains ", " — keep these glued to the company.
 const COMPANY_SUFFIX = /^(inc\.?|llc|l\.l\.c\.|llp|pllc|ltd\.?|limited|co\.?|corp\.?|corporation|plc|gmbh|s\.a\.|n\.a\.|pc|p\.c\.|md|m\.d\.|phd|dds|dmd|do|jd|esq\.?)$/i;
 const UNIVERSITY = /^(university of|uc\s|the university of)/i;
-/** "Senior PM, Acme, Inc. (2021–present)" → { title, company, start, end, current } */
+/** "Senior PM, Acme, Inc. (2021–present)" → { title, company, start, end, current[, end_unknown] } */
 function jobOf(line) {
   const s = line.replace(/\s+/g, " ").trim();
-  // Dates: "(2020–2024)", "(2023–present)", "(2022)". Years only — no months.
-  const d = s.match(/\s*\((\d{4})\s*(?:[–—-]\s*(\d{4}|present|current|now))?\)\s*$/i);
+  // Dates: "(2020–2024)", "(2023–present)", "(2020–?)", "(2022)". Years only — no months.
+  // Only "–present" is current; "–?" (v11+) is a past job whose end year is unknown.
+  const d = s.match(/\s*\((\d{4})\s*(?:[–—-]\s*(\d{4}|present|\?))?\)\s*$/i);
   const body = d ? s.slice(0, d.index).trim() : s;
   const start = d ? Number(d[1]) : null;
-  const current = !!d?.[2] && !/^\d{4}$/.test(d[2]);
-  const end = d ? (d[2] === undefined ? start : current ? null : Number(d[2])) : null;
+  const current = !!d?.[2] && /^present$/i.test(d[2]);
+  const endUnknown = d?.[2] === "?";
+  const end = d ? (d[2] === undefined ? start : current || endUnknown ? null : Number(d[2])) : null;
   if (!d) warn(`an employment line has no dates (kept, undated)`);
 
   let title = body, company = null;
@@ -357,7 +369,8 @@ function jobOf(line) {
     const m = body.match(/^(.*\S)\s+(?:at|@)\s+(\S.*)$/);
     if (m) { title = m[1]; company = m[2]; }
   }
-  return { title: nullIf(title), company: nullIf(company), start, end, current };
+  // end_unknown is only stored when true, so unchanged entries keep their exact shape.
+  return { title: nullIf(title), company: nullIf(company), start, end, current, ...(endUnknown ? { end_unknown: true } : {}) };
 }
 const employmentOf = (cell) => lines(cell).map(jobOf);
 
@@ -813,6 +826,9 @@ async function main() {
 
   // ---- plan: what each row becomes (the sheet's value, or the stored one where the sheet is blank)
   const now = new Date().toISOString(); // an instant (UTC, with "Z") — never a naive timestamp
+  if (CLEAR_REF && CLEAR_REF === FILE) throw new Error("--clear-ref must be the PREVIOUS sheet, not the one being imported");
+  const refBySlug = CLEAR_REF ? new Map(build(CLEAR_REF).people.map((p) => [p.slug, p])) : null;
+  if (CLEAR_REF) console.log(`\nCurrent-role clearing reference: ${CLEAR_REF} (${refBySlug.size} people)`);
   const prevPeople = await selectAll(client, PEOPLE, "*");
   const prevBySlug = new Map(prevPeople.map((r) => [r.slug, r]));
   const plan = people.map((p) => {
@@ -821,7 +837,14 @@ async function main() {
     const prev = prevBySlug.get(p.slug);
     const g = holdGradYear(mergeEmails(keepExisting(next, prev, PERSON_FIELDS), prev), prev);
     const b = holdBerkeley(g.row, prev);
-    return { p, prev, next, merged: b.row, gradHeld: g.held, berkeleyHeld: b.held };
+    // Clear a role the new sheet dropped (blank here, stored value = the reference sheet's).
+    const ref = refBySlug?.get(p.slug);
+    let roleCleared = null;
+    if (ref && ref.name === p.name && !p.currentJob && prev?.current_job && ref.currentJob && prev.current_job === ref.currentJob) {
+      b.row.current_job = null;
+      roleCleared = prev.current_job;
+    }
+    return { p, prev, next, merged: b.row, gradHeld: g.held, berkeleyHeld: b.held, roleCleared };
   });
   printHeldGradYears(plan);
   printHeldBerkeley(plan);
@@ -925,9 +948,39 @@ async function printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan, pr
   }
 
   // (c) Every current-role change, including roles filled in for the first time.
-  const roleChanges = existing.filter((x) => (x.merged.current_job ?? null) !== (x.prev.current_job ?? null)).sort(byName);
+  const roleChanges = existing.filter((x) => !x.roleCleared && (x.merged.current_job ?? null) !== (x.prev.current_job ?? null)).sort(byName);
   console.log(`\n(c) Current role changes: ${roleChanges.length} (${roleChanges.filter((x) => !x.prev.current_job).length} newly filled, ${roleChanges.filter((x) => x.prev.current_job).length} replaced)`);
   for (const x of roleChanges) console.log(`  ${label(x)}: ${x.prev.current_job ? `"${x.prev.current_job}"` : "(none)"}  →  "${x.merged.current_job}"`);
+  const roleClears = existing.filter((x) => x.roleCleared).sort(byName);
+  console.log(`\n(c′) Current roles CLEARED (blank in this sheet, stored value = --clear-ref sheet's value): ${CLEAR_REF ? roleClears.length : "— (no --clear-ref given: nothing cleared)"}`);
+  for (const x of roleClears) console.log(`  ${label(x)}: "${x.roleCleared}"  →  (none)`);
+  // The site falls back to a "–present" employment entry when Current role is blank.
+  const fallback = roleClears.filter((x) => (x.merged.employment_history ?? []).some((j) => j.current));
+  if (CLEAR_REF) console.log(`  of these, ${fallback.length} would still show a role on the site, from a "–present" employment entry${fallback.length ? ` (${fallback.map(label).join(", ")})` : ""}`);
+  const keptRoles = existing.filter((x) => !x.p.currentJob && x.prev.current_job && !x.roleCleared);
+  console.log(`  blank in this sheet but kept (stored value differs from the reference, or no reference): ${keptRoles.length}${keptRoles.length ? ` (${keptRoles.sort(byName).map(label).join(", ")})` : ""}`);
+
+  // (h) Employment history, matched job by job on (title, company, start year).
+  const jobKey = (j) => `${j.title ?? ""}|${j.company ?? ""}|${j.start ?? ""}`;
+  const h = { relabelled: 0, people: new Set(), added: 0, removed: 0, removedPeople: [], other: 0 };
+  for (const x of existing) {
+    // One-for-one: a person can hold two entries with the same key, so each stored
+    // entry is paired with at most one new entry (in order).
+    const was = new Map();
+    for (const j of x.prev.employment_history ?? []) was.set(jobKey(j), [...(was.get(jobKey(j)) ?? []), j]);
+    for (const j of x.merged.employment_history ?? []) {
+      const o = was.get(jobKey(j))?.shift();
+      if (!o) { h.added++; continue; }
+      if (o.current && j.end_unknown) { h.relabelled++; h.people.add(x.p.slug); }
+      else if (stable(o) !== stable(j)) h.other++;
+    }
+    const gone = [...was.values()].reduce((n, l) => n + l.length, 0);
+    if (gone) { h.removed += gone; h.removedPeople.push(`${label(x)} (${gone})`); }
+  }
+  const allJobs = plan.flatMap((x) => x.merged.employment_history ?? []);
+  console.log(`\n(h) Employment history entries relabelled "–present" → "–?": ${h.relabelled} across ${h.people.size} people`);
+  console.log(`    other entries changed: ${h.other} · entries added: ${h.added} · entries removed: ${h.removed}${h.removedPeople.length ? ` (${h.removedPeople.join(", ")})` : ""}`);
+  console.log(`    after the run: ${allJobs.length} entries · ${allJobs.filter((j) => j.current).length} "–present" · ${allJobs.filter((j) => j.end_unknown).length} "–?" · ${allJobs.filter((j) => !j.current && !j.end_unknown).length} other`);
 
   // (d) Emails are merged (see mergeEmails) — counts only, never addresses.
   const emailAdds = existing.map((x) => ({ x, n: x.merged.emails.filter((e) => !(x.prev.emails ?? []).includes(e)).length })).filter((r) => r.n);
@@ -958,7 +1011,8 @@ async function printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan, pr
 
   // (r) Removals: rows, values blanked, and list items a replacement would drop.
   const blanked = (pairsOf, fields) => fields.map((fl) => ({ fl, n: pairsOf.filter((x) => !blankIn(x.prev, fl) && blankIn(x.merged, fl)).length })).filter((r) => r.n);
-  const LIST_COLS = ["emails", "phones", "majors", "minors", "india_trips", "years_active", "other_info", "employment_history"];
+  // Employment is compared job by job in (h) — a relabelled date is not a removed job.
+  const LIST_COLS = ["emails", "phones", "majors", "minors", "india_trips", "years_active", "other_info"];
   const dropped = LIST_COLS.map((c) => {
     const hit = existing.filter((x) => Array.isArray(x.prev[c]) && Array.isArray(x.merged[c]) &&
       x.prev[c].some((v) => !x.merged[c].some((w) => stable(w) === stable(v))));
@@ -967,9 +1021,12 @@ async function printDryRun({ plan, prevPeople, stalePeople, hasLists, msPlan, pr
   const blankP = blanked(pairs, PERSON_FIELDS), blankM = blanked(existingMs, MEMBERSHIP_FIELDS);
   console.log(`\n(r) Removals`);
   console.log(`  people removed: ${stalePeople.length} · memberships removed: ${staleMs.length}${ALLOW_REMOVALS ? "" : " (a real run refuses to remove any)"}`);
-  console.log(`  stored values that would be blanked: ${blankP.length || blankM.length ? [...blankP, ...blankM].map((r) => `${r.fl.label} ${r.n}`).join(", ") : "0"}`);
+  const intended = (r) => r.fl.cols[0] === "current_job" && r.n === roleClears.length;
+  const unexpected = [...blankP, ...blankM].filter((r) => !intended(r));
+  console.log(`  stored values that would be blanked: ${unexpected.length ? unexpected.map((r) => `${r.fl.label} ${r.n}`).join(", ") : "0"}${roleClears.length ? ` (plus the ${roleClears.length} intended current-role clears in (c′))` : ""}`);
+  console.log(`  employment history entries removed: ${h.removed}`);
   console.log(`  stored list items not in the new value (the sheet's non-blank value replaces the list):${dropped.length ? "" : " 0"}`);
-  for (const { c, hit } of dropped) console.log(`    ${c}: ${hit.length} people${["majors", "minors"].includes(c) ? " (see (s))" : ""}${c === "current_job" ? "" : ""}`);
+  for (const { c, hit } of dropped) console.log(`    ${c}: ${hit.length} people${["majors", "minors"].includes(c) ? " (see (s))" : ""}`);
 }
 
 main().catch((e) => { console.error(`\n✗ ${e instanceof Error ? e.message : e}`); process.exit(1); });
