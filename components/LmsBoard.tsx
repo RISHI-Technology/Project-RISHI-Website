@@ -1353,7 +1353,9 @@ function GroupCard({ group, byline, onOpen, onArchive }: { group: TaskGroup; byl
         <div className="flex shrink-0 items-center gap-1.5">
           <span className="rounded-full bg-sage/15 px-2.5 py-1 text-xs font-semibold tabular-nums text-pine-deep">{done}/{total} complete</span>
           {group.rows.some((r) => r.canManage) && (
-            <button onClick={onArchive} title="Archive for everyone" className="grid h-6 w-6 place-items-center rounded-full text-ink/65 hover:bg-pine/5 hover:text-pine-deep">🗄</button>
+            <button onClick={onArchive} title="Archive for everyone" aria-label="Archive for everyone" className="grid h-6 w-6 place-items-center rounded-full text-ink/65 hover:bg-pine/5 hover:text-pine-deep">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true"><rect x="2.5" y="3.5" width="19" height="5" rx="1.2" /><path d="M4.5 8.5V19a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V8.5" /><path d="M10 12.5h4" /></svg>
+            </button>
           )}
         </div>
       </div>
