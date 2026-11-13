@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-11-02T06:40:34.886Z",
         "reason": "Claude triage: L319 is the Lineage family-tree connector line (.familytree li::before), L380 is the TipTap blockquote rule (.doc-prose blockquote) — structural/typographic, not card accents; pre-existing, unchanged since 1ba89b5"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "files": [
+          "lib/lms/notify.ts"
+        ],
+        "createdAt": "2026-11-13T06:47:06.387Z",
+        "reason": "Claude decided: email HTML needs a web-safe font stack (custom fonts don't load in most mail clients); matches the existing htmlFromText() emails in this file"
       }
     ]
   }

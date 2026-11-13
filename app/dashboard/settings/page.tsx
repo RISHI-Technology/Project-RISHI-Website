@@ -10,6 +10,7 @@ import Avatar from "@/components/Avatar";
 import ProfilePhotoModal from "@/components/ProfilePhotoModal";
 import FilesSettingsPanel from "@/components/FilesSettingsPanel";
 import AgentSettingsPanel from "@/components/AgentSettingsPanel";
+import ReminderSettingsPanel from "@/components/ReminderSettingsPanel";
 import { ThemeSetting } from "@/components/ThemeToggle";
 import { InterfaceSetting } from "@/components/GlassMode";
 import DashboardBanner from "@/components/DashboardBanner";
@@ -343,6 +344,9 @@ export default function SettingsPage() {
 
             {/* Ask the archive — webmaster only */}
             <AgentSettingsPanel />
+
+            {/* Reminder emails — anyone who can assign tasks (their team's tasks) */}
+            <ReminderSettingsPanel />
 
             {/* Email sending (Gmail) */}
             {gmail && (

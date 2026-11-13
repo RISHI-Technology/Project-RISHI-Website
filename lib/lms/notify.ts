@@ -18,6 +18,7 @@ import {
 import { taskManagerEmails } from "@/lib/lms/permissions";
 import type { ClubEvent, Task } from "@/lib/lms/types";
 import { PROJECT_GROUP_LABELS } from "@/lib/lms/types";
+import { overduePhrase, timeLeftPhrase, type ReminderItem } from "@/lib/lms/reminderPlan";
 
 const nameOf = (email: string) => {
   const m = findMember(email);
@@ -66,7 +67,11 @@ async function notify(
   refId: string | null,
 ): Promise<void> {
   void kind; void refId; // kept in the signature for every existing caller
-  // Email from the club notifications account.
+  await sendFromNotifyAccount(recipientEmail, subject, htmlFromText(body));
+}
+
+/** Email one recipient from the club notifications account (best-effort). */
+async function sendFromNotifyAccount(recipientEmail: string, subject: string, html: string): Promise<void> {
   try {
     const conn = await getGmailConnection(NOTIFY_SENDER);
     if (!conn) return; // notifications Gmail not connected yet — notification still delivered
@@ -76,7 +81,7 @@ async function notify(
       fromName: NOTIFY_FROM_NAME,
       to: [recipientEmail],
       subject,
-      html: htmlFromText(body),
+      html,
     });
   } catch (e) {
     console.error("notify: email send failed", (e as Error).message);
@@ -197,14 +202,48 @@ export async function notifyTaskNudge(task: Task, nudgerEmail: string): Promise<
   await notify(task.assigneeEmail, subject, body, "task_nudge", task.id);
 }
 
-export async function notifyTaskReminder(
-  task: Task,
-  state: "due" | "past due",
-  phrase: string,
-): Promise<void> {
-  const subject = `Task Reminder: ${task.title} is ${state} ${phrase}`;
-  const body = `${task.title} is ${state} ${phrase}. Please complete as soon as possible and submit for approval.`;
-  await notify(task.assigneeEmail, subject, body, "task_reminder", task.id);
+/**
+ * Automatic reminders (cron) → ONE email per member listing every task of
+ * theirs that's due within a day ("This Week") or overdue ("Last Week").
+ * See lib/lms/reminderPlan.ts for when it goes out and what it includes.
+ */
+export async function notifyTaskReminderDigest(recipientEmail: string, items: ReminderItem[]): Promise<void> {
+  if (items.length === 0) return;
+  const { subject, html } = renderReminderDigest(items);
+  await sendFromNotifyAccount(recipientEmail, subject, html);
+}
+
+/** Subject + HTML of a reminder email (pure, so it can be previewed/tested). */
+export function renderReminderDigest(items: ReminderItem[]): { subject: string; html: string } {
+  const upcoming = items.filter((i) => i.state === "due");
+  const overdue = items.filter((i) => i.state === "overdue");
+
+  const subject =
+    items.length === 1
+      ? items[0].state === "due"
+        ? `Task Reminder: ${items[0].task.title} is due ${timeLeftPhrase(items[0].ms)}`
+        : `Task Reminder: ${items[0].task.title} is past due ${overduePhrase(items[0].ms)}`
+      : `Task Reminder: ${items.length} tasks need your attention`;
+
+  const li = (i: ReminderItem) =>
+    `<li style="margin:0 0 6px"><strong>${esc(i.task.title)}</strong> &mdash; ` +
+    (i.state === "due"
+      ? `due ${esc(fmtDue(i.task.dueAt))} (${esc(timeLeftPhrase(i.ms))})`
+      : `was due ${esc(fmtDue(i.task.dueAt))} (past due ${esc(overduePhrase(i.ms))})`) +
+    `</li>`;
+  const section = (heading: string, list: ReminderItem[]) =>
+    list.length
+      ? `<h3 style="margin:18px 0 6px;font-size:16px;color:#143628">${heading}</h3>` +
+        `<ul style="margin:0;padding-left:20px">${list.map(li).join("")}</ul>`
+      : "";
+
+  const html =
+    `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#1B2620">` +
+    section("This Week", upcoming) +
+    section("Last Week", overdue) +
+    `<p style="margin:18px 0 0">Please complete ${items.length === 1 ? "it" : "these"} as soon as possible and submit for approval on your Member Dashboard.</p>` +
+    `</div>`;
+  return { subject, html };
 }
 
 // --------------------------------------------------------------- EVENT EMAILS

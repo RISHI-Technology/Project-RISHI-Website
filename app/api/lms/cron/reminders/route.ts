@@ -1,55 +1,19 @@
 import { NextResponse } from "next/server";
 import { ensureUpcomingMeetings } from "@/lib/lms/meetingSchedule";
-import { hasRealDueDate, isPlaceholderEmail } from "@/lib/lms/importedTasks";
 import { listRemindableTasks, markRemindersSent } from "@/lib/lms/store";
-import { notifyTaskReminder } from "@/lib/lms/notify";
+import { notifyTaskReminderDigest } from "@/lib/lms/notify";
 import { buildIndexStepLocked } from "@/lib/lms/agent/admin";
+import { ensureRoster } from "@/lib/lms/roster";
+import { findMember } from "@/lib/members";
+import { effectivePrefs, loadReminderSettings, taskScope } from "@/lib/lms/reminderPrefs";
+import { planReminders } from "@/lib/lms/reminderPlan";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-// Reminder windows BEFORE the due time. Each fires once.
-const BEFORE = [
-  { key: "3d", ms: 3 * 86_400_000, phrase: "in 3 days" },
-  { key: "1d", ms: 86_400_000, phrase: "in 1 day" },
-  { key: "6h", ms: 6 * 3_600_000, phrase: "in 6 hours" },
-  { key: "3h", ms: 3 * 3_600_000, phrase: "in 3 hours" },
-  { key: "1h", ms: 3_600_000, phrase: "in 1 hour" },
-] as const;
-
-const utcDate = (d: Date) => d.toISOString().slice(0, 10); // YYYY-MM-DD
-
-// This job runs once an hour. A reminder is sent on the run NEAREST its moment
-// rather than the first run after it: looking ahead half an interval means a
-// "1 hour" reminder lands between 30 and 90 minutes before the deadline,
-// instead of anywhere from 60 minutes down to 1 minute before it.
-const RUN_EVERY_MS = 60 * 60_000;
-const LOOKAHEAD_MS = RUN_EVERY_MS / 2;
-
-/** What the email says, from the time actually left — not the window's label.
- *  With hourly runs a "1 hour" reminder can go out 45 or 80 minutes early, and
- *  the email shouldn't claim exactly an hour when it isn't. */
-function timeLeftPhrase(ms: number): string {
-  const min = Math.max(1, Math.round(ms / 60_000));
-  if (min < 90) {
-    const m = Math.max(5, Math.round(min / 5) * 5);
-    return m === 60 ? "in 1 hour" : `in ${m} minutes`;
-  }
-  const hours = Math.round(min / 60);
-  if (hours < 36) return `in about ${hours} hours`;
-  const days = Math.round(hours / 24);
-  return `in about ${days} day${days === 1 ? "" : "s"}`;
-}
-
-function overduePhrase(ms: number): string {
-  const hours = Math.floor(ms / 3_600_000);
-  if (hours >= 24) {
-    const days = Math.floor(hours / 24);
-    return `by ${days} day${days === 1 ? "" : "s"}`;
-  }
-  const h = Math.max(1, hours);
-  return `by ${h} hour${h === 1 ? "" : "s"}`;
-}
+// When reminders go out, how they're bundled into one email per member, and
+// what they list: see lib/lms/reminderPlan.ts. How often each member gets
+// them is set by the team that assigned each task: see lib/lms/reminderPrefs.ts.
 
 // Accept the secret via Authorization: Bearer, x-cron-secret, or ?secret=.
 function authorized(req: Request): boolean {
@@ -68,55 +32,26 @@ async function run(req: Request) {
     return NextResponse.json({ error: "CRON_SECRET is not configured." }, { status: 500 });
   if (!authorized(req)) return NextResponse.json({ error: "Forbidden" }, { status: 401 });
 
+  await ensureRoster(); // members' groups/roles decide which default applies
   const tasks = await listRemindableTasks();
-  const now = Date.now();
+  // If the settings can't be read, skip reminders this run rather than send
+  // with the standard defaults (which would ignore a lead who turned them off).
+  let settingsError: string | null = null;
+  const settings = await loadReminderSettings().catch((e: Error) => { settingsError = e.message; return null; });
+  const plan = settings
+    ? planReminders(
+        tasks,
+        (t) => effectivePrefs(settings, taskScope(findMember(t.assignerEmail), findMember(t.assigneeEmail)), t.assigneeEmail).prefs,
+        Date.now(),
+      )
+    : { emails: [], marks: [] };
+
   let sent = 0;
-
-  for (const t of tasks) {
-    // Archived tasks never get reminders. The query already excludes them; this
-    // keeps that true even if the query changes.
-    if (t.archived) continue;
-    // Imported stand-ins: the due date isn't real and the address can't receive
-    // mail. Real tasks — including ones created by the agenda import — still
-    // get their normal reminders.
-    if (!hasRealDueDate(t.tags) || isPlaceholderEmail(t.assigneeEmail)) continue;
-    const due = new Date(t.dueAt).getTime();
-    const created = new Date(t.createdAt).getTime();
-    const already = new Set(t.remindersSent ?? []);
-    const toMark = new Set(already);
-    const sends: Array<{ state: "due" | "past due"; phrase: string }> = [];
-
-    if (now < due) {
-      // Find the current (closest) window we've entered that hasn't been sent
-      // and whose moment is after the task was created.
-      const entered = BEFORE.filter(
-        (w) => now + LOOKAHEAD_MS >= due - w.ms && due - w.ms >= created && !already.has(w.key),
-      );
-      if (entered.length) {
-        // smallest ms = closest to due = the one to actually send now
-        const current = entered.reduce((a, b) => (a.ms <= b.ms ? a : b));
-        sends.push({ state: "due", phrase: timeLeftPhrase(due - now) });
-        toMark.add(current.key);
-        // Suppress any larger windows whose moment has already passed.
-        for (const w of BEFORE) if (w.ms >= current.ms && now + LOOKAHEAD_MS >= due - w.ms) toMark.add(w.key);
-      }
-    } else {
-      // Past due — one reminder per calendar day.
-      const key = `overdue:${utcDate(new Date(now))}`;
-      if (!already.has(key)) {
-        sends.push({ state: "past due", phrase: overduePhrase(now - due) });
-        toMark.add(key);
-      }
-    }
-
-    if (sends.length) {
-      for (const s of sends) {
-        await notifyTaskReminder(t, s.state, s.phrase).catch(() => {});
-        sent++;
-      }
-      await markRemindersSent(t.id, Array.from(toMark)).catch(() => {});
-    }
+  for (const email of plan.emails) {
+    await notifyTaskReminderDigest(email.to, email.items).catch(() => {});
+    sent++;
   }
+  for (const m of plan.marks) await markRemindersSent(m.id, m.keys).catch(() => {});
 
   // Also create next Tuesday's meeting pages once the Wednesday after a meeting
   // begins (idempotent; see lib/lms/meetingSchedule.ts).
@@ -135,7 +70,15 @@ async function run(req: Request) {
   try { ask = await buildIndexStepLocked(8_000, { chunk: false }); }
   catch (e) { ask = { error: (e as Error).message }; }
 
-  return NextResponse.json({ ok: true, scanned: tasks.length, sent, meetings, ask });
+  return NextResponse.json({
+    ok: true,
+    scanned: tasks.length,
+    sent,
+    tasksListed: plan.emails.reduce((n, e) => n + e.items.length, 0),
+    ...(settingsError ? { reminderSettingsError: settingsError } : {}),
+    meetings,
+    ask,
+  });
 }
 
 export async function GET(req: Request) {
