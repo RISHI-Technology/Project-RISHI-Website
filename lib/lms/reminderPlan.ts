@@ -6,22 +6,29 @@
 //  the emails it returns and saves the marks.
 //
 //  RULES
-//   - Before the due time a task has up to four reminder moments (1 day,
-//     6 hours, 3 hours, 1 hour before), each sent once. Which of them a member
-//     gets is set by whoever can assign them tasks (lib/lms/reminderPrefs.ts;
-//     by default only 1 day and 1 hour). Nothing is ever sent more than a
-//     day before the due time.
+//   - Before the due time a task has reminder moments from 1 week down to
+//     1 hour before (1 week, 6…2 days, 1 day, 6 hours, 3 hours, 1 hour), each
+//     sent once. Which of them a member gets is set by the team that assigned
+//     the task (lib/lms/reminderPrefs.ts; by default only 1 day and 1 hour).
+//     Nothing is ever sent earlier than the earliest reminder chosen.
 //   - After the due time, reminders repeat daily / every 2 days / weekly, or
 //     not at all, by the same setting.
+//   - Changing a setting only affects reminders STILL AHEAD. Turning on e.g.
+//     "3 days" when a task is due in 2 never sends a catch-up email: reminders
+//     whose moment had passed more than one run before the change are
+//     skipped (anything enabled before then was already sent by an earlier
+//     run). Likewise, turning overdue reminders on / up takes effect at the
+//     next daily overdue reminder, not on the next hourly run.
 //   - A member gets AT MOST ONE reminder email per run, and when one goes out
 //     it lists ALL their tasks that are currently relevant — not just the one
-//     whose moment came up: tasks due within the next day (once their first
-//     reminder has opened) under "This Week", and overdue ones under "Last
+//     whose moment came up: tasks not yet due (once their first reminder has
+//     come up) under "This Week", and overdue ones under "Last
 //     Week". An overdue task's repeat cycle restarts from that email.
 //   - Tasks due at different hours share emails in two ways:
-//       * Day-before reminders wait (up to 12 hours before the due time) while
+//       * Day reminders (1 day to 1 week) may wait up to 12 hours while
 //         another task's reminder is coming up, so e.g. all of tomorrow's
-//         tasks arrive in one email instead of one per deadline.
+//         tasks arrive in one email instead of one per deadline. They are
+//         never sent early, only (a little) late.
 //       * No repeats: being listed in an email counts as a task's next
 //         reminder if that would otherwise come soon after — within 3 hours
 //         (6-hour reminder), 2 hours (3-hour) or 1 hour (1-hour). These gaps
@@ -38,14 +45,16 @@ export const DAY_MS = 24 * HOUR;
 
 // cover: an email also counts as this reminder for a listed task when the
 // reminder would otherwise come less than this long after it.
-export const WINDOWS: ReadonlyArray<{ key: BeforeKey; ms: number; cover: number }> = [
-  { key: "1d", ms: DAY_MS, cover: 0 },
-  { key: "6h", ms: 6 * HOUR, cover: 3 * HOUR },
-  { key: "3h", ms: 3 * HOUR, cover: 2 * HOUR },
-  { key: "1h", ms: HOUR, cover: HOUR },
+// day: a whole-day reminder — sent on the first run at/after its moment (never
+// early), and allowed to wait up to DAY_WAIT_MS to share an email.
+export const WINDOWS: ReadonlyArray<{ key: BeforeKey; ms: number; cover: number; day: boolean }> = [
+  ...([7, 6, 5, 4, 3, 2, 1] as const).map((n) => ({ key: `${n}d` as BeforeKey, ms: n * DAY_MS, cover: 0, day: true })),
+  { key: "6h", ms: 6 * HOUR, cover: 3 * HOUR, day: false },
+  { key: "3h", ms: 3 * HOUR, cover: 2 * HOUR, day: false },
+  { key: "1h", ms: HOUR, cover: HOUR, day: false },
 ];
-/** The 1-day reminder may wait until this long before the due time, to share an email. */
-export const DAY_BEFORE_LATEST_MS = 12 * HOUR;
+/** How long a day reminder may wait to share an email with another task's. */
+export const DAY_WAIT_MS = 12 * HOUR;
 
 // The job runs once an hour. A reminder is sent on the run NEAREST its moment
 // rather than the first run after it: looking ahead half an interval means a
@@ -53,6 +62,8 @@ export const DAY_BEFORE_LATEST_MS = 12 * HOUR;
 // instead of anywhere from 60 minutes down to 1 minute before it.
 export const RUN_EVERY_MS = 60 * 60_000;
 export const LOOKAHEAD_MS = RUN_EVERY_MS / 2;
+/** How early a reminder may fire on the run nearest its moment (hour reminders only). */
+const early = (w: { day: boolean }) => (w.day ? 0 : LOOKAHEAD_MS);
 
 export const utcDate = (ms: number) => new Date(ms).toISOString().slice(0, 10); // YYYY-MM-DD
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / DAY_MS);
@@ -72,16 +83,19 @@ export type ReminderPlan = {
   marks: Array<{ id: string; keys: string[] }>;
 };
 
+/** A member's setting for one task, plus when that setting last changed (ms). */
+export type TaskPrefs = ReminderPrefs & { since?: number | null };
+
 type Candidate = {
   item: ReminderItem; fires: boolean; newKeys: string[];
-  /** Only the 1-day reminder is due: it may wait until this time. */
-  dayBeforeOnlyUntil: number | null;
+  /** Only day reminders are due: they may wait until this time. */
+  dayOnlyUntil: number | null;
   /** When this task's next unsent reminders will come up. */
   upcoming: number[];
   listed: boolean;
 };
 
-function consider(t: Task, prefs: ReminderPrefs, now: number): Candidate | null {
+function consider(t: Task, prefs: TaskPrefs, now: number): Candidate | null {
   // Archived tasks never get reminders. The query already excludes them; this
   // keeps that true even if the query changes.
   if (t.archived) return null;
@@ -93,24 +107,33 @@ function consider(t: Task, prefs: ReminderPrefs, now: number): Candidate | null 
   const created = new Date(t.createdAt).getTime();
   if (Number.isNaN(due)) return null;
   const already = new Set(t.remindersSent ?? []);
+  const changed = prefs.since ?? null;
 
   if (now < due) {
     const enabled = WINDOWS.filter((w) => prefs.before.includes(w.key));
     if (enabled.length === 0) return null; // before-due reminders turned off
     const left = due - now;
-    const pending = enabled.filter((w) => due - w.ms >= created && !already.has(w.key));
-    const firing = pending.filter((w) => now + LOOKAHEAD_MS >= due - w.ms);
+    const pending = enabled.filter((w) =>
+      due - w.ms >= created && // its moment came after the task existed
+      (changed === null || due - w.ms >= changed - RUN_EVERY_MS) && // …and not long before the setting changed
+      !already.has(w.key));
+    const firing = pending.filter((w) => now + early(w) >= due - w.ms);
     const fires = firing.length > 0;
-    const dayBeforeOnlyUntil = fires && firing.every((w) => w.key === "1d") ? due - DAY_BEFORE_LATEST_MS : null;
-    const upcoming = pending.filter((w) => now + LOOKAHEAD_MS < due - w.ms).map((w) => Math.max(due - w.ms - LOOKAHEAD_MS, due - DAY_MS));
-    const earliest = Math.max(...enabled.map((w) => w.ms));
-    if (left > DAY_MS || now + LOOKAHEAD_MS < due - earliest) // not listed yet (never earlier than a day before)
-      return { item: { task: t, state: "due", ms: left }, fires: false, newKeys: [], dayBeforeOnlyUntil: null, upcoming, listed: false };
+    const dayOnlyUntil = fires && firing.every((w) => w.day)
+      ? due - Math.min(...firing.map((w) => w.ms)) + DAY_WAIT_MS
+      : null;
+    const upcoming = pending.filter((w) => now + early(w) < due - w.ms).map((w) => due - w.ms - early(w));
+    const first = enabled[0]; // WINDOWS is ordered earliest-first
+    if (now + early(first) < due - first.ms) // not listed yet: never earlier than the earliest reminder chosen
+      return { item: { task: t, state: "due", ms: left }, fires: false, newKeys: [], dayOnlyUntil: null, upcoming, listed: false };
     // Listing the task covers every reminder moment that has passed or comes
     // within its cover (enabled or not, so a later setting change can't
     // resurrect a stale one).
-    const newKeys = WINDOWS.filter((w) => due - w.ms < now + Math.max(w.cover, LOOKAHEAD_MS) && !already.has(w.key)).map((w) => w.key);
-    return { item: { task: t, state: "due", ms: left }, fires, newKeys, dayBeforeOnlyUntil, upcoming, listed: true };
+    // Day reminders count only once their moment has come (never early).
+    const covered = (w: (typeof WINDOWS)[number]) =>
+      w.day ? due - w.ms <= now : due - w.ms < now + Math.max(w.cover, LOOKAHEAD_MS);
+    const newKeys = WINDOWS.filter((w) => covered(w) && !already.has(w.key)).map((w) => w.key);
+    return { item: { task: t, state: "due", ms: left }, fires, newKeys, dayOnlyUntil, upcoming, listed: true };
   }
 
   // Past due.
@@ -119,14 +142,19 @@ function consider(t: Task, prefs: ReminderPrefs, now: number): Candidate | null 
   const today = utcDate(now);
   const sentDays = Array.from(already).filter((k) => k.startsWith("overdue:")).map((k) => k.slice("overdue:".length)).sort();
   const last = sentDays[sentDays.length - 1];
-  const fires = !last || daysBetween(last, today) >= every;
+  // Setting changed today, after today's overdue reminders already went out
+  // (first run of the UTC day), on a task that was already overdue: start
+  // from the next daily reminder rather than sending one now.
+  const changedAfterTodaysRun = changed !== null && due < changed &&
+    utcDate(changed) === today && changed - Date.parse(`${today}T00:00:00Z`) > RUN_EVERY_MS;
+  const fires = !changedAfterTodaysRun && (!last || daysBetween(last, today) >= every);
   const todayKey = `overdue:${today}`;
-  return { item: { task: t, state: "overdue", ms: now - due }, fires, newKeys: already.has(todayKey) ? [] : [todayKey], dayBeforeOnlyUntil: null, upcoming: [], listed: true };
+  return { item: { task: t, state: "overdue", ms: now - due }, fires, newKeys: already.has(todayKey) ? [] : [todayKey], dayOnlyUntil: null, upcoming: [], listed: true };
 }
 
 export function planReminders(
   tasks: Task[],
-  prefsFor: (task: Task) => ReminderPrefs, // the assigning team's setting for this task's assignee
+  prefsFor: (task: Task) => TaskPrefs, // the assigning team's setting for this task's assignee
   now: number,
 ): ReminderPlan {
   const byPerson = new Map<string, Candidate[]>();
@@ -143,10 +171,10 @@ export function planReminders(
   for (const [to, cands] of Array.from(byPerson.entries())) {
     const firing = cands.filter((c) => c.fires);
     if (!firing.length) continue; // nothing of theirs is due a reminder this run
-    // Only day-before reminders are due: hold them while another task's
-    // reminder comes up before the latest they may go, so they share an email.
-    if (firing.every((c) => c.dayBeforeOnlyUntil !== null)) {
-      const until = Math.min(...firing.map((c) => c.dayBeforeOnlyUntil!));
+    // Only day reminders are due: hold them while another task's reminder
+    // comes up before the latest they may go, so they share an email.
+    if (firing.every((c) => c.dayOnlyUntil !== null)) {
+      const until = Math.min(...firing.map((c) => c.dayOnlyUntil!));
       if (cands.some((c) => !c.fires && c.upcoming.some((at) => at <= until))) continue;
     }
     const items = cands

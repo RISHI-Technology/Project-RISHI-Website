@@ -99,13 +99,15 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "You can't change reminders for that member." }, { status: 403 });
     if (body.prefs === undefined) return NextResponse.json({ error: "Missing prefs." }, { status: 400 });
     if (prefs) await setMemberPrefs(scope, target.email, prefs, me.email);
-    else await clearMemberPrefs(scope, [target.email]);
+    else await clearMemberPrefs(scope, [target.email], me.email);
   } else {
     if (body.resetMembers === true) {
-      await clearMemberPrefs(scope, scopeMembers(scope, me).map((m) => m.email));
+      const current = await loadReminderSettings();
+      const own = scopeMembers(scope, me).filter((m) => effectivePrefs(current, scope, m.email).source === "member");
+      await clearMemberPrefs(scope, own.map((m) => m.email), me.email);
     } else if (body.prefs !== undefined) {
       if (prefs) await setDefaultPrefs(scope, prefs, me.email);
-      else await clearDefaultPrefs(scope);
+      else await clearDefaultPrefs(scope, me.email);
     } else {
       return NextResponse.json({ error: "Missing prefs." }, { status: 400 });
     }

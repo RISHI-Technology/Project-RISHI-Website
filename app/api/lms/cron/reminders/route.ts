@@ -41,7 +41,10 @@ async function run(req: Request) {
   const plan = settings
     ? planReminders(
         tasks,
-        (t) => effectivePrefs(settings, taskScope(findMember(t.assignerEmail), findMember(t.assigneeEmail)), t.assigneeEmail).prefs,
+        (t) => {
+          const e = effectivePrefs(settings, taskScope(findMember(t.assignerEmail), findMember(t.assigneeEmail)), t.assigneeEmail);
+          return { ...e.prefs, since: e.since ? Date.parse(e.since) : null }; // changes only affect reminders still ahead
+        },
         Date.now(),
       )
     : { emails: [], marks: [] };
