@@ -10,7 +10,8 @@ export const runtime = "nodejs";
  * Drive link; uploaded ones get a signed URL that expires in ten minutes, so
  * the storage bucket can stay private.
  */
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
 

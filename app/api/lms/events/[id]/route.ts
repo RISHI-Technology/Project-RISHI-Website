@@ -7,7 +7,8 @@ import type { ProjectGroup } from "@/lib/lms/types";
 
 export const dynamic = "force-dynamic";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
 
@@ -65,7 +66,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json({ event: updated });
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   const event = await getEvent(params.id);

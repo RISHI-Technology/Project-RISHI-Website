@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AgendaDocPanel from "@/components/AgendaDocPanel";
@@ -62,7 +62,8 @@ const STATUS_STYLE: Record<string, string> = {
   not_complete: "bg-ink/8 text-ink/75", pending: "bg-marigold-soft/50 text-marigold-ink", complete: "bg-pine/15 text-pine-deep",
 };
 
-export default function MeetingPage({ params }: { params: { id: string } }) {
+export default function MeetingPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const { id } = params;
   const router = useRouter();
 

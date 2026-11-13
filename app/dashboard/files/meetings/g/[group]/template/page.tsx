@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MeetingEditor from "@/components/MeetingEditor";
@@ -10,7 +10,8 @@ const GROUP_LABEL: Record<string, string> = {
   E: "Education", R: "Water & Sanitation", W: "Women's Empowerment", H: "Health",
 };
 
-export default function TemplateEditor({ params }: { params: { group: string } }) {
+export default function TemplateEditor(props: { params: Promise<{ group: string }> }) {
+  const params = use(props.params);
   const { group } = params;
   const router = useRouter();
   const label = GROUP_LABEL[group] ?? group;

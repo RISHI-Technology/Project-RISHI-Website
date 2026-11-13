@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DashboardBanner from "@/components/DashboardBanner";
@@ -14,7 +14,8 @@ type MeetingRow = {
   notetaker: string; blockCount: number; createdAt: string;
 };
 
-export default function GroupMeetings({ params }: { params: { group: string } }) {
+export default function GroupMeetings(props: { params: Promise<{ group: string }> }) {
+  const params = use(props.params);
   const { group } = params;
   const router = useRouter();
   const label = GROUP_LABEL[group] ?? group;

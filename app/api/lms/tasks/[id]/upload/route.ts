@@ -29,7 +29,8 @@ async function load(id: string) {
 }
 
 /** GET — the files attached to this task (shared across all its assignees). */
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const g = await load(params.id);
   if ("error" in g) return NextResponse.json({ error: g.error }, { status: g.status });
   try {
@@ -40,7 +41,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 }
 
 /** POST a multipart form with `file` — attaches it to this task's submission. */
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const g = await load(params.id);
   if ("error" in g) return NextResponse.json({ error: g.error }, { status: g.status });
   const { me, task, isAssignee } = g;
@@ -93,7 +95,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 }
 
 /** DELETE ?fileId=… — take back an attachment while the task is still open. */
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const g = await load(params.id);
   if ("error" in g) return NextResponse.json({ error: g.error }, { status: g.status });
 

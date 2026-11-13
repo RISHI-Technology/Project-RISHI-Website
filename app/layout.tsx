@@ -72,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${mukta.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${mukta.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         {/* Apply dashboard dark mode and the Liquid Glass interface (the default;
             "classic" opts out, RISHI AI is excluded — see components/GlassMode)

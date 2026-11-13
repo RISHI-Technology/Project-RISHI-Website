@@ -5,7 +5,8 @@ import { setNewsletterRead } from "@/lib/lms/newsletters";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   let body: { read?: boolean };

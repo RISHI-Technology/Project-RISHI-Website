@@ -6,7 +6,8 @@ import { sendPushToUser } from "@/lib/lms/push";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   if (!(await isChatMember(params.id, me.email)))
@@ -17,7 +18,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   return NextResponse.json({ chat, messages });
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   if (!(await isChatMember(params.id, me.email)))
@@ -56,7 +58,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 }
 
 // Delete the conversation for the current member only (hides it from their list).
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   if (!(await isChatMember(params.id, me.email)))

@@ -8,7 +8,8 @@ import { memberFullName, findMember } from "@/lib/members";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   const meeting = await getMeeting(params.id);
@@ -32,7 +33,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   });
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   const meeting = await getMeeting(params.id);
@@ -49,7 +51,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json({ meeting: updated });
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   const meeting = await getMeeting(params.id);

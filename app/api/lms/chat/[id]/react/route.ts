@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 const ALLOWED = ["👍", "❤️", "😂", "😮", "😢", "🙏", "🔥", "🎉"];
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
 

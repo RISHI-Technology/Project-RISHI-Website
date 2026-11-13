@@ -112,7 +112,8 @@ async function syncGroupArchive(task: Task): Promise<void> {
  * back with the same flags and co-assignee list the board gets, so the meeting
  * view and the dashboard show identical information.
  */
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
 
@@ -141,7 +142,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   });
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
 
@@ -355,7 +357,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401 });
   const task = await getTask(params.id);
