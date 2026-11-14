@@ -22,9 +22,15 @@ export const LINEAGES: LineageNode[] = [
       { name: "Divya Katyal", children: [
         { name: "Shreya Gunda", children: [
           { name: "Ryan Raphael", children: [
-            { name: "Sachit Kumar" },
-            { name: "Nirali Narayan" },
-            { name: "YaduKrishna Raghu" }
+            { name: "Sachit Kumar", children: [
+              { name: "Elijah Anil" }
+            ] },
+            { name: "Nirali Narayan", children: [
+              { name: "Arry Jeejeebhoy" }
+            ] },
+            { name: "YaduKrishna Raghu", children: [
+              { name: "Yashashvi Kamboj" }
+            ] }
           ] },
           { name: "Saavri Biswal", children: [
             { name: "Nikita Jadhav" }
@@ -33,7 +39,10 @@ export const LINEAGES: LineageNode[] = [
       ] },
       { name: "Medha Kalidas", children: [
         { name: "Grishma Jain", children: [
-          { name: "Simar Kaur" }
+          { name: "Simar Kaur", children: [
+            { name: "Maisha Sharma" }
+          ] },
+          { name: "Aasma Dhawan" }
         ] },
         { name: "Pushkar Kairam", children: [
           { name: "Jahanveer Butar" },
@@ -106,13 +115,20 @@ export const LINEAGES: LineageNode[] = [
         { name: "Sara Kathuria" },
         { name: "Advik Kotte", children: [
           { name: "Surabhi Khanna", children: [
-            { name: "Megha Ramachandran" }
+            { name: "Megha Ramachandran", children: [
+              { name: "Yash Advik Guruprakash" },
+              { name: "Anish Joshi" }
+            ] }
           ] },
           { name: "Krrishika Saxena", children: [
             { name: "Shipra Jha" },
-            { name: "Loyna Rism" }
+            { name: "Loyna Rism", children: [
+              { name: "Varda Qudratullah" }
+            ] }
           ] },
-          { name: "Srivishal Sudharsan" }
+          { name: "Srivishal Sudharsan", children: [
+            { name: "Arya Bhardia" }
+          ] }
         ] }
       ] }
     ] }
@@ -130,12 +146,16 @@ export const LINEAGES: LineageNode[] = [
       { name: "Shweta Pattnaik", children: [
         { name: "Rhea Siromani", children: [
           { name: "Kaavya Pravin", children: [
-            { name: "Maia Berges Voorhis" }
+            { name: "Maia Berges Voorhis", children: [
+              { name: "Keya Vaidya" }
+            ] }
           ] }
         ] },
         { name: "Alisha Shah", children: [
           { name: "Tanya Goel", children: [
-            { name: "Sahaana Mehta" }
+            { name: "Sahaana Mehta" },
+            { name: "Pranaya Rishi" },
+            { name: "Neev Sheth" }
           ] }
         ] }
       ] }
@@ -155,7 +175,10 @@ export const LINEAGES: LineageNode[] = [
       { name: "Ekansh Agarwal", children: [
         { name: "Rishit Pradhan", children: [
           { name: "Anoushka Soni" },
-          { name: "Utkarsh Agarwal" },
+          { name: "Utkarsh Agarwal", children: [
+            { name: "Prabhav Goel" },
+            { name: "Krishiv Bhatia" }
+          ] },
           { name: "Shiama Srikantan", children: [
             { name: "Arnav Mishra", children: [
               { name: "Sid Pradeep" },
@@ -169,10 +192,14 @@ export const LINEAGES: LineageNode[] = [
             { name: "Jannat Vohra" }
           ] },
           { name: "Sara Khemani", children: [
-            { name: "Palak Prabhakar" },
+            { name: "Palak Prabhakar", children: [
+              { name: "Laasya Mallapragada" }
+            ] },
             { name: "Meera Mahidhara", children: [
               { name: "Aarushi Mupparti" },
-              { name: "Sanjoli Gupta" },
+              { name: "Sanjoli Gupta", children: [
+                { name: "Rhea Gosain" }
+              ] },
               { name: "Zahra Habib" }
             ] }
           ] }
