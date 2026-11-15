@@ -7,14 +7,14 @@ export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Cache-Control": "private, no-store" };
 
-// The Full Directory (every member, 2015–2027). Any signed-in member can view it;
-// phone numbers and non-@berkeley.edu emails are included only for exec and the
-// webmaster, and are stripped server-side for everyone else.
+// The Full Directory (every member, 2015–2027). Any signed-in member can view it,
+// including phone numbers and personal (non-@berkeley.edu) emails. Signed-out
+// visitors get nothing.
 export async function GET() {
   const me = await getCurrentMember();
   if (!me) return NextResponse.json({ error: "Not authorized" }, { status: 401, headers: NO_STORE });
 
-  const canSeePrivate = !!(me.roles.exec || me.roles.webmaster);
+  const canSeePrivate = true;
   try {
     const people = await listFullDirectory(canSeePrivate);
     const body: FullDirectoryResponse = { people, canSeePrivate };

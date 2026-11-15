@@ -51,7 +51,7 @@ export type FullPerson = {
   name: string;
   /** Regular members only receive @berkeley.edu addresses. */
   emails: string[];
-  /** Present ONLY for exec / webmaster. Absent (not empty) for everyone else. */
+  /** Present only when the viewer canSeePrivate (every signed-in member). Absent (not empty) otherwise. */
   phones?: string[];
   gradYear: number | null;
   gradYearInferred: boolean;
@@ -84,6 +84,6 @@ export type FullPerson = {
 
 export type FullDirectoryResponse = {
   people: FullPerson[];
-  /** True for exec / webmaster: phones and personal emails are included. */
+  /** True for every signed-in member: phones and personal emails are included. */
   canSeePrivate: boolean;
 };

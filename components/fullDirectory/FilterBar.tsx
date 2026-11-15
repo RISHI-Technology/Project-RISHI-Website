@@ -135,7 +135,6 @@ function useSections(s: DirState, set: Set_, o: Options, canSeePrivate: boolean)
         <div>
           <OptionList label="contact info" options={o.contact} selected={usableContact(s, canSeePrivate)}
             onToggle={(v) => set({ contact: toggleIn(s.contact, v as ContactKind) })} />
-          {canSeePrivate && <p className="mt-2 px-2 text-[11px] text-ink/50">Email and phone are exec only — members don’t see phone numbers.</p>}
         </div>
       ),
     });

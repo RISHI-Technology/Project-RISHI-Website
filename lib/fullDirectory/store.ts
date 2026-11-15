@@ -4,9 +4,10 @@
 //  Reads ONLY directory_people / directory_memberships (service role; RLS has no
 //  policies, so nothing else can). Never touches the lms_* roster.
 //
-//  Privacy is applied here, before anything leaves the server: for viewers who
-//  aren't exec/webmaster, phone numbers are removed from the object entirely and
-//  only @berkeley.edu emails are kept.
+//  Privacy is applied here, before anything leaves the server: when
+//  `canSeePrivate` is false, phone numbers are removed from the object entirely
+//  and only @berkeley.edu emails are kept. (The API route currently passes true
+//  for every signed-in member.)
 // ============================================================================
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -149,8 +150,8 @@ export async function listFullDirectory(canSeePrivate: boolean): Promise<FullPer
         lastYear: p.last_year,
         memberships: (byPerson.get(p.id) ?? []).sort((a, b) => (a.yearStart ?? 9999) - (b.yearStart ?? 9999)),
       };
-      // Phones are only ever attached for exec/webmaster — for everyone else the
-      // key does not exist in the response at all.
+      // Phones are only attached when canSeePrivate — otherwise the key does
+      // not exist in the response at all.
       if (canSeePrivate) person.phones = p.phones ?? [];
       return person;
     })
