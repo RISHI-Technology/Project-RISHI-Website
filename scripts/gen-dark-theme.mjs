@@ -237,6 +237,14 @@ html.dark .familytree { --ft-line: rgb(124 196 160 / 0.35); }
 html.dark .ft-node { background: ${D.surface}; color: ${D.text}; border-color: rgb(124 196 160 / 0.25); }
 html.dark .ft-node--me { background: ${LIGHT.marigold}; color: ${LIGHT["pine-deep"]}; border-color: ${LIGHT["marigold-deep"]}; }
 html.dark .ft-badge { background: ${D.pineSolid}; color: ${LIGHT.paper}; }
+html.dark .ft-card { background: ${D.surface}; color: ${D.text}; border-color: rgb(124 196 160 / 0.25); }
+html.dark .ft-card__section + .ft-card__section { border-top-color: rgb(124 196 160 / 0.22); }
+html.dark .ft-card__title { color: rgb(230 226 213 / 0.68); }
+html.dark .ft-card__empty { color: rgb(230 226 213 / 0.45); }
+html.dark .ft-chip { background: rgb(124 196 160 / 0.12); color: ${D.mintLight}; }
+html.dark .ft-chip:hover { background: rgb(124 196 160 / 0.2); border-color: rgb(124 196 160 / 0.45); }
+html.dark .ft-chip:focus-visible { outline-color: ${D.mint}; }
+html.dark .ft-chip__q { color: rgb(230 226 213 / 0.55); }
 
 /* The logo's lettering is black; swap to the light variant. */
 html.dark img[data-logo="light"] { display: none; }

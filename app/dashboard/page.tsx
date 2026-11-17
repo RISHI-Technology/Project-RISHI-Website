@@ -110,7 +110,7 @@ export default function DashboardPage() {
         )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Member Directory (2/3 height) + RISHI Lineage (1/3 height) */}
+          {/* Member Directory (2/3 height) + RISHI Lore (Lineages + Leadership; 1/3 height) */}
           <Reveal>
             <div className="grid h-full grid-rows-[2fr_1fr] gap-4">
               <Link
@@ -135,7 +135,7 @@ export default function DashboardPage() {
 
               <GatedLink
                 locked={unplaced}
-                href="/dashboard/lineage"
+                href="/dashboard/lore"
                 lockedClassName="flex min-h-0 items-center gap-4 p-5"
                 className="group flex min-h-0 items-center gap-4 rounded-3xl border border-pine/15 bg-pine/[0.03] p-5 transition-colors hover:border-pine hover:bg-pine hover:text-paper"
               >
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                   </svg>
                 </span>
                 <span className="font-display text-lg font-semibold leading-tight">
-                  RISHI Lineage
+                  RISHI Lore
                 </span>
               </GatedLink>
             </div>
