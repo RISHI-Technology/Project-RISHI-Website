@@ -64,35 +64,47 @@ const toHolder = (h: HolderRow): LeadershipHolder => ({
   id: h.id, roleId: h.role_id, name: h.display_name, personId: h.directory_person_id, qualifier: h.qualifier, note: h.note, sortOrder: h.sort_order,
 });
 
-/** The Full Directory facts for the given people (only those still in the directory). */
+/** Current slug + name for the given Full Directory ids (only those still in the directory). */
 async function linkedPeople(ids: string[]): Promise<Record<string, LinkedPerson>> {
   const out: Record<string, LinkedPerson> = {};
   for (let i = 0; i < ids.length; i += 150) {
-    const chunk = ids.slice(i, i + 150);
-    const [{ data: people, error: e1 }, { data: ms, error: e2 }] = await Promise.all([
-      sb().from("directory_people").select("id, slug, full_name").in("id", chunk),
-      sb().from("directory_memberships").select("person_id, year, project_groups, positions, position_type, not_yet_placed").in("person_id", chunk),
-    ]);
-    if (e1) throw new Error(`directory_people: ${e1.message}`);
-    if (e2) throw new Error(`directory_memberships: ${e2.message}`);
-    for (const p of people ?? []) out[p.id] = { id: p.id, slug: p.slug, name: p.full_name, memberships: [] };
-    for (const m of ms ?? []) {
-      out[m.person_id]?.memberships.push({
-        year: m.year, groups: m.project_groups ?? [], positions: m.positions ?? [],
-        positionType: m.position_type, notYetPlaced: m.not_yet_placed,
-      });
-    }
+    const { data, error } = await sb().from("directory_people").select("id, slug, full_name").in("id", ids.slice(i, i + 150));
+    if (error) throw new Error(`directory_people: ${error.message}`);
+    for (const p of data ?? []) out[p.id] = { id: p.id, slug: p.slug, name: p.full_name };
   }
   return out;
 }
 
-/** Everything Lore → Leadership shows: every year, role and holder, plus the
- *  directory facts for linked holders (for the person popup). Small: ~150 roles. */
-export async function getLeadershipData(canEdit: boolean): Promise<LeadershipData> {
-  const [years, roles, holders] = await Promise.all([
+/** The viewer's own Full Directory record: by their login email (directory emails
+ *  are stored lower-cased), else by exact full name when exactly one record has it
+ *  (the same rule Lineage uses for its "You"). Null when neither finds one person. */
+async function findMe(viewer: Viewer | null): Promise<string | null> {
+  if (!viewer) return null;
+  const email = viewer.email?.trim().toLowerCase();
+  if (email) {
+    const { data, error } = await sb().from("directory_people").select("id").contains("emails", [email]).limit(2);
+    if (error) throw new Error(`directory_people: ${error.message}`);
+    if (data?.length === 1) return data[0].id as string;
+  }
+  const name = viewer.name?.replace(/\s+/g, " ").trim();
+  if (name) {
+    const { data, error } = await sb().from("directory_people").select("id").eq("full_name", name).limit(2);
+    if (error) throw new Error(`directory_people: ${error.message}`);
+    if (data?.length === 1) return data[0].id as string;
+  }
+  return null;
+}
+
+export type Viewer = { email: string | null; name: string | null };
+
+/** Everything Lore → Leadership shows: every year, role and holder, the profile
+ *  slug of every linked holder, and which record is the viewer. Small: ~150 roles. */
+export async function getLeadershipData(canEdit: boolean, viewer: Viewer | null): Promise<LeadershipData> {
+  const [years, roles, holders, meId] = await Promise.all([
     allYears(),
     all<RoleRow>(ROLES, ROLE_COLS, "sort_order"),
     all<HolderRow>(HOLDERS, HOLDER_COLS, "sort_order"),
+    findMe(viewer),
   ]);
   const ids = [...new Set(holders.map((h) => h.directory_person_id).filter((x): x is string => !!x))];
   return {
@@ -100,6 +112,7 @@ export async function getLeadershipData(canEdit: boolean): Promise<LeadershipDat
     roles: roles.map(toRole),
     holders: holders.map(toHolder),
     people: await linkedPeople(ids),
+    meId,
     canEdit,
   };
 }

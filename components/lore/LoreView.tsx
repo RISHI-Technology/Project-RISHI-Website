@@ -44,14 +44,14 @@ export default function LoreView() {
               Back to dashboard
             </Link>
             <h1 className="mt-4 font-display text-4xl font-semibold sm:text-5xl">RISHI Lore</h1>
-            <p className="mt-2 max-w-xl text-paper/75">
-              {tab === "lineages" ? "Bigs, littles and the families they've grown into." : "Who led RISHI, year by year."}
-            </p>
           </Reveal>
         </div>
       </DashboardBanner>
 
+      {/* A solid paper pill behind the toggle, so it reads over the banner photo
+          (Liquid Glass) as well as on the plain page, in light and dark mode. */}
       <div className="container-rishi flex justify-center pb-8 pt-10">
+        <div className="rounded-full bg-paper p-1 shadow-[0_6px_20px_-8px_rgb(20_54_40/0.35)] ring-1 ring-pine/10" data-lore-toggle>
         <Segmented<Tab>
           label="Lore view"
           value={tab}
@@ -61,6 +61,7 @@ export default function LoreView() {
             { value: "leadership", label: "Leadership" },
           ]}
         />
+        </div>
       </div>
 
       {tab === "lineages" ? (

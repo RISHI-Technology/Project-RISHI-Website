@@ -48,7 +48,7 @@ create table if not exists leadership_holders (
   display_name         text not null check (length(btrim(display_name)) > 0),
   directory_person_id  uuid references directory_people(id) on delete set null,
   qualifier            text,                             -- shown under the name on the tree
-  note                 text,                             -- shown only in the person popup
+  note                 text,                             -- shown when hovering the name
   sort_order           int not null default 0,
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now(),

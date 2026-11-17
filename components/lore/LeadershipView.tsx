@@ -3,15 +3,14 @@
 // Lore → Leadership: one school year's leadership tree at a time.
 //   • ‹ › (and ←/→) step to the previous/next year that has data; each stops at its end.
 //   • The year lives in the URL (?tab=leadership&year=2024-2025), so links work.
-//   • Clicking a name opens that person's history (PersonPopup).
+//   • A name opens that person's Full Directory profile in a new tab.
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import LeadershipTree from "@/components/lore/LeadershipTree";
-import PersonPopup from "@/components/lore/PersonPopup";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/fullDirectory/ui";
-import { personHistory, personKeyOf, type PersonKey } from "@/lib/leadership/history";
+import { personHref } from "@/components/fullDirectory/model";
 import {
   CURRENT_LEADERSHIP_YEAR, shortLeadershipYear, type LeadershipData, type LeadershipHolder,
 } from "@/lib/leadership/types";
@@ -28,13 +27,19 @@ export function yearsWithData(data: LeadershipData): string[] {
 export function defaultYear(years: string[]): string | null {
   return years.includes(CURRENT_LEADERSHIP_YEAR) ? CURRENT_LEADERSHIP_YEAR : years.at(-1) ?? null;
 }
+/** A holder's Full Directory profile, by the stored directory id (null when not linked). */
+export function profileHrefFor(data: LeadershipData) {
+  return (h: LeadershipHolder) => {
+    const p = h.personId ? data.people[h.personId] : undefined;
+    return p ? personHref(p.slug) : null;
+  };
+}
 
 export default function LeadershipView() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const [load, setLoad] = useState<Load>({ state: "loading" });
-  const [open, setOpen] = useState<PersonKey | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -54,6 +59,7 @@ export default function LeadershipView() {
 
   const data = load.state === "ready" ? load.data : null;
   const years = useMemo(() => (data ? yearsWithData(data) : []), [data]);
+  const hrefOf = useMemo(() => (data ? profileHrefFor(data) : () => null), [data]);
   const asked = params.get("year");
   const year = asked && years.includes(asked) ? asked : defaultYear(years);
   const i = year ? years.indexOf(year) : -1;
@@ -68,12 +74,11 @@ export default function LeadershipView() {
     router.replace(`${pathname}?${q.toString()}`, { scroll: false });
   }, [params, pathname, router]);
 
-  // ←/→ step years — except while typing, while the popup is open, or while the
-  // tree's scroll area itself is focused (there the arrows pan it sideways, like
-  // Lineage's). A focused name chip inside the tree still steps years.
+  // ←/→ step years — except while typing, or while the tree's scroll area itself is
+  // focused (there the arrows pan it sideways, like Lineage's). A focused name still steps.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (open || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       const t = e.target as HTMLElement | null;
       if (t?.matches("[data-lore-tree]") || t?.closest("input, textarea, select, [contenteditable='true'], [role='dialog']")) return;
       if (e.key === "ArrowLeft" && prev) { e.preventDefault(); go(prev); }
@@ -81,11 +86,7 @@ export default function LeadershipView() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, prev, next, go]);
-
-  const history = useMemo(() => (data && open ? personHistory(data, open) : null), [data, open]);
-  const onPick = useCallback((h: LeadershipHolder) => setOpen(personKeyOf(h)), []);
-  const close = useCallback(() => setOpen(null), []);
+  }, [prev, next, go]);
 
   if (load.state === "loading")
     return <p className="py-16 text-center text-sm text-ink/60" role="status">Loading leadership history…</p>;
@@ -106,7 +107,7 @@ export default function LeadershipView() {
         <YearButton dir="next" to={next} onClick={() => go(next)} />
       </div>
       <p className="mt-2 text-center text-xs text-ink/50">
-        Use ‹ › or the arrow keys to step through {years.length} years
+        Use ‹ › or the arrow keys to step through {years.length} years · Click a name to open their profile
         {data.canEdit && (
           <>
             {" · "}
@@ -116,12 +117,10 @@ export default function LeadershipView() {
       </p>
       {note && <p className="mx-auto mt-4 max-w-xl text-center text-sm text-ink/55" data-year-note>{note}</p>}
 
-      <div className="mt-8 rounded-3xl border border-pine/12 bg-paper p-4 sm:p-8">
-        <LeadershipTree year={y} roles={data.roles} holders={data.holders} onPick={onPick}
-          label={`Leadership tree for ${shortLeadershipYear(year)} (scrolls sideways)`} />
+      <div className="mt-8 rounded-3xl border border-pine/12 bg-paper p-3 sm:p-6">
+        <LeadershipTree year={y} roles={data.roles} holders={data.holders} hrefOf={hrefOf} meId={data.meId}
+          label={`Leadership tree for ${shortLeadershipYear(year)}`} />
       </div>
-
-      <PersonPopup history={history} onClose={close} />
     </div>
   );
 }

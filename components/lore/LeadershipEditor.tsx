@@ -19,7 +19,7 @@ import {
   PROJECT_GROUPS, SLOTS, SLOT_LABELS, STRUCTURES, STRUCTURE_LABELS, isYearKey, shortLeadershipYear,
   type LeadershipData, type LeadershipHolder, type LeadershipRole, type Slot, type Structure,
 } from "@/lib/leadership/types";
-import { PVP_ONLY_NOTE, defaultYear } from "@/components/lore/LeadershipView";
+import { PVP_ONLY_NOTE, defaultYear, profileHrefFor } from "@/components/lore/LeadershipView";
 
 type DirPerson = { id: string; name: string; slug: string; years: string[] };
 type RoleDraft = Pick<LeadershipRole, "title" | "slot" | "projectGroup" | "parentRoleId">;
@@ -161,8 +161,9 @@ export default function LeadershipEditor() {
                 {(yearRow.note ?? (yearRow.structure === "pvp_only" ? PVP_ONLY_NOTE : null)) && (
                   <p className="mb-3 text-center text-sm text-ink/55">{yearRow.note ?? PVP_ONLY_NOTE}</p>
                 )}
-                <LeadershipTree year={yearRow} roles={previewRoles} holders={previewHolders} onPick={() => {}}
-                  label={`Preview of ${shortLeadershipYear(yearRow.year)} (scrolls sideways)`} />
+                <LeadershipTree year={yearRow} roles={previewRoles} holders={previewHolders}
+                  hrefOf={profileHrefFor(data)} meId={data.meId}
+                  label={`Preview of ${shortLeadershipYear(yearRow.year)}`} />
               </>
             ) : (
               <p className="py-10 text-center text-sm text-ink/60">Add a year to start.</p>
@@ -408,7 +409,7 @@ function HolderEditor({ holder: h, draft, onDraft, people, first, last, busy, sa
         <label><span className={LABEL}>Qualifier (on the tree)</span>
           <input className={`${INPUT} mt-1`} value={v.qualifier ?? ""} placeholder="e.g. Fall 2019" onChange={(e) => onDraft({ ...v, qualifier: e.target.value || null })} />
         </label>
-        <label className="sm:col-span-2"><span className={LABEL}>Note (popup only)</span>
+        <label className="sm:col-span-2"><span className={LABEL}>Note (shown on hover)</span>
           <input className={`${INPUT} mt-1`} value={v.note ?? ""} placeholder="e.g. Title not stated" onChange={(e) => onDraft({ ...v, note: e.target.value || null })} />
         </label>
         <div className="sm:col-span-2">
@@ -462,7 +463,7 @@ function AddHolder({ roleId, people, busy, save }: {
 }
 
 /** Link a holder to a Full Directory record by searching it — the stored id is what
- *  the popup and "View full profile" use, never the typed name. */
+ *  the tree's profile link and "You" highlight use, never the typed name. */
 function DirectoryPicker({ people, value, suggest, onChange }: {
   people: DirPerson[]; value: string | null; suggest: string; onChange: (id: string | null) => void;
 }) {

@@ -10,10 +10,12 @@
 //                         (leads whose group has no senior lead hang directly)
 //
 //  one_vp / pvp_only  (one VP)
-//    President ── VP ── every director / exec role, and ONE shared node for all
-//                       projects-director roles; every lead hangs beneath that
-//                       node (or beneath the VP when a year has none).
-//    pvp_only years simply have no roles below the VP.
+//    President
+//    ├─ VP ── every director / exec role, "other" roles and parentless interns
+//    └─ ONE shared node for all projects-director roles ── every lead
+//    The projects director sits beside the VP, so execs and leads share a level
+//    (the same shape as two_vp). With no projects director, leads hang under
+//    the VP beside the directors. pvp_only years simply have nothing below the VP.
 //
 //  Any year: a role with an explicit parent (interns under their director,
 //  "Internal" under VP Internal) hangs under that parent instead. A role whose
@@ -92,24 +94,22 @@ export function buildTree(structure: Structure, input: LeadershipRole[]): TreeNo
 
   // Senior leads (with their leads) and leads that have no senior lead.
   const leadTree = ordered([...single(of("senior_lead")), ...single(looseLeads)]);
-  const pdItems: [number, TreeNode][] = projectsDirectors.length
-    ? [[projectsDirectors[0].sortOrder, node(projectsDirectors, structure === "two_vp" ? [] : leadTree)]]
-    : [];
-
   let underTop: TreeNode[];
   if (structure === "two_vp") {
-    const internalSide = ordered([...single(directors), ...pdItems, ...single(sideRoles)]);
+    // Leads always hang under VP of Projects here; a projects-director role (unusual
+    // in these years) is just one more exec node under VP Internal.
+    const pd: [number, TreeNode][] = projectsDirectors.length ? [[projectsDirectors[0].sortOrder, node(projectsDirectors)]] : [];
+    const internalSide = ordered([...single(directors), ...pd, ...single(sideRoles)]);
     underTop = [
       ...vps.map((r) => node([r])),
       ...(vpInternal.length ? [node(vpInternal, internalSide)] : internalSide),
       ...(vpProjects.length ? [node(vpProjects, leadTree)] : leadTree),
     ];
   } else {
-    const vpKids = ordered([
-      ...single(directors), ...pdItems, ...single(sideRoles), ...single(vpInternal), ...single(vpProjects),
-    ]);
-    if (!projectsDirectors.length) vpKids.push(...leadTree);
-    underTop = vps.length ? [node(vps, vpKids)] : vpKids;
+    const vpKids = ordered([...single(directors), ...single(sideRoles), ...single(vpInternal), ...single(vpProjects)]);
+    const pdNode = projectsDirectors.length ? node(projectsDirectors, leadTree) : null;
+    if (!pdNode) vpKids.push(...leadTree);
+    underTop = [...(vps.length ? [node(vps, vpKids)] : vpKids), ...(pdNode ? [pdNode] : [])];
   }
   return presidents.length ? [node(presidents, underTop)] : underTop;
 }

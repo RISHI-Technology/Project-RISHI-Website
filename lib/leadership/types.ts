@@ -1,6 +1,6 @@
 // ============================================================================
 //  Leadership history ("Lore → Leadership") — shapes shared by the API routes,
-//  the tree, the person popup and the webmaster editor.
+//  the tree and the webmaster editor.
 //  Data: leadership_years / leadership_roles / leadership_holders
 //  (migration-leadership.sql), seeded by scripts/seed-leadership.mjs.
 //
@@ -85,23 +85,17 @@ export type LeadershipHolder = {
   personId: string | null;
   /** Short text shown under the name on the tree ("Fall 2019"). */
   qualifier: string | null;
-  /** Longer context shown only in the person popup ("Title not stated"). */
+  /** Longer context, shown when hovering the name ("Title not stated"). */
   note: string | null;
   sortOrder: number;
 };
 
-/** The Full Directory facts the popup needs for a linked person. */
+/** A linked holder's Full Directory record — enough to link to their profile. */
 export type LinkedPerson = {
   id: string;
+  /** Current profile slug (looked up fresh, since slugs can change on a rename). */
   slug: string;
   name: string;
-  memberships: {
-    year: string;
-    groups: string[];
-    positions: string[];
-    positionType: "exec" | "lead" | "member" | "other";
-    notYetPlaced: boolean;
-  }[];
 };
 
 export type LeadershipData = {
@@ -110,6 +104,9 @@ export type LeadershipData = {
   holders: LeadershipHolder[];
   /** Keyed by directory_people.id, for every linked holder. */
   people: Record<string, LinkedPerson>;
+  /** The signed-in member's Full Directory id, if they have one — their name
+   *  chips get the "You" highlight. */
+  meId: string | null;
   /** True for webmasters: shows the "Edit" entry point. The API enforces it too. */
   canEdit: boolean;
 };

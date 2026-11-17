@@ -242,7 +242,11 @@ html.dark .ft-card__section + .ft-card__section { border-top-color: rgb(124 196 
 html.dark .ft-card__title { color: rgb(230 226 213 / 0.68); }
 html.dark .ft-card__empty { color: rgb(230 226 213 / 0.45); }
 html.dark .ft-chip { background: rgb(124 196 160 / 0.12); color: ${D.mintLight}; }
-html.dark .ft-chip:hover { background: rgb(124 196 160 / 0.2); border-color: rgb(124 196 160 / 0.45); }
+html.dark .ft-chip:hover { background: rgb(124 196 160 / 0.26); border-color: rgb(124 196 160 / 0.6); color: ${LIGHT.paper}; }
+html.dark .ft-chip--me { background: ${LIGHT.marigold}; color: ${LIGHT["pine-deep"]}; border-color: ${LIGHT["marigold-deep"]}; }
+html.dark .ft-chip--me:hover { background: #EAB04A; color: ${LIGHT["pine-deep"]}; }
+html.dark .ft-chip--static, html.dark .ft-chip--static:hover { background: rgb(124 196 160 / 0.12); border-color: transparent; color: ${D.mintLight}; }
+html.dark .ft-group { border-color: rgb(124 196 160 / 0.22); background: rgb(124 196 160 / 0.04); }
 html.dark .ft-chip:focus-visible { outline-color: ${D.mint}; }
 html.dark .ft-chip__q { color: rgb(230 226 213 / 0.55); }
 

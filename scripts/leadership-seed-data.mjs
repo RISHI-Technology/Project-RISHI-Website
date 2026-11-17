@@ -5,7 +5,7 @@
  *
  * Holder: "Name", or { name, qualifier?, note? }.
  *   qualifier — short text shown under the name on the tree ("Fall 2019")
- *   note      — context shown only in the person popup ("Title not stated")
+ *   note      — context shown when hovering the name ("Title not stated")
  * Role:   { title, slot, group?, parent?, holders }
  *   group  — project group, for leads / senior leads (Full Directory spelling)
  *   parent — title of a role in the same year this one hangs under
@@ -35,13 +35,10 @@ export const SEED = [
       { title: "Director of International Affairs", slot: "director", holders: ["Jiya Dharne"] },
       { title: "Internal (socials)", slot: "other", parent: "VP Internal",
         holders: ["Srivishal Sudarshan", { name: "Yadukrishna Raghu", note: "Non-exec" }] },
-      { title: "Health Senior Lead", slot: "senior_lead", group: HEALTH, holders: ["Kaavya Pravin"] },
+      // No senior leads in 2026–27 (removed at the club's request): leads hang directly under VP of Projects.
       { title: "Health Leads", slot: "lead", group: HEALTH, holders: ["Aarushi Mupparti", "Krrishika Saxena"] },
-      { title: "Women's Senior Lead", slot: "senior_lead", group: WOMENS, holders: ["Pushkar Kairam"] },
       { title: "Women's Leads", slot: "lead", group: WOMENS, holders: ["Palak Prabhakar", "Jannat Vohra"] },
-      { title: "WatSan Senior Lead", slot: "senior_lead", group: WATSAN, holders: ["Jiya Dharne"] },
       { title: "WatSan Leads", slot: "lead", group: WATSAN, holders: ["Maia Berges", "Ria Prathinidhi"] },
-      { title: "Education Senior Lead", slot: "senior_lead", group: EDU, holders: ["Surabhi Khanna"] },
       { title: "Education Leads", slot: "lead", group: EDU, holders: ["Megha Ramachandran", "Utkarsh Agarwal"] },
     ],
   },
@@ -250,7 +247,5 @@ export const SEED = [
  * Directory links decided by the club (never guessed):
  *   • "Simar Kaur" has two Full Directory records; the 2019–20 President is
  *     simar-kaur-2016 (the only one with a 2019-20 membership).
- *   • 2026–27 senior leads are deliberately left unlinked.
  */
 export const LINK_BY_SLUG = [{ year: "2019-2020", name: "Simar Kaur", slug: "simar-kaur-2016" }];
-export const keepUnlinked = (year, slot) => year === "2026-2027" && slot === "senior_lead";

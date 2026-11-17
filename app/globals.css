@@ -401,12 +401,106 @@ body {
   font-weight: 500;
   line-height: 1.2;
   white-space: nowrap;
+  text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 .ft-chip:hover {
-  border-color: rgba(30, 77, 58, 0.35);
-  background: rgba(30, 77, 58, 0.12);
+  border-color: rgba(30, 77, 58, 0.5);
+  background: rgba(30, 77, 58, 0.16);
+  color: #0f2a1f;
+}
+.ft-chip__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+/* The viewer's own name — the same marigold "You" treatment as Lineage's .ft-node--me,
+   but on the name only, not the whole role card. */
+.ft-chip--me {
+  background: #e2a02f;
+  color: #143628;
+  font-weight: 600;
+  border-color: #c27e18;
+  box-shadow: 0 0 0 3px rgba(226, 160, 47, 0.35);
+}
+.ft-chip--me:hover {
+  background: #eab04a;
+  border-color: #a86a10;
+  color: #143628;
+}
+.ft-chip--static,
+.ft-chip--static:hover {
+  cursor: default;
+  border-color: transparent;
+  background: rgba(30, 77, 58, 0.07);
+}
+/* Childless roles under one parent share a grid under a single connector. */
+.ft-group {
+  display: inline-grid;
+  gap: 10px;
+  align-items: start;
+  justify-items: stretch;
+  padding: 10px;
+  border: 1px dashed rgba(30, 77, 58, 0.22);
+  border-radius: 20px;
+  background: rgba(30, 77, 58, 0.025);
+}
+.ft-group > .ft-card,
+.ft-stack > .ft-card {
+  display: flex;
+  width: 100%;
+  max-width: 15rem;
+}
+/* A director and their interns inside a grid cell: card, short line, card. */
+.ft-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.ft-stack__line {
+  width: 2px;
+  height: 14px;
+  background: var(--ft-line);
+}
+/* The Leadership tree always lays out at its natural width (cards never squeeze
+   below their names); fitting is done by its grids, dense mode and a gentle scale. */
+.familytree--leadership {
+  width: max-content;
+}
+/* Dense: only when a leadership year still doesn't fit in one column (phones) —
+   tighter spacing and narrower cards; long names may wrap onto two lines. */
+.familytree--dense li {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+.familytree--dense .ft-card {
+  min-width: 0;
+  max-width: 9.5rem;
+  padding: 6px 7px 8px;
+  border-radius: 14px;
+}
+.familytree--dense .ft-group {
+  gap: 6px;
+  padding: 6px;
+  border-radius: 16px;
+}
+.familytree--dense .ft-group > .ft-card,
+.familytree--dense .ft-stack > .ft-card {
+  max-width: 9.5rem;
+}
+.familytree--dense .ft-card__title {
+  overflow-wrap: anywhere;
+}
+.familytree--dense .ft-chip {
+  padding: 3px 8px;
+  font-size: 12.5px;
+  white-space: normal;
+  text-align: center;
+}
+.familytree--dense .ft-chip__name {
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .ft-chip:focus-visible {
   outline: 2px solid #1f6f54;

@@ -11,8 +11,8 @@
  *
  * DIRECTORY LINKS: every holder is matched to exactly one Full Directory record
  *   (directory_people) by exact name (case/space-insensitive), and that record's
- *   id is stored. Decided exceptions live in the data file (LINK_BY_SLUG,
- *   keepUnlinked). If any name matches no record or several, NOTHING is written
+ *   id is stored. Decided exceptions live in the data file (LINK_BY_SLUG).
+ *   If any name matches no record or several, NOTHING is written
  *   and the names are listed — they need a decision, not a guess.
  *
  * IDEMPOTENT: rows are keyed by year, (year, title) and (role, name). A re-run
@@ -24,7 +24,7 @@
  * directory_memberships.
  */
 import { createClient } from "@supabase/supabase-js";
-import { SEED, LINK_BY_SLUG, keepUnlinked } from "./leadership-seed-data.mjs";
+import { SEED, LINK_BY_SLUG } from "./leadership-seed-data.mjs";
 
 const args = process.argv.slice(2);
 const DRY = args.includes("--dry-run");
@@ -102,10 +102,9 @@ async function resolveLinks(holders) {
   const byName = new Map(), bySlug = new Map(people.map((p) => [p.slug, p]));
   for (const p of people) byName.set(nameKey(p.full_name), [...(byName.get(nameKey(p.full_name)) ?? []), p]);
 
-  const unmatched = [], ambiguous = [], keptUnlinked = [], byOverride = [], noYear = [];
+  const unmatched = [], ambiguous = [], byOverride = [], noYear = [];
   for (const h of holders) {
     h.directory_person_id = null;
-    if (keepUnlinked(h.year, h.slot)) { keptUnlinked.push(`${h.year}  ${h.display_name} (${h.title})`); continue; }
     const o = LINK_BY_SLUG.find((x) => x.year === h.year && nameKey(x.name) === nameKey(h.display_name));
     let p = null;
     if (o) {
@@ -122,7 +121,7 @@ async function resolveLinks(holders) {
     h.slug = p.slug;
     if (!(yearsOf.get(p.id) ?? []).includes(h.year)) noYear.push(`${h.year}  ${h.display_name} → ${p.slug} (directory has no ${h.year} membership)`);
   }
-  return { unmatched, ambiguous, keptUnlinked, byOverride, noYear: [...new Set(noYear)] };
+  return { unmatched, ambiguous, byOverride, noYear: [...new Set(noYear)] };
 }
 
 // ------------------------------------------------------------------ 3. what's stored now
@@ -277,7 +276,6 @@ console.log(`\nDirectory links: ${linkedCount} linked · ${seed.holders.length -
 console.log(`  unmatched: ${links.unmatched.length}${links.unmatched.length ? "\n    " + links.unmatched.join("\n    ") : ""}`);
 console.log(`  ambiguous: ${links.ambiguous.length}${links.ambiguous.length ? "\n    " + links.ambiguous.join("\n    ") : ""}`);
 console.log(`  linked by a recorded decision: ${links.byOverride.length}${links.byOverride.length ? "\n    " + links.byOverride.join("\n    ") : ""}`);
-console.log(`  kept unlinked by decision: ${links.keptUnlinked.length}${links.keptUnlinked.length ? "\n    " + links.keptUnlinked.join("\n    ") : ""}`);
 console.log(`  linked, but the directory has no membership that year (FYI): ${links.noYear.length}${links.noYear.length ? "\n    " + links.noYear.join("\n    ") : ""}`);
 
 const stored = await loadStored();
