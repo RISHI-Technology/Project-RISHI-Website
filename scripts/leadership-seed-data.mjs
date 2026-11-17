@@ -29,12 +29,10 @@ export const SEED = [
       { title: "VP Internal", slot: "vp_internal", holders: ["Ryan Raphael"] },
       { title: "VP of Projects", slot: "vp_projects", holders: ["Tanya Goel"] },
       { title: "Directors of Finance", slot: "director", holders: ["Sachit Kumar", "Thanuj Komatireddy"] },
-      { title: "Director of Technology (Webmaster)", slot: "director", holders: ["Sachit Kumar"] },
+      // Director of Technology (Webmaster) and Internal (socials) are left off 2026–27 at the club's request.
       { title: "Director of Outreach", slot: "director", holders: ["Nikita Jadhav"] },
       { title: "Directors of NMT", slot: "director", holders: ["Advik Kotte", "Nirali Narayan"] },
       { title: "Director of International Affairs", slot: "director", holders: ["Jiya Dharne"] },
-      { title: "Internal (socials)", slot: "other", parent: "VP Internal",
-        holders: ["Srivishal Sudarshan", { name: "Yadukrishna Raghu", note: "Non-exec" }] },
       // No senior leads in 2026–27 (removed at the club's request): leads hang directly under VP of Projects.
       { title: "Health Leads", slot: "lead", group: HEALTH, holders: ["Aarushi Mupparti", "Krrishika Saxena"] },
       { title: "Women's Leads", slot: "lead", group: WOMENS, holders: ["Palak Prabhakar", "Jannat Vohra"] },

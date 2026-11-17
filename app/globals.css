@@ -435,22 +435,32 @@ body {
   border-color: transparent;
   background: rgba(30, 77, 58, 0.07);
 }
-/* Childless roles under one parent share a grid under a single connector. */
+/* Childless roles under one parent share one box under a single connector, packed
+   into balanced columns (LeadershipTree's packColumns): equal-width columns, each a
+   straight stack, so short cards never leave holes beside tall ones. */
 .ft-group {
   display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 10px;
   align-items: start;
-  justify-items: stretch;
   padding: 10px;
   border: 1px dashed rgba(30, 77, 58, 0.22);
   border-radius: 20px;
   background: rgba(30, 77, 58, 0.025);
 }
-.ft-group > .ft-card,
+.ft-group__col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  max-width: 15rem;
+}
+.ft-group__col > .ft-card,
 .ft-stack > .ft-card {
   display: flex;
   width: 100%;
-  max-width: 15rem;
+  max-width: none;
 }
 /* A director and their interns inside a grid cell: card, short line, card. */
 .ft-stack {
@@ -480,13 +490,15 @@ body {
   padding: 6px 7px 8px;
   border-radius: 14px;
 }
-.familytree--dense .ft-group {
+.familytree--dense .ft-group,
+.familytree--dense .ft-group__col {
   gap: 6px;
+}
+.familytree--dense .ft-group {
   padding: 6px;
   border-radius: 16px;
 }
-.familytree--dense .ft-group > .ft-card,
-.familytree--dense .ft-stack > .ft-card {
+.familytree--dense .ft-group__col {
   max-width: 9.5rem;
 }
 .familytree--dense .ft-card__title {

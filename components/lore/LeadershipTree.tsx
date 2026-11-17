@@ -189,6 +189,39 @@ function Branch({ node, ctx, depth }: { node: TreeNode; ctx: Ctx; depth: number 
  *  beneath it (a director and their interns), drawn as a short vertical stack. */
 const gridable = (n: TreeNode) => n.children.length === 0 || (n.children.length === 1 && n.children[0].children.length === 0);
 
+// ---- packing a group into balanced columns (no holes)
+// A plain grid makes every row as tall as its tallest card, leaving gaps under short
+// cards. Instead each column is a straight stack. Tallest cards are placed first,
+// each into whichever column is currently shortest (by an estimate of its height:
+// title plus one line per name, more for a qualifier) — the classic way to balance
+// columns — then each column keeps the roles' own order. Deterministic: no
+// measuring, so it can't flicker.
+const GAP = 10;
+function cardHeight(n: TreeNode, holdersOf: Map<string, LeadershipHolder[]>): number {
+  return n.roles.reduce((sum, role, i) => {
+    const hs = holdersOf.get(role.id) ?? [];
+    const title = role.title.length > 34 ? 30 : 16;
+    const names = Math.max(1, hs.length) * 31;
+    const quals = hs.reduce((q, h) => q + (h.qualifier ? (h.qualifier.length > 26 ? 26 : 13) : 0), 0);
+    return sum + (i ? 8 : 0) + title + names + quals;
+  }, 18);
+}
+const cellHeight = (n: TreeNode, holdersOf: Map<string, LeadershipHolder[]>) =>
+  cardHeight(n, holdersOf) + (n.children.length ? 14 + cardHeight(n.children[0], holdersOf) : 0);
+function packColumns(nodes: TreeNode[], cols: number, holdersOf: Map<string, LeadershipHolder[]>): TreeNode[][] {
+  const order = new Map(nodes.map((n, i) => [n, i]));
+  const columns = Array.from({ length: Math.max(1, Math.min(cols, nodes.length)) }, () => ({ h: 0, items: [] as TreeNode[] }));
+  const tallestFirst = [...nodes].sort((a, b) => cellHeight(b, holdersOf) - cellHeight(a, holdersOf) || order.get(a)! - order.get(b)!);
+  for (const n of tallestFirst) {
+    const c = columns.reduce((a, b) => (b.h < a.h ? b : a)); // ties go to the leftmost column
+    c.items.push(n);
+    c.h += cellHeight(n, holdersOf) + GAP;
+  }
+  // Keep the roles' own order inside each column; put the column holding the first role first.
+  for (const c of columns) c.items.sort((a, b) => order.get(a)! - order.get(b)!);
+  return columns.filter((c) => c.items.length).sort((a, b) => order.get(a.items[0])! - order.get(b.items[0])!).map((c) => c.items);
+}
+
 /** A node's children. Below the top level, two or more grid-able roles share one grid
  *  (one connector); everything else keeps its own branch. The top level (VPs and the
  *  projects director) always keeps the plain tree shape. */
@@ -207,18 +240,22 @@ function Children({ nodes, ctx, depth }: { nodes: TreeNode[]; ctx: Ctx; depth: n
           <Branch key={it.node.key} node={it.node} ctx={ctx} depth={depth} />
         ) : (
           <li key={`g:${it.nodes[0].key}`}>
-            <div className="ft-group" style={{ gridTemplateColumns: `repeat(${Math.min(ctx.cols, it.nodes.length)}, auto)` }} data-role-group>
-              {it.nodes.map((n) =>
-                n.children.length === 0 ? (
-                  <RoleCard key={n.key} node={n} ctx={ctx} />
-                ) : (
-                  <div key={n.key} className="ft-stack" data-role-stack>
-                    <RoleCard node={n} ctx={ctx} />
-                    <span className="ft-stack__line" aria-hidden />
-                    <RoleCard node={n.children[0]} ctx={ctx} />
-                  </div>
-                ),
-              )}
+            <div className="ft-group" data-role-group>
+              {packColumns(it.nodes, ctx.cols, ctx.holdersOf).map((col, i) => (
+                <div key={i} className="ft-group__col" data-group-col>
+                  {col.map((n) =>
+                    n.children.length === 0 ? (
+                      <RoleCard key={n.key} node={n} ctx={ctx} />
+                    ) : (
+                      <div key={n.key} className="ft-stack" data-role-stack>
+                        <RoleCard node={n} ctx={ctx} />
+                        <span className="ft-stack__line" aria-hidden />
+                        <RoleCard node={n.children[0]} ctx={ctx} />
+                      </div>
+                    ),
+                  )}
+                </div>
+              ))}
             </div>
           </li>
         ),
