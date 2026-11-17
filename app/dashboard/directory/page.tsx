@@ -8,7 +8,7 @@ import ViewSwitcher from "@/components/fullDirectory/ViewSwitcher";
 
 // Member Directory: two views behind one entry point.
 //   /dashboard/directory            → Current Members (unchanged existing view)
-//   /dashboard/directory?view=full  → Full Directory (every member, 2015–2027)
+//   /dashboard/directory?view=full  → Full Directory (every member, 2014–2027)
 function DirectoryViews() {
   const view = useSearchParams().get("view") === "full" ? "full" : "current";
   const switcher = <ViewSwitcher active={view} />;

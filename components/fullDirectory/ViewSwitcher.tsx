@@ -4,7 +4,7 @@ import Link from "next/link";
 
 /**
  * Member Directory's two views: "Current Members" (the existing directory) and
- * "Full Directory" (everyone, 2015–2027). Real links (?view=full), so each view
+ * "Full Directory" (everyone, 2014–2027). Real links (?view=full), so each view
  * can be shared, bookmarked and survives a refresh. Sits on the dark banner.
  */
 export default function ViewSwitcher({ active }: { active: "current" | "full" }) {
@@ -32,7 +32,7 @@ export default function ViewSwitcher({ active }: { active: "current" | "full" })
       className="mt-6 inline-flex rounded-full border border-paper/25 bg-ink/20 p-1 backdrop-blur-sm"
     >
       {item("current", "/dashboard/directory", "Current Members", "This year")}
-      {item("full", "/dashboard/directory?view=full", "Full Directory", "2015–2027")}
+      {item("full", "/dashboard/directory?view=full", "Full Directory", "2014–2027")}
     </nav>
   );
 }

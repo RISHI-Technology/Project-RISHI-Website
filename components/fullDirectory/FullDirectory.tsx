@@ -1,7 +1,7 @@
 "use client";
 
 // ============================================================================
-//  Full Directory — every RISHI member, 2015–2027.
+//  Full Directory — every RISHI member, 2014–2027.
 // ----------------------------------------------------------------------------
 //  Data: GET /api/lms/full-directory (already redacted for this viewer).
 //  Every filter, the search, sort, layout, grouping, columns and the open
@@ -220,7 +220,7 @@ export default function FullDirectory({ switcher }: { switcher?: ReactNode }) {
     </>
   );
 
-  const yearsSpan = allYears.length ? `${allYears[0].slice(0, 4)}–${allYears[allYears.length - 1].slice(5)}` : "2015–2027";
+  const yearsSpan = allYears.length ? `${allYears[0].slice(0, 4)}–${allYears[allYears.length - 1].slice(5)}` : "2014–2027";
 
   return (
     <>
@@ -262,7 +262,7 @@ export default function FullDirectory({ switcher }: { switcher?: ReactNode }) {
             </h2>
             <p className="mt-2 text-sm text-ink/65">
               {error.notReady
-                ? "Once the member archive has been imported, everyone from 2015 onward will appear here."
+                ? "Once the member archive has been imported, everyone from 2014 onward will appear here."
                 : error.message}
             </p>
             {!error.notReady && (

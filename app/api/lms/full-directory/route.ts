@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Cache-Control": "private, no-store" };
 
-// The Full Directory (every member, 2015–2027). Any signed-in member can view it,
+// The Full Directory (every member, 2014–2027). Any signed-in member can view it,
 // including phone numbers and personal (non-@berkeley.edu) emails. Signed-out
 // visitors get nothing.
 export async function GET() {

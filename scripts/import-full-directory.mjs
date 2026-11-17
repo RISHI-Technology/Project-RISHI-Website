@@ -8,7 +8,7 @@
  *   node --env-file=.env.local scripts/import-full-directory.mjs --verify
  *
  *   --file <path>   spreadsheet to read (default: $FULL_DIRECTORY_XLSX, else
- *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v12.xlsx)
+ *                   ~/Downloads/rishi-context/RISHI_Member_Directory_v13.xlsx)
  *   --dry-run       parse, then diff against the database (read-only); write nothing
  *   --verify        read counts back from the database and compare with the sheet
  *
@@ -91,7 +91,7 @@ const ALLOW_BERKELEY_CHANGES = flag("--allow-berkeley-changes");
 const ALLOW_REMOVALS = flag("--allow-removals");
 const CLEAR_REF = opt("--clear-ref") && path.resolve(opt("--clear-ref").replace(/^~(?=$|\/)/, os.homedir()));
 const FILE = path.resolve(
-  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v12.xlsx")
+  (opt("--file") ?? process.env.FULL_DIRECTORY_XLSX ?? "~/Downloads/rishi-context/RISHI_Member_Directory_v13.xlsx")
     .replace(/^~(?=$|\/)/, os.homedir()),
 );
 
