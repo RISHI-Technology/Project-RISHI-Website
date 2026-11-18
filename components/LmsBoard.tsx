@@ -23,6 +23,8 @@ const GROUP_LABEL: Record<Group, string> = {
 type Roles = {
   nmtLeader: boolean; newbie: boolean; lead: boolean;
   internal: boolean; vpp: boolean; exec: boolean;
+  /** Director of Finance: may assign tasks to every project lead ("All leads" checkbox). */
+  financeDirector?: boolean;
 };
 type Lite = { email: string; name: string; group: Group; avatar?: string | null; lead?: boolean; nmt?: boolean; exec?: boolean; vpp?: boolean; interns?: InternType[] };
 
@@ -2156,6 +2158,31 @@ function CohortPicker({ cohort, members, selected, onToggle, onSetAll }: {
   );
 }
 
+/** Directors of Finance: one checkbox that ticks (or unticks) every project lead in
+ *  the list, leaving anyone else already ticked alone. Shows a dash when only some
+ *  leads are ticked. Each lead is still saved as an ordinary individual assignee
+ *  and re-checked server-side (canAssignTaskTo). */
+function AllLeadsCheckbox({ leadEmails, selected, onSetAll }: {
+  leadEmails: string[]; selected: string[]; onSetAll: (emails: string[]) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const ticked = leadEmails.filter((e) => selected.includes(e)).length;
+  const all = ticked === leadEmails.length;
+  const some = ticked > 0 && !all;
+  useEffect(() => { if (ref.current) ref.current.indeterminate = some; }, [some]);
+  const toggle = () =>
+    onSetAll(all ? selected.filter((e) => !leadEmails.includes(e)) : Array.from(new Set([...selected, ...leadEmails])));
+  return (
+    <label data-all-leads className="mb-2 flex cursor-pointer items-center gap-2 rounded-xl border border-pine/15 bg-pine/[0.03] px-3 py-2 text-sm font-medium text-ink hover:bg-pine/[0.06]">
+      <input ref={ref} type="checkbox" checked={all} onChange={toggle} aria-label={`All leads (${leadEmails.length})`} />
+      All leads
+      <span className="text-xs font-normal text-ink/60">
+        {some ? `${ticked} of ${leadEmails.length} ticked` : `${leadEmails.length} ${leadEmails.length === 1 ? "lead" : "leads"}`}
+      </span>
+    </label>
+  );
+}
+
 // -------------------------------------------------------------------- task form
 export function TaskForm({ meta, editing, editGroupAssignees, meetingId, onClose, onCreated }: { meta: Meta; editing?: Task | null; editGroupAssignees?: string[]; meetingId?: string; onClose: () => void; onCreated: () => void }) {
   const isEdit = !!editing;
@@ -2178,6 +2205,10 @@ export function TaskForm({ meta, editing, editGroupAssignees, meetingId, onClose
     : []);
   // "All Finance Interns" etc. for whoever supervises that kind of intern.
   const internKeys = internKeysFor(meta.internTypes, meta.assignableMembers);
+  // Directors of Finance may assign to every project lead: an "All leads" checkbox.
+  const leadEmails = meta.me.roles.financeDirector
+    ? cohortMembers(meta.assignableMembers, "leads").map((m) => m.email)
+    : [];
   const scopes: Array<Meta["assignScopes"][number] | PickKey> =
     [...(meta.assignScopes.length ? meta.assignScopes : (["members"] as const)), ...cohortKeys, ...internKeys];
   const [scope, setScope] = useState<Meta["assignScopes"][number] | PickKey>(isEdit ? "members" : scopes[0]);
@@ -2268,7 +2299,10 @@ export function TaskForm({ meta, editing, editGroupAssignees, meetingId, onClose
         <div>
           <label data-tour="tf-assignees" className={labelCls}>Assign to{isEdit ? " (add or remove anyone)" : ""}</label>
           {isEdit ? (
-            <div className="mt-1"><MemberPicker members={meta.assignableMembers} selected={assignees} onToggle={toggleAssignee} /></div>
+            <div className="mt-1">
+              {leadEmails.length > 0 && <AllLeadsCheckbox leadEmails={leadEmails} selected={assignees} onSetAll={setAssignees} />}
+              <MemberPicker members={meta.assignableMembers} selected={assignees} onToggle={toggleAssignee} />
+            </div>
           ) : (
             <div className="mt-1 space-y-3">
               {scopes.length > 1 && (
@@ -2276,7 +2310,12 @@ export function TaskForm({ meta, editing, editGroupAssignees, meetingId, onClose
                   {scopes.map((s) => <option key={s} value={s}>{scopeLabel(s)}</option>)}
                 </select>
               )}
-              {scope === "members" && <MemberPicker members={meta.assignableMembers} selected={assignees} onToggle={toggleAssignee} />}
+              {scope === "members" && (
+                <div>
+                  {leadEmails.length > 0 && <AllLeadsCheckbox leadEmails={leadEmails} selected={assignees} onSetAll={setAssignees} />}
+                  <MemberPicker members={meta.assignableMembers} selected={assignees} onToggle={toggleAssignee} />
+                </div>
+              )}
               {isPickKey(scope) && (
                 <CohortPicker cohort={scope} members={meta.assignableMembers} selected={assignees}
                   onToggle={toggleAssignee} onSetAll={setAssignees} />

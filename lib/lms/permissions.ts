@@ -56,7 +56,7 @@ export function supervisesAnyIntern(m: Member): boolean {
 // ---------------------------------------------------------------- task assign
 /** Can this member assign tasks to anyone at all? */
 export function canAssignTasks(m: Member): boolean {
-  return m.roles.lead || m.roles.nmtLeader || m.roles.vpp || supervisesAnyIntern(m);
+  return m.roles.lead || m.roles.nmtLeader || m.roles.vpp || m.roles.financeDirector || supervisesAnyIntern(m);
 }
 
 /** Can `assigner` assign a task to `assignee`? */
@@ -64,6 +64,7 @@ export function canAssignTaskTo(assigner: Member, assignee: Member): boolean {
   if (assigner.roles.vpp) return true; // VP/P → anyone in the club
   if (assigner.roles.lead && assignee.group === assigner.group) return true; // Lead → own group (incl. self)
   if (assigner.roles.nmtLeader && assignee.roles.newbie) return true; // NMT leader → newbies
+  if (assigner.roles.financeDirector && assignee.roles.lead) return true; // Director of Finance → every project lead
   if (isSupervisedIntern(assigner, assignee)) return true; // Director → their interns
   return false;
 }
